@@ -1,0 +1,62 @@
+name: "Tarefa de Feature"
+description: "Template para tarefas do Flowity Content Engine"
+title: "[TAREFA] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Instruções
+        Preencha os campos abaixo. Leia tudo antes de começar a codar.
+
+  - type: input
+    id: integrante
+    attributes:
+      label: Integrante responsável
+      placeholder: "ex: Integrante 1 — Nome"
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: Nome da branch
+      placeholder: "ex: feat/issue-1-sources-page"
+    validations:
+      required: true
+
+  - type: input
+    id: area
+    attributes:
+      label: Área
+      placeholder: "Frontend / Backend / Infra"
+    validations:
+      required: true
+
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que fazer
+      description: Descreva a tarefa passo a passo
+      placeholder: |
+        Passo 1 — ...
+        Passo 2 — ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done ✅
+      description: Como saber que a tarefa está concluída
+      placeholder: |
+        - [ ] Item 1
+        - [ ] Item 2
+    validations:
+      required: true
+
+  - type: input
+    id: estimativa
+    attributes:
+      label: Estimativa de tempo
+      placeholder: "ex: 4–6 horas"

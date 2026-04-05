@@ -1,0 +1,139 @@
+/* ══════════════════════════════════════════════════════════════
+   Flowity AI — Global Styles & CSS Variables
+   Cores: logoPurple #9C83F7 | logoCyan #1CD8DE
+   Background: Deep space dark #07080F
+   ══════════════════════════════════════════════════════════════ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Root variables ──────────────────────────────────────────── */
+:root {
+  --color-purple:     #9C83F7;
+  --color-purple-dim: rgba(156, 131, 247, 0.15);
+  --color-cyan:       #1CD8DE;
+  --color-cyan-dim:   rgba(28, 216, 222, 0.15);
+  --gradient:         linear-gradient(135deg, #9C83F7, #1CD8DE);
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #1E2433 transparent;
+}
+
+body {
+  background-color: #07080F;
+  color: #F0F2FF;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar (webkit) ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1E2433; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2D3748; }
+
+/* ── Reusable component classes ──────────────────────────────── */
+@layer components {
+
+  /* Card base */
+  .card {
+    @apply bg-bg-surface border border-border rounded-lg p-4;
+  }
+
+  /* Primary button — purple gradient */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           text-white transition-all duration-200 cursor-pointer;
+    background: var(--gradient);
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           bg-bg-elevated border border-border text-text-secondary
+           hover:border-flowity-purple hover:text-text-primary transition-all duration-200 cursor-pointer;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm
+           text-text-muted hover:text-text-secondary hover:bg-bg-elevated
+           transition-all duration-200 cursor-pointer;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full px-3 py-2 rounded-lg text-sm
+           bg-bg-elevated border border-border text-text-primary
+           placeholder-text-muted
+           focus:outline-none focus:border-flowity-purple focus:ring-1 focus:ring-flowity-purple
+           transition-colors duration-200;
+  }
+
+  /* Textarea */
+  .textarea {
+    @apply input resize-none;
+  }
+
+  /* Select */
+  .select {
+    @apply input appearance-none cursor-pointer;
+  }
+
+  /* Label */
+  .label {
+    @apply block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wide;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow effect on purple elements */
+  .purple-glow {
+    box-shadow: 0 0 20px var(--color-purple-dim);
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-border;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in  { animation: fadeIn  0.2s ease-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
