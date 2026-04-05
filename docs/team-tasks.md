@@ -21,6 +21,78 @@
 
 ---
 
+## Tarefa 0 — Demo Guiada: Melhorar a SettingsPage
+
+| Campo | Valor |
+|-------|-------|
+| **Integrante** | Líder do projeto |
+| **Issue** | #75 |
+| **Branch** | `feat/issue-0-settings-demo` |
+| **Área** | Frontend |
+| **Prioridade** | 🟢 Baixa |
+| **Estimativa** | 30–60 minutos |
+
+### O que fazer (passo a passo)
+
+**Objetivo da T0:** fazer uma tarefa pequena, real e visível para mostrar ao time o fluxo completo:
+issue → branch → código → commit → push → pull request.
+
+**Passo 1 — Crie a branch**
+```bash
+git checkout main
+git pull origin main
+git checkout -b feat/issue-0-settings-demo
+```
+
+**Passo 2 — Abra o arquivo** `frontend/src/pages/SettingsPage.jsx`
+
+**Passo 3 — Adicione uma nova seção/card chamada** `Ambiente Local`
+
+Esse card deve mostrar links rápidos para:
+
+- Frontend → `http://localhost:5173`
+- Backend Docs → `http://localhost:8000/docs`
+- n8n → `http://localhost:5678`
+
+**Passo 4 — Regras visuais**
+- Use a mesma linguagem visual dos outros cards da tela
+- Use classes já existentes como `card`, `text-text-primary`, `text-text-muted`
+- Os links devem abrir em nova aba
+
+**Passo 5 — Adicione um pequeno texto de apoio**
+- Exemplo: "Use estes links durante a demo local do projeto."
+
+**Passo 6 — Teste**
+```bash
+cd frontend
+npm install
+npm run dev
+# Abra http://localhost:5173/settings
+```
+
+Valide:
+
+- o novo card aparece sem quebrar o layout
+- os 3 links aparecem corretamente
+- os links abrem os serviços certos
+
+**Passo 7 — Commit e PR**
+```bash
+git add frontend/src/pages/SettingsPage.jsx
+git commit -m "feat: adicionar card de ambiente local na SettingsPage"
+git push origin feat/issue-0-settings-demo
+# Abra PR: Closes #75
+```
+
+### Definition of Done ✅
+- [ ] A página `/settings` continua abrindo normalmente
+- [ ] Existe um card novo chamado `Ambiente Local`
+- [ ] O card mostra links para frontend, backend docs e n8n
+- [ ] Os links funcionam em nova aba
+- [ ] PR aberto com `Closes #75`
+
+---
+
 ## Tarefa 1 — Library / Sources Page
 
 | Campo | Valor |
