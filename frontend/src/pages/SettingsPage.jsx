@@ -86,7 +86,6 @@ export default function SettingsPage() {
             </a>
           </div>
         </div>
-
         {/* Ollama */}
         <div className="card">
           <div className="flex items-center gap-3 mb-3">
