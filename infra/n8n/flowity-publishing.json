@@ -1,0 +1,94 @@
+{
+  "name": "Flowity — Auto Publishing",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] }
+      },
+      "id": "cron-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://backend:8000/automation/posts/ready",
+        "options": {},
+        "headerParameters": {
+          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
+        }
+      },
+      "id": "get-ready-posts",
+      "name": "GET Ready Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [{ "value1": "={{ $json.length }}", "operation": "larger", "value2": 0 }]
+        }
+      },
+      "id": "has-posts",
+      "name": "Has Posts?",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300]
+    },
+    {
+      "parameters": { "fieldToSplitOut": "=", "include": "allOtherFields" },
+      "id": "split-posts",
+      "name": "Split Into Items",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "url": "=http://backend:8000/automation/posts/{{ $json.id }}/publish-attempt",
+        "requestMethod": "POST",
+        "options": {},
+        "headerParameters": {
+          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
+        }
+      },
+      "id": "publish-attempt",
+      "name": "Mark as Publishing",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1120, 200]
+    },
+    {
+      "parameters": { "amount": 2, "unit": "seconds" },
+      "id": "simulate-delay",
+      "name": "Simulate Publish (2s)",
+      "type": "n8n-nodes-base.wait",
+      "position": [1340, 200],
+      "notes": "MVP: simula a publicação. Substitua por nó LinkedIn/Twitter real quando disponível."
+    },
+    {
+      "parameters": {
+        "url": "=http://backend:8000/automation/posts/{{ $json.id }}/publish-result",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ \"success\": true, \"simulated\": true }",
+        "options": {},
+        "headerParameters": {
+          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
+        }
+      },
+      "id": "publish-result",
+      "name": "Mark as Published",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1560, 200]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes":    { "main": [[{ "node": "GET Ready Posts",    "type": "main", "index": 0 }]] },
+    "GET Ready Posts":    { "main": [[{ "node": "Has Posts?",         "type": "main", "index": 0 }]] },
+    "Has Posts?":         { "main": [[{ "node": "Split Into Items",   "type": "main", "index": 0 }]] },
+    "Split Into Items":   { "main": [[{ "node": "Mark as Publishing", "type": "main", "index": 0 }]] },
+    "Mark as Publishing": { "main": [[{ "node": "Simulate Publish (2s)", "type": "main", "index": 0 }]] },
+    "Simulate Publish (2s)": { "main": [[{ "node": "Mark as Published", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "notes": "Workflow MVP do Flowity Content Engine. Importar no painel n8n (http://localhost:5678). Configurar variável de ambiente N8N_WEBHOOK_SECRET igual ao valor no .env do backend."
+}

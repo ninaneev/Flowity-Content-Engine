@@ -1,24 +1,33 @@
-# Python
+# ── Python / Backend ─────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 .venv/
+venv/
 env/
+*.egg-info/
+*.db
+*.db-shm
+*.db-wal
 
-# Node
+# ── Node / Frontend ──────────────────────────────────────────────
 node_modules/
 dist/
 build/
+.vite/
 
-# OS
+# ── OS ───────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# Logs
+# ── Logs ─────────────────────────────────────────────────────────
 *.log
 
-# Env
+# ── Ambiente (NUNCA commitar) ─────────────────────────────────────
 .env
 .env.local
+.env.*.local
 
-# Docker volumes / temp
+# ── Docker / temp ────────────────────────────────────────────────
 *.sqlite3
+infra/n8n/.n8n/

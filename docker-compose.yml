@@ -1,0 +1,83 @@
+# ══════════════════════════════════════════════════════════════════════
+#  Flowity Content Engine — Docker Compose
+#  Como rodar: docker compose up --build
+#  Serviços:
+#    frontend  → http://localhost:5173
+#    backend   → http://localhost:8000  (docs em /docs)
+#    ollama    → http://localhost:11434
+#    n8n       → http://localhost:5678
+# ══════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Frontend (React + Vite) ─────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules          # Evita sobrescrever node_modules local
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - flowity
+
+  # ── Backend (FastAPI) ───────────────────────────────────────────────
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app             # Hot reload em desenvolvimento
+    env_file:
+      - .env
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - flowity
+
+  # ── Ollama (LLM local) ──────────────────────────────────────────────
+  # Após subir, baixe o modelo com:
+  #   docker exec -it flowity-ollama ollama pull llama3.1:8b
+  ollama:
+    image: ollama/ollama:latest
+    container_name: flowity-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama  # Persiste modelos baixados
+    networks:
+      - flowity
+
+  # ── n8n (Automação) ─────────────────────────────────────────────────
+  # Acesso: http://localhost:5678
+  # Login: admin / flowity123 (ou mude N8N_BASIC_AUTH_PASSWORD no .env)
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-flowity123}
+      - WEBHOOK_URL=http://localhost:5678
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - flowity
+
+# ── Volumes persistentes ────────────────────────────────────────────
+volumes:
+  ollama_data:
+  n8n_data:
+
+# ── Rede interna ────────────────────────────────────────────────────
+networks:
+  flowity:
+    driver: bridge
