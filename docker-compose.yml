@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ══════════════════════════════════════════════════════════════════════
 #  Flowity Content Engine — Docker Compose
 #  Como rodar: docker compose up --build
