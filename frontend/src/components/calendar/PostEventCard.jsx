@@ -21,7 +21,7 @@
  */
 
 import React from "react";
-
+import { Linkedin, Twitter } from "lucide-react";
 // Cores de fundo por status
 const STATUS_BG = {
   idea:       "bg-bg-elevated    border-border",
@@ -35,15 +35,16 @@ const STATUS_BG = {
 
 export default function PostEventCard({ post, onClick }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
-
+  const Icon = post.channel === "linkedin" ? Linkedin : Twitter;
   return (
     // TODO Integrante 3: melhore o visual deste card
     <div
-      className={`px-2 py-1 rounded border text-xs cursor-pointer truncate transition-all hover:opacity-80 ${bgClass}`}
+      className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs cursor-pointer truncate transition-all hover:opacity-80 ${bgClass}`}
       onClick={(e) => { e.stopPropagation(); onClick(post); }}
       title={post.hook}
     >
       {/* TODO: adicione ícone do canal (linkedin/x) antes do texto */}
+      <Icon size={12} className="shrink-0 opacity-70" />
       <span className="text-text-secondary truncate">{post.hook}</span>
     </div>
   );
