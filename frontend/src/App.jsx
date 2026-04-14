@@ -7,6 +7,7 @@ import GeneratorPage from "./pages/GeneratorPage";
 import PipelinePage from "./pages/PipelinePage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
+import Tarefa2Page from "./pages/Tarefa2Page";
 
 // ── Proteção de rota ──────────────────────────────────────────────────────────
 function ProtectedRoute({ children }) {
@@ -28,7 +29,8 @@ export default function App() {
           <ProtectedRoute>
             <AppShell>
               <Routes>
-                <Route path="/"           element={<DashboardPage />} />
+                <Route path="/"           element={<DashboardPage />} />                
+                <Route path="tarefa2"           element={<Tarefa2Page />} />
                 <Route path="/sources"    element={<SourcesPage />} />
                 <Route path="/generator"  element={<GeneratorPage />} />
                 <Route path="/pipeline"   element={<PipelinePage />} />
