@@ -1,8 +1,8 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  TAREFA DO INTEGRANTE 2 — Formulário de Nova Source                ║
- * ║  Issue: #2 no GitHub Projects                                       ║
- * ║  Branch: feat/issue-2-new-source-form                               ║
+ * ║  TAREFA DO INTEGRANTE 2 — Formulário de Nova Source                  ║
+ * ║  Issue: #2 no GitHub Projects                                        ║
+ * ║  Branch: feat/issue-2-new-source-form                                ║
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
  * O QUE VOCÊ VAI FAZER:
@@ -34,26 +34,26 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 
 const SOURCE_TYPES = [
-  { value: "post_antigo",  label: "Post antigo" },
-  { value: "insight",      label: "Insight" },
-  { value: "frase",        label: "Frase de posicionamento" },
-  { value: "objecao",      label: "Objeção de prospect" },
-  { value: "dor",          label: "Dor de founder" },
-  { value: "trecho",       label: "Trecho do site" },
-  { value: "comentario",   label: "Comentário de cliente" },
-  { value: "newsletter",   label: "Newsletter" },
-  { value: "referencia",   label: "Referência externa" },
+  { value: "post_antigo", label: "Post antigo" },
+  { value: "insight", label: "Insight" },
+  { value: "frase", label: "Frase de posicionamento" },
+  { value: "objecao", label: "Objeção de prospect" },
+  { value: "dor", label: "Dor de founder" },
+  { value: "trecho", label: "Trecho do site" },
+  { value: "comentario", label: "Comentário de cliente" },
+  { value: "newsletter", label: "Newsletter" },
+  { value: "referencia", label: "Referência externa" },
 ];
 
 export default function NewSourceForm({ onSave, onCancel, loading }) {
   // Estado inicial do formulário
   const [form, setForm] = useState({
-    title:       "",
+    title: "",
     source_type: "insight",
-    content:     "",
-    theme:       "",
-    origin:      "",
-    notes:       "",
+    content: "",
+    theme: "",
+    origin: "",
+    notes: "",
   });
 
   function handleChange(e) {
@@ -90,8 +90,18 @@ export default function NewSourceForm({ onSave, onCancel, loading }) {
 
       {/* TODO: CAMPO 3 — content (textarea, obrigatório, 6 linhas) */}
 
-      {/* TODO: CAMPO 4 — theme (input texto, opcional) */}
+      {/* CAMPO 4 — theme (input texto, opcional) */}
+      <div>
+        <label className="label">Tema *</label>
+        <input
+          className="input"
+          name="theme"
+          value={form.theme}
+          onChange={handleChange}
+          placeholder="Tema do Arquivo"
 
+        />
+      </div>
       {/* TODO: CAMPO 5 — origin (input texto, opcional) */}
 
       {/* TODO: CAMPO 6 — notes (textarea, opcional, 3 linhas) */}
