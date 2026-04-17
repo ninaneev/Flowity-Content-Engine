@@ -88,7 +88,37 @@ export default function NewSourceForm({ onSave, onCancel, loading }) {
 
       {/* TODO: CAMPO 2 — source_type (select com as opções de SOURCE_TYPES) */}
 
+      <div>
+        <label className="label">Tipo de Source *</label>
+        <select
+          name="source_type"
+          className="select"
+          value={form.source_type}
+          onChange={handleChange}
+          required
+        >
+          {SOURCE_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* TODO: CAMPO 3 — content (textarea, obrigatório, 6 linhas) */}
+
+      <div>
+        <label className="label">Conteúdo *</label>
+        <textarea
+          name="content"
+          className="textarea"
+          rows={6}
+          value={form.content}
+          onChange={handleChange}
+          placeholder="Cole aqui o conteúdo da source..."
+          required
+        />
+      </div>
 
       {/* CAMPO 4 — theme (input texto, opcional) */}
       <div>
@@ -102,9 +132,34 @@ export default function NewSourceForm({ onSave, onCancel, loading }) {
 
         />
       </div>
+
       {/* TODO: CAMPO 5 — origin (input texto, opcional) */}
 
+      <div>
+        <label className="label">Origem</label>
+        <input
+          type="text"
+          name="origin"
+          className="input"
+          value={form.origin}
+          onChange={handleChange}
+          placeholder="Ex: LinkedIn, Email, Reunião..."
+        />
+      </div>
+
       {/* TODO: CAMPO 6 — notes (textarea, opcional, 3 linhas) */}
+
+      <div>
+        <label className="label">Observações</label>
+        <textarea
+          name="notes"
+          className="textarea"
+          rows={3}
+          value={form.notes}
+          onChange={handleChange}
+          placeholder="Observações adicionais..."
+        />
+      </div>
 
       {/* Botões */}
       <div className="flex gap-2 pt-2">
