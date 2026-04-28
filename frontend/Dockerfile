@@ -1,12 +1,14 @@
-FROM node:20-alpine
+FROM node:20
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json package-lock.json* ./
+
 RUN npm install
 
 COPY . .
 
-EXPOSE 5173
+# 🔥 CORREÇÃO DO BUG DO ROLLDOWN
+RUN rm -rf node_modules package-lock.json && npm install
 
 CMD ["npm", "run", "dev"]

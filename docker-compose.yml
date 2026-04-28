@@ -40,6 +40,7 @@ services:
       - ollama
     networks:
       - flowity
+    container_name: flowity-backend
 
   # ── Ollama (LLM local) ──────────────────────────────────────────────
   # Após subir, baixe o modelo com:
