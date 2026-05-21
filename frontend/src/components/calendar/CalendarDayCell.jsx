@@ -54,12 +54,18 @@ export default function CalendarDayCell({ day, posts = [], isToday, onAddPost, o
 
       {/* Posts do dia */}
       <div className="space-y-1">
-        {posts.map((post) => (
+        {/* Adicionamos o .slice(0, 3) aqui para limitar a exibição */}
+        {posts.slice(0, 3).map((post) => (
           <PostEventCard key={post.id} post={post} onClick={onEditPost} />
         ))}
-      </div>
-
-      {/* TODO Integrante 3: se tiver mais de 3 posts no dia, mostre "+N mais" */}
+        
+        {/* E aqui embaixo do TODO, colocamos o contador */}
+        {posts.length > 3 && (
+          <p className="text-[10px] text-text-muted font-medium pl-1 italic">
+            +{posts.length - 3} mais
+          </p>
+        )}
+</div>
     </div>
   );
 }

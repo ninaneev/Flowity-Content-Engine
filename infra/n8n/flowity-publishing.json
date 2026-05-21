@@ -5,90 +5,272 @@
       "parameters": {
         "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] }
       },
-      "id": "cron-trigger",
-      "name": "Every 5 Minutes",
+      "id": "a001",
+      "name": "A cada 5 minutos",
       "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
       "position": [240, 300]
     },
     {
       "parameters": {
+        "method": "GET",
         "url": "http://backend:8000/automation/posts/ready",
-        "options": {},
+        "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
-        }
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "options": {}
       },
-      "id": "get-ready-posts",
-      "name": "GET Ready Posts",
+      "id": "a002",
+      "name": "Buscar posts prontos",
       "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [460, 300]
     },
     {
       "parameters": {
         "conditions": {
-          "number": [{ "value1": "={{ $json.length }}", "operation": "larger", "value2": 0 }]
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-len",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
         }
       },
-      "id": "has-posts",
-      "name": "Has Posts?",
+      "id": "a003",
+      "name": "Há posts para publicar?",
       "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
       "position": [680, 300]
     },
     {
-      "parameters": { "fieldToSplitOut": "=", "include": "allOtherFields" },
-      "id": "split-posts",
-      "name": "Split Into Items",
-      "type": "n8n-nodes-base.splitOut",
+      "parameters": {
+        "fieldToSplitOut": "",
+        "options": {}
+      },
+      "id": "a004",
+      "name": "Para cada post",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
       "position": [900, 200]
     },
     {
       "parameters": {
+        "method": "POST",
         "url": "=http://backend:8000/automation/posts/{{ $json.id }}/publish-attempt",
-        "requestMethod": "POST",
-        "options": {},
+        "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
-        }
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "options": {}
       },
-      "id": "publish-attempt",
-      "name": "Mark as Publishing",
+      "id": "a005",
+      "name": "Marcar como publicando",
       "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [1120, 200]
     },
     {
-      "parameters": { "amount": 2, "unit": "seconds" },
-      "id": "simulate-delay",
-      "name": "Simulate Publish (2s)",
-      "type": "n8n-nodes-base.wait",
-      "position": [1340, 200],
-      "notes": "MVP: simula a publicação. Substitua por nó LinkedIn/Twitter real quando disponível."
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "id": "route-li",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "linkedin",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "LinkedIn"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "id": "route-x",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "x",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "X"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "a006",
+      "name": "Canal?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1340, 200]
     },
     {
       "parameters": {
-        "url": "=http://backend:8000/automation/posts/{{ $json.id }}/publish-result",
-        "requestMethod": "POST",
-        "jsonParameters": true,
-        "bodyParametersJson": "={ \"success\": true, \"simulated\": true }",
-        "options": {},
-        "headerParameters": {
-          "parameters": [{ "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }]
-        }
+        "operation": "create",
+        "person": "={{ $env.LINKEDIN_PERSON_URN }}",
+        "text": "={{ $json.hook }}\n\n{{ $json.body }}\n\n{{ $json.cta }}",
+        "additionalFields": {}
       },
-      "id": "publish-result",
-      "name": "Mark as Published",
+      "id": "a007",
+      "name": "Publicar no LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [1560, 100],
+      "credentials": {
+        "linkedInOAuth2Api": { "id": "linkedin-cred", "name": "LinkedIn account" }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.short_x ? $json.short_x : ($json.hook + '\\n\\n' + $json.cta).slice(0, 280) }}",
+        "additionalFields": {}
+      },
+      "id": "a008",
+      "name": "Publicar no X",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [1560, 320],
+      "credentials": {
+        "twitterOAuth2Api": { "id": "x-cred", "name": "X (Twitter) account" }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/automation/posts/{{ $('Marcar como publicando').item.json.id }}/publish-result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"success\": true, \"simulated\": false }",
+        "options": {}
+      },
+      "id": "a009",
+      "name": "Marcar publicado",
       "type": "n8n-nodes-base.httpRequest",
-      "position": [1560, 200]
+      "typeVersion": 4.2,
+      "position": [1780, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/automation/posts/{{ $('Marcar como publicando').item.json.id }}/publish-result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"success\": false, \"error_message\": \"{{ $json.message || 'Erro desconhecido' }}\" }",
+        "options": {}
+      },
+      "id": "a010",
+      "name": "Marcar falhou",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/automation/posts/{{ $('Marcar como publicando').item.json.id }}/publish-result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"success\": true, \"simulated\": true }",
+        "options": {}
+      },
+      "id": "a011",
+      "name": "Marcar publicado (X)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 320]
     }
   ],
   "connections": {
-    "Every 5 Minutes":    { "main": [[{ "node": "GET Ready Posts",    "type": "main", "index": 0 }]] },
-    "GET Ready Posts":    { "main": [[{ "node": "Has Posts?",         "type": "main", "index": 0 }]] },
-    "Has Posts?":         { "main": [[{ "node": "Split Into Items",   "type": "main", "index": 0 }]] },
-    "Split Into Items":   { "main": [[{ "node": "Mark as Publishing", "type": "main", "index": 0 }]] },
-    "Mark as Publishing": { "main": [[{ "node": "Simulate Publish (2s)", "type": "main", "index": 0 }]] },
-    "Simulate Publish (2s)": { "main": [[{ "node": "Mark as Published", "type": "main", "index": 0 }]] }
+    "A cada 5 minutos": {
+      "main": [[{ "node": "Buscar posts prontos", "type": "main", "index": 0 }]]
+    },
+    "Buscar posts prontos": {
+      "main": [[{ "node": "Há posts para publicar?", "type": "main", "index": 0 }]]
+    },
+    "Há posts para publicar?": {
+      "main": [
+        [{ "node": "Para cada post", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Para cada post": {
+      "main": [[{ "node": "Marcar como publicando", "type": "main", "index": 0 }]]
+    },
+    "Marcar como publicando": {
+      "main": [[{ "node": "Canal?", "type": "main", "index": 0 }]]
+    },
+    "Canal?": {
+      "main": [
+        [{ "node": "Publicar no LinkedIn", "type": "main", "index": 0 }],
+        [{ "node": "Publicar no X", "type": "main", "index": 0 }]
+      ]
+    },
+    "Publicar no LinkedIn": {
+      "main": [
+        [{ "node": "Marcar publicado", "type": "main", "index": 0 }],
+        [{ "node": "Marcar falhou", "type": "main", "index": 0 }]
+      ]
+    },
+    "Publicar no X": {
+      "main": [
+        [{ "node": "Marcar publicado (X)", "type": "main", "index": 0 }],
+        [{ "node": "Marcar falhou", "type": "main", "index": 0 }]
+      ]
+    }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" },
-  "notes": "Workflow MVP do Flowity Content Engine. Importar no painel n8n (http://localhost:5678). Configurar variável de ambiente N8N_WEBHOOK_SECRET igual ao valor no .env do backend."
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [{ "name": "flowity" }],
+  "triggerCount": 1,
+  "versionId": "flowity-v2-publishing"
 }

@@ -1,50 +1,13 @@
-/**
- * ╔═════════════════════════════════════════════════════════���════════════╗
- * ║  TAREFA DO INTEGRANTE 4 — Modal do Post                            ║
- * ║  Issue: #4 no GitHub Projects                                       ║
- * ║  Branch: feat/issue-4-post-modal                                    ║
- * ╚═════════════════════════════════════════════════════════════════���════╝
- *
- * O QUE VOCÊ VAI FAZER:
- *   Criar o modal que abre quando o usuário clica em um post no calendário.
- *   O modal deve mostrar todos os campos do post E permitir editar.
- *
- * COMO FUNCIONA:
- *   1. Usuário clica num post no calendário
- *   2. O DashboardPage abre este modal passando o post como prop
- *   3. O modal exibe os dados
- *   4. Usuário pode editar e salvar (chama onSave) ou fechar (chama onClose)
- *
- * PROPS:
- *   post    = objeto com id, hook, body, cta, channel, status, scheduled_at, etc.
- *   onClose = função chamada ao fechar o modal
- *   onSave  = função assíncrona chamada com os dados editados
- *
- * CAMPOS QUE DEVEM APARECER NO MODAL:
- *   - hook (campo de texto — o mais importante, visualmente em destaque)
- *   - body (textarea grande)
- *   - cta (campo de texto)
- *   - short_x (campo de texto, label "Versão para X")
- *   - channel (select: linkedin / x)
- *   - status (select com todos os status)
- *   - scheduled_at (input datetime-local)
- *   - notes (textarea)
- *
- * COMO TESTAR:
- *   1. Crie um post pelo Generator
- *   2. Vá para o calendário (/dashboard)
- *   3. Clique no card do post — o modal deve abrir
- */
-
 import React, { useState, useEffect } from "react";
-import { X, ExternalLink } from "lucide-react";
+import { X } from "lucide-react";
 import StatusBadge from "../shared/StatusBadge";
+
+const STATUSES = ["idea", "draft", "revised", "scheduled", "published", "failed"];
 
 export default function PostModal({ post, onClose, onSave }) {
   const [form, setForm] = useState(post || {});
   const [saving, setSaving] = useState(false);
 
-  // Fecha o modal ao pressionar ESC
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
@@ -64,7 +27,6 @@ export default function PostModal({ post, onClose, onSave }) {
   if (!post) return null;
 
   return (
-    // Overlay escuro
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -74,7 +36,9 @@ export default function PostModal({ post, onClose, onSave }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <StatusBadge status={form.status} />
-            <span className="text-text-muted text-sm">{form.channel === "linkedin" ? "LinkedIn" : "X"}</span>
+            <span className="text-text-muted text-sm">
+              {form.channel === "linkedin" ? "LinkedIn" : "X"}
+            </span>
           </div>
           <button className="btn-ghost" onClick={onClose}>
             <X size={16} />
@@ -84,10 +48,7 @@ export default function PostModal({ post, onClose, onSave }) {
         {/* Body */}
         <div className="p-6 space-y-4">
 
-          {/* TODO Integrante 4: adicione os campos abaixo */}
-          {/* O hook é o campo mais importante — deixe ele em destaque */}
-
-          {/* CAMPO 1 — hook (já feito como exemplo) */}
+          {/* Hook */}
           <div>
             <label className="label">Hook / Título principal</label>
             <textarea
@@ -100,19 +61,97 @@ export default function PostModal({ post, onClose, onSave }) {
             />
           </div>
 
-          {/* TODO: CAMPO 2 — body (textarea grande, 8 linhas) */}
+          {/* Body */}
+          <div>
+            <label className="label">Corpo do post</label>
+            <textarea
+              className="textarea"
+              name="body"
+              value={form.body || ""}
+              onChange={handleChange}
+              rows={8}
+              placeholder="Desenvolvimento do conteúdo..."
+            />
+          </div>
 
-          {/* TODO: CAMPO 3 — cta (input texto) */}
+          {/* CTA */}
+          <div>
+            <label className="label">CTA (Call to Action)</label>
+            <input
+              className="input"
+              name="cta"
+              value={form.cta || ""}
+              onChange={handleChange}
+              placeholder="Ex: Comenta aqui o que você acha..."
+            />
+          </div>
 
-          {/* TODO: CAMPO 4 — short_x (input texto, label "Versão para X (máx 280 chars)") */}
+          {/* Short X */}
+          <div>
+            <label className="label">Versão para X (máx 280 chars)</label>
+            <input
+              className="input"
+              name="short_x"
+              value={form.short_x || ""}
+              onChange={handleChange}
+              maxLength={280}
+              placeholder="Versão compacta para o X..."
+            />
+          </div>
 
-          {/* TODO: CAMPO 5 — status (select) */}
+          {/* Status + Channel */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Status</label>
+              <select
+                className="select"
+                name="status"
+                value={form.status || "draft"}
+                onChange={handleChange}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">Canal</label>
+              <select
+                className="select"
+                name="channel"
+                value={form.channel || "linkedin"}
+                onChange={handleChange}
+              >
+                <option value="linkedin">LinkedIn</option>
+                <option value="x">X (Twitter)</option>
+              </select>
+            </div>
+          </div>
 
-          {/* TODO: CAMPO 6 — channel (select: linkedin / x) */}
+          {/* Scheduled At */}
+          <div>
+            <label className="label">Agendamento</label>
+            <input
+              className="input"
+              type="datetime-local"
+              name="scheduled_at"
+              value={form.scheduled_at ? form.scheduled_at.slice(0, 16) : ""}
+              onChange={handleChange}
+            />
+          </div>
 
-          {/* TODO: CAMPO 7 — scheduled_at (input datetime-local) */}
-
-          {/* TODO: CAMPO 8 — notes (textarea, 3 linhas) */}
+          {/* Notes */}
+          <div>
+            <label className="label">Observações</label>
+            <textarea
+              className="textarea"
+              name="notes"
+              value={form.notes || ""}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Anotações internas..."
+            />
+          </div>
 
         </div>
 
