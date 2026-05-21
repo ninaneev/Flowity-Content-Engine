@@ -25,7 +25,7 @@ JWT_SECRET=sua-chave-secreta-super-aleatoria-com-min-32-caracteres
 
 # Admin
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=$2b$12$R9h7cIPz0gi.URNNGRST2OPST2bxW2/d5QHHwBAYvxaF9WuwuXMYG
+ADMIN_PASSWORD_HASH=$2b$12$4d1YE2MbvfNmeHjJkHmjZuhtme5ekO7KYUgfxI5F0PtT07PriLWkK
 
 # Ollama (IA local)
 OLLAMA_BASE_URL=http://ollama:11434
@@ -44,7 +44,25 @@ VITE_API_URL=http://localhost:8000
 
 ---
 
-## 2️⃣ Rodar Docker Compose
+## 2️⃣ Rodar o Frontend localmente (sem Docker)
+
+Se você só precisa trabalhar no frontend, não precisa do Docker. Basta rodar:
+
+```bash
+cd frontend        # ⚠️ O package.json fica DENTRO de /frontend, não na raiz
+npm install
+npm run dev
+```
+
+Acesse **http://localhost:5173** e faça login com:
+- **Usuário**: `admin`
+- **Senha**: `admin`
+
+> ℹ️ Sem o backend rodando, chamadas à API vão falhar — mas a UI pode ser desenvolvida com dados mockados.
+
+---
+
+## 3️⃣ Rodar Docker Compose (stack completa)
 
 Depois de criar o `.env`, abra **PowerShell** e rode:
 
@@ -62,7 +80,7 @@ Isso vai:
 
 ---
 
-## 3️⃣ Verificar que tudo funciona
+## 4️⃣ Verificar que tudo funciona (com Docker)
 
 ### Frontend
 
