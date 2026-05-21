@@ -33,7 +33,17 @@ import CalendarDayCell from "./CalendarDayCell";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+
+
 export default function ContentCalendar({ posts = [], month, onAddPost, onEditPost }) {
+  // Mocks para simular posts'
+const MOCK_POSTS = [
+  { id: 1, hook: "Post do LinkedIn", channel: "linkedin", scheduled_at: "2026-04-17T10:00:00", status: "draft" },
+  { id: 2, hook: "Dica de Python para iniciantes", channel: "x", scheduled_at: "2026-04-17T12:00:00", status: "scheduled" },
+  { id: 3, hook: "Novidades da Univesp 2026", channel: "linkedin", scheduled_at: "2026-04-17T15:00:00", status: "published" },
+  { id: 4, hook: "Sprint de Dev - Flowity", channel: "x", scheduled_at: "2026-04-17T18:00:00", status: "idea" },
+  { id: 5, hook: "Planejamento de Maio", channel: "linkedin", scheduled_at: "2026-04-20T09:00:00", status: "draft" }
+];
   const firstDay   = startOfMonth(month);
   const lastDay    = endOfMonth(month);
   const days       = eachDayOfInterval({ start: firstDay, end: lastDay });
@@ -75,7 +85,12 @@ export default function ContentCalendar({ posts = [], month, onAddPost, onEditPo
           <CalendarDayCell
             key={day.toISOString()}
             day={day}
-            posts={getPostsForDay(day)}
+            /* Trecho da Tarefa 3:
+              Enquanto a API (T6) não está pronta, filtramos os posts do MOCK_POSTS.
+              Para voltar ao original, basta trocar a linha abaixo por: posts={getPostsForDay(day)}
+            */
+            posts={MOCK_POSTS.filter(post => isSameDay(new Date(post.scheduled_at), day))}
+            
             isToday={isToday(day)}
             onAddPost={onAddPost}
             onEditPost={onEditPost}
