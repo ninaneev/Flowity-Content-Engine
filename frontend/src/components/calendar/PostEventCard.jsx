@@ -21,7 +21,7 @@
  */
 
 import React from "react";
-
+import { Linkedin, Twitter } from "lucide-react";
 // Cores de fundo por status
 const STATUS_BG = {
   idea:       "bg-bg-elevated    border-border",
@@ -35,16 +35,27 @@ const STATUS_BG = {
 
 export default function PostEventCard({ post, onClick }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
-
-  return (
-    // TODO Integrante 3: melhore o visual deste card
+  const Icon = post.channel === "linkedin" ? Linkedin : Twitter;
+  // TODO Integrante 3: melhore o visual deste card
+return (
     <div
-      className={`px-2 py-1 rounded border text-xs cursor-pointer truncate transition-all hover:opacity-80 ${bgClass}`}
-      onClick={(e) => { e.stopPropagation(); onClick(post); }}
-      title={post.hook}
+      // Estilização: Alinhamento, tamanho da fonte e efeitos de hover
+      className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded border text-[10px] leading-tight cursor-pointer truncate transition-all hover:scale-[1.02] active:scale-95 ${bgClass}`}
+      onClick={(e) => { 
+        // Impede que o clique abra a criação de novo post no calendário
+        e.stopPropagation(); 
+        onClick(post); 
+      }}
+      // Tooltip com rede social e texto completo
+      title={`${post.channel.toUpperCase()}: ${post.hook}`}
     >
-      {/* TODO: adicione ícone do canal (linkedin/x) antes do texto */}
-      <span className="text-text-secondary truncate">{post.hook}</span>
+      {/* Ícone: shrink-0 evita que o ícone seja "esmagado" pelo texto */}
+      <Icon size={10} className="shrink-0 opacity-80" />
+      
+      {/* Texto: truncate adiciona os "..." se o hook for muito longo */}
+      <span className="font-medium truncate">
+        {post.hook}
+      </span>
     </div>
   );
 }
