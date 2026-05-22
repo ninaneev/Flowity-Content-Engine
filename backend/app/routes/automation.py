@@ -10,6 +10,7 @@ from app.db.database import get_db
 from app.schemas.post import PostResponse
 from app.repositories import posts as post_repo
 from app.core.config import settings
+from app.core.security import get_current_admin
 
 router = APIRouter()
 
@@ -91,7 +92,7 @@ def publish_result(
 
 # ── Config da automação ───────────────────────────────────────────────────────
 @router.get("/config")
-def get_automation_config():
+def get_automation_config(_admin=Depends(get_current_admin)):
     """Retorna a config atual da automação para exibir na tela Settings."""
     return {
         "ollama_base_url": settings.OLLAMA_BASE_URL,

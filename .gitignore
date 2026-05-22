@@ -28,6 +28,10 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# ── Tooling ──────────────────────────────────────────────────────
+.claude/
+package-lock.json
+
 # ── Docker / temp ────────────────────────────────────────────────
 *.sqlite3
 infra/n8n/.n8n/

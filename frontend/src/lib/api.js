@@ -5,7 +5,26 @@
  */
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const configuredBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+function resolveBaseUrl() {
+  if (typeof window === "undefined") return configuredBaseUrl;
+
+  const pageHost = window.location.hostname;
+  const isLocalPageHost =
+    pageHost === "localhost" ||
+    pageHost === "127.0.0.1" ||
+    pageHost === "0.0.0.0" ||
+    pageHost === "::1";
+
+  if (!isLocalPageHost && configuredBaseUrl.includes("localhost")) {
+    return `http://${pageHost}:8000`;
+  }
+
+  return configuredBaseUrl;
+}
+
+const BASE_URL = resolveBaseUrl();
 
 const api = axios.create({
   baseURL: BASE_URL,

@@ -1,17 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { format, addMonths, subMonths } from "date-fns";
+import { format, addMonths, subMonths, setHours, setMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import ContentCalendar from "../components/calendar/ContentCalendar";
 import PostModal from "../components/posts/PostModal";
 import { postsApi } from "../lib/api";
 
+function newPostForDate(date = new Date()) {
+  const scheduled = setMinutes(setHours(date, 9), 0);
+  return {
+    hook: "Novo post",
+    body: "",
+    cta: "",
+    short_x: "",
+    alt_title: "",
+    channel: "linkedin",
+    tone: "estratégico",
+    objective: "",
+    format: "lista",
+    status: "idea",
+    scheduled_at: format(scheduled, "yyyy-MM-dd'T'HH:mm"),
+    generation_mode: "manual",
+    notes: "",
+    source_ids: [],
+  };
+}
+
 export default function DashboardPage() {
-  const [month, setMonth]       = useState(new Date());
-  const [posts, setPosts]       = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [month, setMonth] = useState(new Date());
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [newPostDate, setNewPostDate]   = useState(null);
+  const [creatingPost, setCreatingPost] = useState(null);
 
   const monthKey = format(month, "yyyy-MM");
 
@@ -31,31 +51,35 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleSavePost(data) {
+  async function handleSaveExistingPost(data) {
     await postsApi.update(selectedPost.id, data);
-    fetchPosts();
+    await fetchPosts();
   }
 
-  function handleAddPost(date) {
-    setNewPostDate(date);
-    // TODO: abrir modal de criação com a data pré-preenchida
-    // Por enquanto, redirecione para /generator com a data como parâmetro
-    console.log("Criar post para:", format(date, "yyyy-MM-dd"));
+  async function handleCreatePost(data) {
+    await postsApi.create(data);
+    setCreatingPost(null);
+    await fetchPosts();
+  }
+
+  function handleAddPost(date = new Date()) {
+    setCreatingPost(newPostForDate(date));
   }
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Calendário Editorial</h1>
           <p className="text-text-muted text-sm mt-0.5">
-            Visualize e gerencie seus posts agendados
+            Visualize, aprove e agende os posts do mês
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Navegação de mês */}
+          <button className="btn-primary" onClick={() => handleAddPost(new Date())}>
+            <Plus size={16} /> Novo post
+          </button>
           <div className="flex items-center gap-1 bg-bg-surface border border-border rounded-lg p-1">
             <button className="btn-ghost p-1.5" onClick={() => setMonth(subMonths(month, 1))}>
               <ChevronLeft size={16} />
@@ -67,23 +91,30 @@ export default function DashboardPage() {
               <ChevronRight size={16} />
             </button>
           </div>
-
-          <button
-            className="btn-ghost text-xs"
-            onClick={() => setMonth(new Date())}
-          >
+          <button className="btn-ghost text-xs" onClick={() => setMonth(new Date())}>
             Hoje
           </button>
         </div>
       </div>
 
-      {/* Legenda de status */}
-      <div className="flex gap-4 mb-4">
+      <div className="card mb-4 bg-bg-surface/70">
+        <h2 className="text-sm font-semibold text-text-primary mb-2">Fluxo de aprovação</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-text-muted">
+          <p><strong className="text-text-secondary">1. Ideia/Rascunho:</strong> conteúdo criado manualmente ou pelo Generator.</p>
+          <p><strong className="text-text-secondary">2. Revisado:</strong> aprovação editorial humana antes do envio.</p>
+          <p><strong className="text-text-secondary">3. Agendado:</strong> n8n pode publicar quando a data chegar.</p>
+          <p><strong className="text-text-secondary">4. Publicado/Falhou:</strong> retorno registrado pela automação.</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 mb-4">
         {[
-          { status: "draft",     label: "Rascunho"  },
-          { status: "revised",   label: "Revisado"  },
-          { status: "scheduled", label: "Agendado"  },
+          { status: "idea", label: "Ideia" },
+          { status: "draft", label: "Rascunho" },
+          { status: "revised", label: "Revisado" },
+          { status: "scheduled", label: "Agendado" },
           { status: "published", label: "Publicado" },
+          { status: "failed", label: "Falhou" },
         ].map(({ status, label }) => (
           <div key={status} className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full bg-status-${status}`} />
@@ -92,7 +123,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Calendário */}
       {loading ? (
         <div className="grid grid-cols-7 gap-1.5">
           {Array(35).fill(0).map((_, i) => (
@@ -108,12 +138,21 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Modal de edição */}
       {selectedPost && (
         <PostModal
           post={selectedPost}
+          mode="edit"
           onClose={() => setSelectedPost(null)}
-          onSave={handleSavePost}
+          onSave={handleSaveExistingPost}
+        />
+      )}
+
+      {creatingPost && (
+        <PostModal
+          post={creatingPost}
+          mode="create"
+          onClose={() => setCreatingPost(null)}
+          onSave={handleCreatePost}
         />
       )}
     </div>

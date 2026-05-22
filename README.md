@@ -88,6 +88,7 @@ PI-Univesp/
 - [`docs/team-tasks.md`](docs/team-tasks.md) — Tarefas dos integrantes
 - [`docs/shadow-working-guide.md`](docs/shadow-working-guide.md) — Guia de onboarding técnico
 - [`docs/architecture.md`](docs/architecture.md) — Arquitetura do sistema
+- [`docs/funcionamento-plataforma.md`](docs/funcionamento-plataforma.md) — Fluxo completo com screenshots numerados
 
 ## Fluxo de trabalho do time
 

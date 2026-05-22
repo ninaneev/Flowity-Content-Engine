@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.schemas.post import PostCreate, PostUpdate, PostResponse, CalendarPost
 from app.repositories import posts as post_repo
+from app.core.security import get_current_admin
 
 router = APIRouter()
 
@@ -12,6 +13,7 @@ def list_posts(
     status: str | None = Query(None),
     channel: str | None = Query(None),
     db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
 ):
     posts = post_repo.get_all(db, status=status, channel=channel)
 
@@ -22,7 +24,7 @@ def list_posts(
 
 
 @router.post("/", response_model=PostResponse, status_code=201)
-def create_post(post: PostCreate, db: Session = Depends(get_db)):
+def create_post(post: PostCreate, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
     new_post = post_repo.create(db, post)
     new_post.source_ids = post_repo.get_source_ids(db, new_post.id)
 
@@ -33,6 +35,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
 def get_calendar(
     month: str = Query(..., description="Formato: YYYY-MM"),
     db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
 ):
     try:
         year, m = map(int, month.split("-"))
@@ -46,7 +49,7 @@ def get_calendar(
 
 
 @router.get("/{post_id}", response_model=PostResponse)
-def get_post(post_id: int, db: Session = Depends(get_db)):
+def get_post(post_id: int, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
     post = post_repo.get_by_id(db, post_id)
 
     if not post:
@@ -58,7 +61,7 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{post_id}", response_model=PostResponse)
-def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db)):
+def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
     updated = post_repo.update(db, post_id, post)
 
     if not updated:
