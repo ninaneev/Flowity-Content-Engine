@@ -22,20 +22,25 @@ export default function SourceCard({ source, onSelect, selected }) {
   return (
     <div
       className={`card cursor-pointer transition-all duration-200 hover:border-border-bright ${
-        selected ? "border-flowity-purple purple-glow" : ""
+        selected ? "border-flowity-purple purple-glow border-2" : "border"
       }`}
       onClick={onSelect}
     >
       <div className="flex items-start gap-3">
         <BookOpen size={16} className="text-text-muted mt-0.5 flex-shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-text-primary font-medium text-sm truncate">{source.title}</p>
+          {/* Título em destaque */}
+          <p className="text-text-primary font-bold text-base mb-2 truncate">
+            {source.title}
+          </p>
+          
+          {/* Badges coloridos */}
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span className="badge border border-flowity-purple/30 bg-flowity-purple/10 text-flowity-purple text-[10px]">
+            <span className="badge border border-flowity-purple/30 bg-flowity-purple/10 text-flowity-purple text-[10px] font-semibold">
               {typeLabel}
             </span>
             {source.theme && (
-              <span className="badge border border-flowity-cyan/30 bg-flowity-cyan/10 text-flowity-cyan text-[10px]">
+              <span className="badge border border-flowity-cyan/30 bg-flowity-cyan/10 text-flowity-cyan text-[10px] font-semibold">
                 {source.theme}
               </span>
             )}
@@ -45,8 +50,12 @@ export default function SourceCard({ source, onSelect, selected }) {
               </span>
             )}
           </div>
+          
+          {/* Preview do conteúdo */}
           {preview && (
-            <p className="text-text-muted text-xs mt-2 leading-relaxed line-clamp-2">{preview}</p>
+            <p className="text-text-muted text-xs mt-3 leading-relaxed line-clamp-2">
+              {preview}
+            </p>
           )}
         </div>
       </div>
