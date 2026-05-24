@@ -7,7 +7,7 @@ import { format } from "date-fns";
 const PIPELINE_COLUMNS = [
   { status: "idea",      label: "Idea" },
   { status: "draft",     label: "Draft" },
-  { status: "revised",   label: "Reviewed" },
+  { status: "revised",   label: "Revised" },
   { status: "scheduled", label: "Scheduled" },
   { status: "published", label: "Published" },
 ];
