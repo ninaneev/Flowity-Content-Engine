@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import StatusBadge from "../shared/StatusBadge";
+import SelectField from "../shared/SelectField";
 
 const STATUSES = ["idea", "draft", "revised", "scheduled", "publishing", "published", "failed"];
 const STATUS_LABELS = {
   idea: "Idea",
   draft: "Draft",
-  revised: "Reviewed",
+  revised: "Revised",
   scheduled: "Scheduled",
   publishing: "Publishing",
   published: "Published",
@@ -88,7 +89,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           <div className="card bg-bg-elevated/40">
             <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
-              Use <strong className="text-text-secondary">Reviewed</strong> for manual approval. Only use <strong className="text-text-secondary">Scheduled</strong> when the content and date are ready for automated publishing.
+              Use <strong className="text-text-secondary">Revised</strong> for manual approval. Only use <strong className="text-text-secondary">Scheduled</strong> when the content and date are ready for automated publishing.
             </p>
           </div>
 
@@ -144,29 +145,25 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label">Status</label>
-              <select
-                className="select"
+              <SelectField
                 name="status"
                 value={form.status || "draft"}
                 onChange={handleChange}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                ))}
-              </select>
+                options={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
+              />
               <p className="text-[11px] text-text-muted mt-1">{STATUS_HELP[form.status] || STATUS_HELP.draft}</p>
             </div>
             <div>
               <label className="label">Channel</label>
-              <select
-                className="select"
+              <SelectField
                 name="channel"
                 value={form.channel || "linkedin"}
                 onChange={handleChange}
-              >
-                <option value="linkedin">LinkedIn</option>
-                <option value="x">X (Twitter)</option>
-              </select>
+                options={[
+                  { value: "linkedin", label: "LinkedIn" },
+                  { value: "x",        label: "X (Twitter)" },
+                ]}
+              />
             </div>
           </div>
 

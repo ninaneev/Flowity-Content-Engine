@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import SelectField from "../shared/SelectField";
 
 const EMPTY_FORM = {
   title: "",
@@ -53,17 +54,13 @@ export default function NewSourceForm({ initialData, onSave, onCancel, loading }
 
       <div>
         <label className="label">Type *</label>
-        <select
+        <SelectField
           name="source_type"
-          className="select"
           value={form.source_type}
           onChange={handleChange}
+          options={SOURCE_TYPES}
           required
-        >
-          {SOURCE_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
+        />
       </div>
 
       <div>

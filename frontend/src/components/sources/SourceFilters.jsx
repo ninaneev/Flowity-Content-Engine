@@ -1,5 +1,6 @@
 import React from "react";
 import { Search } from "lucide-react";
+import SelectField from "../shared/SelectField";
 
 const SOURCE_TYPE_OPTIONS = [
   { value: "post_antigo", label: "Old post" },
@@ -31,18 +32,12 @@ export default function SourceFilters({
         />
       </div>
 
-      <select
-        className={`input text-sm bg-bg-surface transition cursor-pointer hover:opacity-90 w-40 ${
-          typeFilter ? "text-flowity-cyan border-flowity-cyan" : "text-text-muted"
-        }`}
+      <SelectField
         value={typeFilter}
         onChange={(e) => onTypeFilterChange(e.target.value)}
-      >
-        <option value="">All types</option>
-        {SOURCE_TYPE_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
+        options={[{ value: "", label: "All types" }, ...SOURCE_TYPE_OPTIONS]}
+        selectClassName={`w-40 text-sm ${typeFilter ? "text-flowity-cyan border-flowity-cyan" : "text-text-muted"}`}
+      />
     </div>
   );
 }

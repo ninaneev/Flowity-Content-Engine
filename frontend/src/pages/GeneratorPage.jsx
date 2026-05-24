@@ -1,17 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Zap, Copy, Check, ArrowRight, CalendarPlus } from "lucide-react";
+import { Sparkles, Zap, Copy, Check, ArrowRight, CalendarPlus, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SourceCard from "../components/sources/SourceCard";
 import { sourcesApi, generationApi, postsApi } from "../lib/api";
 import { validateGenerationSelection } from "../lib/generatorValidation.mjs";
 
-const TONES = ["strategic", "educational", "inspirational", "direct"];
-const FORMATS = ["list", "narrative", "question", "data point"];
+const TONES = [
+  { value: "strategic", label: "Strategic" },
+  { value: "educational", label: "Educational" },
+  { value: "inspirational", label: "Inspirational" },
+  { value: "direct", label: "Direct" },
+];
+const FORMATS = [
+  { value: "list", label: "List" },
+  { value: "narrative", label: "Narrative" },
+  { value: "question", label: "Question" },
+  { value: "data point", label: "Data Point" },
+];
 const CHANNELS = [{ value: "linkedin", label: "LinkedIn" }, { value: "x", label: "X / Twitter" }];
 const MODES = [
   { value: "template", label: "Template", desc: "Fast and always available" },
   { value: "ollama", label: "Ollama AI", desc: "Local LLM mode, requires Docker" },
 ];
+
+function GeneratorDropdown({ label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((option) => option.value === value) || options[0];
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
+    >
+      <label className="label">{label}</label>
+      <button
+        type="button"
+        className="input flex items-center justify-between text-left cursor-pointer"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected.label}</span>
+        <ChevronDown
+          size={16}
+          className={`text-text-muted transition-transform duration-200 ease-out ${open ? "-rotate-90" : "rotate-0"}`}
+        />
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-bg-elevated shadow-xl" role="listbox">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className={`w-full px-3 py-2 text-left text-sm transition-colors duration-150 ${
+                option.value === value
+                  ? "bg-flowity-purple-dim text-text-primary"
+                  : "text-text-secondary hover:bg-bg-surface hover:text-text-primary"
+              }`}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function GeneratorPage() {
   const navigate = useNavigate();
@@ -153,30 +218,10 @@ export default function GeneratorPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Channel</label>
-              <select className="select" value={channel} onChange={(e) => setChannel(e.target.value)}>
-                {CHANNELS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Tone</label>
-              <select className="select" value={tone} onChange={(e) => setTone(e.target.value)}>
-                {TONES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Format</label>
-              <select className="select" value={format} onChange={(e) => setFormat(e.target.value)}>
-                {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Mode</label>
-              <select className="select" value={mode} onChange={(e) => setMode(e.target.value)}>
-                {MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-            </div>
+            <GeneratorDropdown label="Channel" value={channel} options={CHANNELS} onChange={setChannel} />
+            <GeneratorDropdown label="Tone" value={tone} options={TONES} onChange={setTone} />
+            <GeneratorDropdown label="Format" value={format} options={FORMATS} onChange={setFormat} />
+            <GeneratorDropdown label="Mode" value={mode} options={MODES} onChange={setMode} />
           </div>
 
           <div>
