@@ -1,4 +1,4 @@
-"""Rotas de geração de conteúdo com IA (Ollama + fallback template)."""
+"""Content generation routes with Ollama and template fallback."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -19,17 +19,17 @@ async def preview_generation(
     _admin=Depends(get_current_admin),
 ):
     """
-    Gera conteúdo sem salvar como post.
-    Use para pré-visualizar antes de criar o post definitivo.
+    Generate content without saving a post.
+    Use this to preview content before creating the final post.
     """
     if not request.source_ids:
-        raise HTTPException(status_code=400, detail="Selecione pelo menos 1 source.")
+        raise HTTPException(status_code=400, detail="Select at least 1 source.")
     if len(request.source_ids) > 3:
-        raise HTTPException(status_code=400, detail="Máximo de 3 sources por geração.")
+        raise HTTPException(status_code=400, detail="Select at most 3 sources per generation.")
 
     sources = source_repo.get_many_by_ids(db, request.source_ids)
     if not sources:
-        raise HTTPException(status_code=404, detail="Nenhuma source encontrada com os IDs fornecidos.")
+        raise HTTPException(status_code=404, detail="No sources found for the provided IDs.")
 
     return await generator.generate_content(db, request, sources)
 
@@ -41,21 +41,21 @@ async def generate_and_create_post(
     _admin=Depends(get_current_admin),
 ):
     """
-    Gera conteúdo E salva como post com status 'draft'.
-    O post criado aparece no Pipeline e no Calendário.
+    Generate content and save it as a draft post.
+    The created post appears in the Pipeline and Calendar.
     """
     if not request.source_ids:
-        raise HTTPException(status_code=400, detail="Selecione pelo menos 1 source.")
+        raise HTTPException(status_code=400, detail="Select at least 1 source.")
     if len(request.source_ids) > 3:
-        raise HTTPException(status_code=400, detail="Máximo de 3 sources por geração.")
+        raise HTTPException(status_code=400, detail="Select at most 3 sources per generation.")
 
     sources = source_repo.get_many_by_ids(db, request.source_ids)
     if not sources:
-        raise HTTPException(status_code=404, detail="Nenhuma source encontrada com os IDs fornecidos.")
+        raise HTTPException(status_code=404, detail="No sources found for the provided IDs.")
 
     result = await generator.generate_content(db, request, sources)
 
-    # Salva como post com status 'draft'
+    # Save as a draft post.
     post_data = PostCreate(
         hook=result.hook,
         body=result.body,
@@ -72,7 +72,7 @@ async def generate_and_create_post(
     )
     new_post = post_repo.create(db, post_data)
 
-    # Vincula o GenerationRun ao post criado
+    # Link the GenerationRun to the created post.
     if result.run_id:
         from app.models.generation import GenerationRun
         run = db.query(GenerationRun).filter(GenerationRun.id == result.run_id).first()

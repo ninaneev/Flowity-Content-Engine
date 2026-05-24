@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
+import { getLoginErrorMessage } from "../lib/loginError.mjs";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -17,8 +18,8 @@ export default function LoginPage() {
       const res = await authApi.login(username, password);
       localStorage.setItem("flowity_token", res.data.access_token);
       navigate("/");
-    } catch {
-      setError("Usuário ou senha incorretos.");
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -27,21 +28,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center p-4">
       <div className="w-full max-w-sm animate-slide-up">
-        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold gradient-text">Flowity</h1>
           <p className="text-text-muted text-sm mt-1">Content Engine</p>
         </div>
 
-        {/* Card */}
         <div className="card p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-6">
-            Entrar
+            Sign in
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Usuário</label>
+              <label className="label">Username</label>
               <input
                 className="input"
                 type="text"
@@ -54,13 +53,13 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="label">Senha</label>
+              <label className="label">Password</label>
               <input
                 className="input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="********"
                 required
               />
             </div>
@@ -74,13 +73,13 @@ export default function LoginPage() {
               disabled={loading}
               className="btn-primary w-full justify-center"
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </div>
 
         <p className="text-center text-text-muted text-xs mt-4">
-          Flowity AI · Plataforma interna
+          Flowity AI - Internal platform
         </p>
       </div>
     </div>

@@ -3,20 +3,29 @@ import { X } from "lucide-react";
 import StatusBadge from "../shared/StatusBadge";
 
 const STATUSES = ["idea", "draft", "revised", "scheduled", "publishing", "published", "failed"];
+const STATUS_LABELS = {
+  idea: "Idea",
+  draft: "Draft",
+  revised: "Reviewed",
+  scheduled: "Scheduled",
+  publishing: "Publishing",
+  published: "Published",
+  failed: "Failed",
+};
 const STATUS_HELP = {
-  idea: "Ideia inicial ainda sem redação final.",
-  draft: "Rascunho criado pelo Generator ou manualmente.",
-  revised: "Aprovado por revisão humana; pronto para ser agendado.",
-  scheduled: "Liberado para o n8n publicar na data definida.",
-  publishing: "Publicação em andamento pela automação.",
-  published: "Publicado com sucesso.",
-  failed: "Falha registrada pela automação.",
+  idea: "Initial idea without final copy.",
+  draft: "Draft created by Generator or manually.",
+  revised: "Approved by human review; ready to schedule.",
+  scheduled: "Cleared for n8n to publish on the selected date.",
+  publishing: "Automation is publishing this post.",
+  published: "Published successfully.",
+  failed: "Automation reported a failure.",
 };
 
 function normalizeForApi(form) {
   return {
     ...form,
-    hook: form.hook?.trim() || "Novo post",
+    hook: form.hook?.trim() || "New post",
     scheduled_at: form.scheduled_at || null,
     source_ids: form.source_ids || [],
   };
@@ -63,7 +72,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
             <StatusBadge status={form.status} />
             <div>
               <p className="text-sm text-text-secondary">
-                {mode === "create" ? "Novo post" : `Post #${post.id}`}
+                {mode === "create" ? "New post" : `Post #${post.id}`}
               </p>
               <p className="text-xs text-text-muted">
                 {form.channel === "linkedin" ? "LinkedIn" : "X / Twitter"}
@@ -77,59 +86,59 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
         <div className="p-6 space-y-4">
           <div className="card bg-bg-elevated/40">
-            <h3 className="text-sm font-semibold text-text-primary mb-1">Aprovação editorial</h3>
+            <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
-              Use <strong className="text-text-secondary">Revisado</strong> para registrar aprovação manual. Só coloque como <strong className="text-text-secondary">Agendado</strong> quando o conteúdo e a data estiverem prontos para publicação automática.
+              Use <strong className="text-text-secondary">Reviewed</strong> for manual approval. Only use <strong className="text-text-secondary">Scheduled</strong> when the content and date are ready for automated publishing.
             </p>
           </div>
 
           <div>
-            <label className="label">Hook / Título principal</label>
+            <label className="label">Hook / main title</label>
             <textarea
               className="textarea text-base font-medium"
               name="hook"
               value={form.hook || ""}
               onChange={handleChange}
               rows={2}
-              placeholder="A primeira linha que vai prender a atenção..."
+              placeholder="The first line that grabs attention..."
               required
             />
           </div>
 
           <div>
-            <label className="label">Corpo do post</label>
+            <label className="label">Post body</label>
             <textarea
               className="textarea"
               name="body"
               value={form.body || ""}
               onChange={handleChange}
               rows={8}
-              placeholder="Desenvolvimento do conteúdo..."
+              placeholder="Develop the content..."
             />
           </div>
 
           <div>
-            <label className="label">CTA (Call to Action)</label>
+            <label className="label">CTA (call to action)</label>
             <input
               className="input"
               name="cta"
               value={form.cta || ""}
               onChange={handleChange}
-              placeholder="Ex: Comente aqui o que você acha..."
+              placeholder="Example: Comment with your take..."
             />
           </div>
 
           <div>
-            <label className="label">Versão para X (máx 280 chars)</label>
+            <label className="label">X version (max 280 chars)</label>
             <input
               className="input"
               name="short_x"
               value={form.short_x || ""}
               onChange={handleChange}
               maxLength={280}
-              placeholder="Versão compacta para o X..."
+              placeholder="Compact version for X..."
             />
-            <p className="text-[11px] text-text-muted mt-1">{(form.short_x || "").length}/280 caracteres</p>
+            <p className="text-[11px] text-text-muted mt-1">{(form.short_x || "").length}/280 characters</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -142,13 +151,13 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 onChange={handleChange}
               >
                 {STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                 ))}
               </select>
               <p className="text-[11px] text-text-muted mt-1">{STATUS_HELP[form.status] || STATUS_HELP.draft}</p>
             </div>
             <div>
-              <label className="label">Canal</label>
+              <label className="label">Channel</label>
               <select
                 className="select"
                 name="channel"
@@ -163,7 +172,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Agendamento</label>
+              <label className="label">Schedule</label>
               <input
                 className="input"
                 type="datetime-local"
@@ -173,34 +182,34 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               />
             </div>
             <div>
-              <label className="label">Modo de criação</label>
+              <label className="label">Creation mode</label>
               <input
                 className="input"
                 name="generation_mode"
                 value={form.generation_mode || "manual"}
                 onChange={handleChange}
-                placeholder="manual, template ou ollama"
+                placeholder="manual, template, or ollama"
               />
             </div>
           </div>
 
           <div>
-            <label className="label">Observações</label>
+            <label className="label">Notes</label>
             <textarea
               className="textarea"
               name="notes"
               value={form.notes || ""}
               onChange={handleChange}
               rows={3}
-              placeholder="Anotações internas, motivo de falha ou contexto de aprovação..."
+              placeholder="Internal notes, failure reason, or approval context..."
             />
           </div>
         </div>
 
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
-          <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : mode === "create" ? "Criar post" : "Salvar alterações"}
+            {saving ? "Saving..." : mode === "create" ? "Create post" : "Save changes"}
           </button>
         </div>
       </div>

@@ -25,23 +25,23 @@ class PostBase(BaseModel):
     @classmethod
     def validate_channel(cls, v: str) -> str:
         if v not in VALID_CHANNELS:
-            raise ValueError(f"channel deve ser: {', '.join(VALID_CHANNELS)}")
+            raise ValueError(f"channel must be: {', '.join(VALID_CHANNELS)}")
         return v
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
         if v not in VALID_STATUS:
-            raise ValueError(f"status deve ser um de: {', '.join(sorted(VALID_STATUS))}")
+            raise ValueError(f"status must be one of: {', '.join(sorted(VALID_STATUS))}")
         return v
 
 
 class PostCreate(PostBase):
-    source_ids: list[int] = []  # IDs das sources usadas para gerar o post
+    source_ids: list[int] = []  # IDs of sources used to generate the post.
 
 
 class PostUpdate(BaseModel):
-    """Todos os campos opcionais para atualização parcial."""
+    """All fields are optional for partial updates."""
     hook: str | None = None
     body: str | None = None
     cta: str | None = None
@@ -67,7 +67,7 @@ class PostResponse(PostBase):
 
 
 class CalendarPost(BaseModel):
-    """Versão compacta para o calendário."""
+    """Compact version for the calendar."""
     id: int
     hook: str
     channel: str

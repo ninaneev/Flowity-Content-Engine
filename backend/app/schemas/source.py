@@ -1,4 +1,4 @@
-"""Schemas Pydantic para Sources (validação de entrada/saída da API)."""
+"""Pydantic schemas for source input and output validation."""
 from datetime import datetime
 from pydantic import BaseModel, field_validator
 import json
@@ -19,7 +19,7 @@ class SourceBase(BaseModel):
     def validate_type(cls, v: str) -> str:
         allowed = {"post_antigo", "insight", "frase", "objecao", "dor", "trecho", "comentario", "newsletter", "referencia"}
         if v not in allowed:
-            raise ValueError(f"source_type deve ser um de: {', '.join(sorted(allowed))}")
+            raise ValueError(f"source_type must be one of: {', '.join(sorted(allowed))}")
         return v
 
 
@@ -28,7 +28,7 @@ class SourceCreate(SourceBase):
 
 
 class SourceUpdate(BaseModel):
-    """Todos os campos são opcionais na atualização."""
+    """All fields are optional when updating."""
     title: str | None = None
     source_type: str | None = None
     content: str | None = None

@@ -10,7 +10,7 @@ from app.routes import auth, sources, posts, generation, automation
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="API do Flowity Content Engine — geração, agendamento e publicação de conteúdo.",
+    description="Flowity Content Engine API for content generation, scheduling, and publishing.",
     version="1.0.0",
     docs_url="/docs",      # Swagger UI: http://localhost:8000/docs
     redoc_url="/redoc",    # ReDoc:       http://localhost:8000/redoc
@@ -41,23 +41,23 @@ app.add_middleware(
 )
 
 # ── Rotas ─────────────────────────────────────────────────────────────────────
-app.include_router(auth.router,       prefix="/auth",       tags=["Autenticação"])
+app.include_router(auth.router,       prefix="/auth",       tags=["Authentication"])
 app.include_router(sources.router,    prefix="/sources",    tags=["Sources"])
 app.include_router(posts.router,      prefix="/posts",      tags=["Posts"])
-app.include_router(generation.router, prefix="/generation", tags=["Geração IA"])
-app.include_router(automation.router, prefix="/automation", tags=["Automação n8n"])
+app.include_router(generation.router, prefix="/generation", tags=["AI Generation"])
+app.include_router(automation.router, prefix="/automation", tags=["n8n Automation"])
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def on_startup():
-    """Cria tabelas no banco ao iniciar (se ainda não existirem)."""
+    """Create database tables on startup when they do not exist yet."""
     create_tables()
-    print(f"✅ {settings.APP_NAME} iniciado. Docs em http://localhost:8000/docs")
+    print(f"{settings.APP_NAME} started. Docs at http://localhost:8000/docs")
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
-@app.get("/health", tags=["Sistema"])
+@app.get("/health", tags=["System"])
 def health_check():
-    """Endpoint para verificar se a API está online."""
+    """Check whether the API is online."""
     return {"status": "ok", "service": settings.APP_NAME}

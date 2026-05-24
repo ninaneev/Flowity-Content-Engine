@@ -7,12 +7,13 @@ export default defineConfig({
     port: 5173,
     host: "0.0.0.0", // Necessário para funcionar no Docker
     proxy: {
-      // Redireciona /api/* para o backend FastAPI — evita problemas de CORS no dev
-      "/api": {
-        target: "http://backend:8000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
+      // Redireciona chamadas diretas ao backend — evita CORS no dev e no browser externo
+      "/auth":       { target: "http://backend:8000", changeOrigin: true },
+      "/sources":    { target: "http://backend:8000", changeOrigin: true },
+      "/posts":      { target: "http://backend:8000", changeOrigin: true },
+      "/generation": { target: "http://backend:8000", changeOrigin: true },
+      "/automation": { target: "http://backend:8000", changeOrigin: true },
+      "/health":     { target: "http://backend:8000", changeOrigin: true },
     },
   },
 });

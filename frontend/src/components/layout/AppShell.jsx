@@ -5,11 +5,11 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { to: "/",          icon: Calendar,    label: "Calendário"  },
-  { to: "/sources",   icon: BookOpen,    label: "Library"     },
-  { to: "/generator", icon: Sparkles,    label: "Generator"   },
-  { to: "/pipeline",  icon: LayoutList,  label: "Pipeline"    },
-  { to: "/settings",  icon: Settings,    label: "Settings"    },
+  { to: "/", icon: Calendar, label: "Calendar" },
+  { to: "/sources", icon: BookOpen, label: "Library" },
+  { to: "/generator", icon: Sparkles, label: "Generator" },
+  { to: "/pipeline", icon: LayoutList, label: "Pipeline" },
+  { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function AppShell({ children }) {
@@ -22,9 +22,7 @@ export default function AppShell({ children }) {
 
   return (
     <div className="flex h-screen bg-bg-base overflow-hidden">
-      {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside className="w-56 flex-shrink-0 bg-bg-surface border-r border-border flex flex-col">
-        {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-flowity-cyan" />
@@ -33,7 +31,6 @@ export default function AppShell({ children }) {
           <p className="text-text-muted text-xs mt-0.5 pl-6">Content Engine</p>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-2 py-3 space-y-0.5">
           {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -54,19 +51,17 @@ export default function AppShell({ children }) {
           ))}
         </nav>
 
-        {/* Logout */}
         <div className="px-2 py-3 border-t border-border">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-muted hover:text-status-failed hover:bg-bg-elevated w-full transition-all duration-150"
           >
             <LogOut size={16} />
-            Sair
+            Log out
           </button>
         </div>
       </aside>
 
-      {/* ── Main content ─────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>

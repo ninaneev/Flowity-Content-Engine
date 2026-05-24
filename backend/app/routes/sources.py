@@ -22,7 +22,7 @@ def create_source(source: SourceCreate, db: Session = Depends(get_db), _admin=De
 def get_source(source_id: int, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
     source = source_repo.get_by_id(db, source_id)
     if not source:
-        raise HTTPException(status_code=404, detail="Source não encontrada")
+        raise HTTPException(status_code=404, detail="Source not found.")
     return source
 
 
@@ -30,5 +30,5 @@ def get_source(source_id: int, db: Session = Depends(get_db), _admin=Depends(get
 def update_source(source_id: int, source: SourceUpdate, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
     updated = source_repo.update(db, source_id, source)
     if not updated:
-        raise HTTPException(status_code=404, detail="Source não encontrada")
+        raise HTTPException(status_code=404, detail="Source not found.")
     return updated

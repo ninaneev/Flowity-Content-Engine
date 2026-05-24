@@ -27,16 +27,16 @@ def login(body: LoginRequest):
     Cole o resultado em ADMIN_PASSWORD_HASH no .env
     """
     if body.username != settings.ADMIN_USERNAME:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
 
     if not settings.ADMIN_PASSWORD_HASH:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="ADMIN_PASSWORD_HASH não configurado. Veja o README.",
+            detail="ADMIN_PASSWORD_HASH is not configured. See the README.",
         )
 
     if not verify_password(body.password, settings.ADMIN_PASSWORD_HASH):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
 
     token = create_access_token(body.username)
     return TokenResponse(access_token=token)

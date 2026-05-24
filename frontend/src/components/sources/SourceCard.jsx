@@ -1,19 +1,19 @@
 import React from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Check } from "lucide-react";
 
 const TYPE_LABELS = {
-  post_antigo: "Post antigo",
+  post_antigo: "Old post",
   insight: "Insight",
-  frase: "Frase",
-  objecao: "Objeção",
-  dor: "Dor",
-  trecho: "Trecho",
-  comentario: "Comentário",
+  frase: "Positioning line",
+  objecao: "Objection",
+  dor: "Pain point",
+  trecho: "Excerpt",
+  comentario: "Comment",
   newsletter: "Newsletter",
-  referencia: "Referência",
+  referencia: "Reference",
 };
 
-export default function SourceCard({ source, onSelect, selected }) {
+export default function SourceCard({ source, onSelect, selected, selectedLabel = "Selected" }) {
   const typeLabel = TYPE_LABELS[source.source_type] || source.source_type;
   const preview = source.content
     ? source.content.slice(0, 100) + (source.content.length > 100 ? "..." : "")
@@ -21,15 +21,31 @@ export default function SourceCard({ source, onSelect, selected }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
       className={`card cursor-pointer transition-all duration-200 hover:border-border-bright ${
         selected ? "border-flowity-purple purple-glow" : ""
       }`}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect?.();
+        }
+      }}
     >
       <div className="flex items-start gap-3">
         <BookOpen size={16} className="text-text-muted mt-0.5 flex-shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-text-primary font-medium text-sm truncate">{source.title}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-text-primary font-medium text-sm truncate">{source.title}</p>
+            {selected && (
+              <span className="badge border border-flowity-purple/30 bg-flowity-purple/10 text-flowity-purple text-[10px] flex items-center gap-1">
+                <Check size={12} /> {selectedLabel}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             <span className="badge border border-flowity-purple/30 bg-flowity-purple/10 text-flowity-purple text-[10px]">
               {typeLabel}

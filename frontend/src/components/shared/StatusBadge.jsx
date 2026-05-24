@@ -3,38 +3,38 @@ import { CheckCircle, XCircle, Clock, Loader, FileText, Lightbulb, Eye } from "l
 
 const STATUS_CONFIG = {
   idea: {
-    label: "Ideia",
+    label: "Idea",
     icon: Lightbulb,
     color: "text-text-muted bg-bg-elevated border-border",
   },
   draft: {
-    label: "Rascunho",
+    label: "Draft",
     icon: FileText,
     color: "text-status-draft bg-status-draft/10 border-status-draft/30",
   },
   revised: {
-    label: "Revisado",
+    label: "Reviewed",
     icon: Eye,
     color: "text-status-revised bg-status-revised/10 border-status-revised/30",
   },
   scheduled: {
-    label: "Agendado",
+    label: "Scheduled",
     icon: Clock,
     color: "text-status-scheduled bg-status-scheduled/10 border-status-scheduled/30",
   },
   publishing: {
-    label: "Publicando",
+    label: "Publishing",
     icon: Loader,
     color: "text-status-publishing bg-status-publishing/10 border-status-publishing/30",
     spin: true,
   },
   published: {
-    label: "Publicado",
+    label: "Published",
     icon: CheckCircle,
     color: "text-status-published bg-status-published/10 border-status-published/30",
   },
   failed: {
-    label: "Falhou",
+    label: "Failed",
     icon: XCircle,
     color: "text-status-failed bg-status-failed/10 border-status-failed/30",
   },

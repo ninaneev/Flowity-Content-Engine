@@ -1,11 +1,15 @@
 /**
- * Cliente HTTP centralizado.
- * Toda comunicação com o backend passa por aqui.
- * Importar assim: import api from '@/lib/api'
+ * Central HTTP client.
+ * All backend communication goes through this module.
+ * Import as: import api from '@/lib/api'
  */
 import axios from "axios";
 
-const configuredBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// In development, use a relative URL so the Vite proxy can intercept API calls.
+// This avoids CORS and hostname-resolution issues in external browsers.
+const configuredBaseUrl = import.meta.env.DEV
+  ? ""
+  : import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 function resolveBaseUrl() {
   if (typeof window === "undefined") return configuredBaseUrl;
@@ -31,7 +35,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// ── Injeta o token JWT em todas as requisições ────────────────────────────────
+// Attach the JWT token to every request.
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("flowity_token");
   if (token) {
@@ -40,11 +44,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Redireciona para login se o token expirar ─────────────────────────────────
+// Redirect to login when a non-login request receives an expired-token response.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginEndpoint = error.config?.url?.includes("/auth/login");
+    if (error.response?.status === 401 && !isLoginEndpoint) {
       localStorage.removeItem("flowity_token");
       window.location.href = "/login";
     }
@@ -52,17 +57,13 @@ api.interceptors.response.use(
   }
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
 // AUTH
-// ══════════════════════════════════════════════════════════════════════════════
 export const authApi = {
   login: (username, password) =>
     api.post("/auth/login", { username, password }),
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
 // SOURCES
-// ══════════════════════════════════════════════════════════════════════════════
 export const sourcesApi = {
   list:   ()          => api.get("/sources/"),
   get:    (id)        => api.get(`/sources/${id}`),
@@ -70,9 +71,7 @@ export const sourcesApi = {
   update: (id, data)  => api.put(`/sources/${id}`, data),
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
 // POSTS
-// ══════════════════════════════════════════════════════════════════════════════
 export const postsApi = {
   list:     (params)        => api.get("/posts/", { params }),
   get:      (id)            => api.get(`/posts/${id}`),
@@ -82,17 +81,13 @@ export const postsApi = {
   pipeline: ()              => api.get("/posts/", { params: {} }),
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
 // GENERATION
-// ══════════════════════════════════════════════════════════════════════════════
 export const generationApi = {
   preview:    (data) => api.post("/generation/preview", data),
   createPost: (data) => api.post("/generation/create-post", data),
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
 // AUTOMATION
-// ══════════════════════════════════════════════════════════════════════════════
 export const automationApi = {
   config: () => api.get("/automation/config"),
 };

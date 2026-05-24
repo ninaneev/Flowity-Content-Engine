@@ -1,9 +1,4 @@
-"""
-Serviço de geração de conteúdo.
-Modo 1 — template: sempre funciona, sem IA.
-Modo 2 — ollama: usa LLM local real.
-Se o Ollama falhar ou o JSON vier inválido, cai automaticamente para template.
-"""
+"""Content generation service with template and Ollama modes."""
 import json
 from sqlalchemy.orm import Session
 from app.models.source import Source
@@ -12,40 +7,46 @@ from app.schemas.generation import GenerationRequest, GenerationResult
 from app.services import ollama_client
 
 
-# ── Templates fixos ───────────────────────────────────────────────────────────
 TONE_OPENERS = {
-    "estratégico": "A maioria das empresas ignora isso:",
-    "educativo":   "Aprendi isso do jeito difícil:",
-    "inspiracional": "Uma coisa que mudou como trabalho:",
-    "direto":      "Sem rodeios:",
+    "strategic": "Most companies miss this:",
+    "educational": "Here is the lesson worth keeping:",
+    "inspirational": "One thing changed how I work:",
+    "direct": "No fluff:",
+    "estratégico": "Most companies miss this:",
+    "educativo": "Here is the lesson worth keeping:",
+    "inspiracional": "One thing changed how I work:",
+    "direto": "No fluff:",
 }
 
 FORMAT_STRUCTURES = {
-    "lista":     "→ Ponto 1\n→ Ponto 2\n→ Ponto 3",
-    "narrativa": "Contexto → Conflito → Resolução",
-    "pergunta":  "Você já percebeu que...?",
-    "dado":      "X% das empresas...",
+    "list": "- Point 1\n- Point 2\n- Point 3",
+    "narrative": "Context -> Conflict -> Resolution",
+    "question": "Have you noticed that...?",
+    "data point": "X% of companies...",
+    "lista": "- Point 1\n- Point 2\n- Point 3",
+    "narrativa": "Context -> Conflict -> Resolution",
+    "pergunta": "Have you noticed that...?",
+    "dado": "X% of companies...",
 }
 
 
 def _build_template_output(sources: list[Source], request: GenerationRequest) -> dict:
-    """Gera conteúdo de fallback baseado nas sources e nas configurações."""
-    opener = TONE_OPENERS.get(request.tone, "Reflexão importante:")
+    """Generate fallback content from selected sources and settings."""
+    opener = TONE_OPENERS.get(request.tone, "Important reflection:")
     structure = FORMAT_STRUCTURES.get(request.format, "")
 
-    # Extrai os primeiros 200 chars de cada source como matéria-prima
     source_excerpts = [s.content[:200] for s in sources]
-    main_idea = source_excerpts[0] if source_excerpts else "Conteúdo da Flowity AI"
+    main_idea = source_excerpts[0] if source_excerpts else "Flowity AI content"
 
     hook = f"{opener} {main_idea[:150]}..."
 
-    body_parts = [f"Com base em {len(sources)} referência(s) selecionada(s):\n", structure, ""]
+    body_parts = [f"Based on {len(sources)} selected reference(s):\n", structure, ""]
     for i, src in enumerate(sources, 1):
         body_parts.append(f"{i}. {src.title}: {src.content[:100]}...")
 
     body = "\n".join(body_parts)
-    cta = f"Gostou? Salve e compartilhe. Seguindo a Flowity AI para mais sobre IA aplicada a negócios."
-    short_x = f"{hook[:200]} #FlowityAI #IA"
+    cta = "Save this and share it with someone building AI-powered operations."
+    short_x = f"{hook[:200]} #FlowityAI #AI"
 
     return {"hook": hook, "body": body, "cta": cta, "short_x": short_x, "alt_title": None}
 
@@ -55,12 +56,7 @@ async def generate_content(
     request: GenerationRequest,
     sources: list[Source],
 ) -> GenerationResult:
-    """
-    Ponto de entrada principal.
-    1. Tenta Ollama se mode == 'ollama'
-    2. Fallback automático para template se falhar
-    3. Salva o GenerationRun no banco sempre
-    """
+    """Generate content, falling back to the template mode when Ollama fails."""
     mode_used = "template"
     model_used = "template-fallback"
     raw_output = None
@@ -68,7 +64,6 @@ async def generate_content(
     token_estimate = 0
     status = "complete"
 
-    # ── Modo Ollama ───────────────────────────────────────────────
     if request.mode == "ollama":
         sources_text = "\n\n".join(
             f"[{s.title}] ({s.source_type})\n{s.content}" for s in sources
@@ -87,18 +82,15 @@ async def generate_content(
             mode_used = "ollama"
             model_used = "ollama/" + __import__("app.core.config", fromlist=["settings"]).settings.OLLAMA_MODEL
         except (RuntimeError, json.JSONDecodeError, KeyError) as e:
-            # Ollama falhou → fallback para template
-            print(f"[generator] Ollama falhou ({e}), usando template.")
+            print(f"[generator] Ollama failed ({e}); using template mode.")
             parsed = None
-            status = "complete"  # ainda é sucesso, apenas modo diferente
+            status = "complete"
 
-    # ── Modo Template (ou fallback) ───────────────────────────────
     if parsed is None:
         parsed = _build_template_output(sources, request)
         mode_used = "template"
         model_used = "template-fallback"
 
-    # ── Persiste o GenerationRun ──────────────────────────────────
     run = GenerationRun(
         prompt_used=raw_output and prompt if request.mode == "ollama" else None,  # type: ignore[possibly-undefined]
         model_used=model_used,

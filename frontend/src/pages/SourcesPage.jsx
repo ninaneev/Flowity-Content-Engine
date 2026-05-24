@@ -10,6 +10,7 @@ export default function SourcesPage() {
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingSource, setEditingSource] = useState(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -24,62 +25,82 @@ export default function SourcesPage() {
       const res = await sourcesApi.list();
       setSources(res.data);
     } catch (err) {
-      console.error("Erro ao carregar sources:", err);
+      console.error("Error loading sources:", err);
     } finally {
       setLoading(false);
     }
   }
 
+  function openCreateForm() {
+    setEditingSource(null);
+    setShowForm(true);
+  }
+
+  function openEditForm(source) {
+    setEditingSource(source);
+    setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingSource(null);
+  }
+
   async function handleSave(data) {
     setSaving(true);
     try {
-      await sourcesApi.create(data);
-      setShowForm(false);
+      if (editingSource) {
+        await sourcesApi.update(editingSource.id, data);
+      } else {
+        await sourcesApi.create(data);
+      }
+      closeForm();
       fetchSources();
     } catch (err) {
-      console.error("Erro ao criar source:", err);
+      console.error("Error saving source:", err);
     } finally {
       setSaving(false);
     }
   }
 
   const filtered = sources.filter((s) => {
+    const searchTerm = search.toLowerCase();
     const matchesSearch =
-      s.title.toLowerCase().includes(search.toLowerCase()) ||
-      s.content.toLowerCase().includes(search.toLowerCase());
+      s.title.toLowerCase().includes(searchTerm) ||
+      s.content.toLowerCase().includes(searchTerm);
     const matchesType = typeFilter ? s.source_type === typeFilter : true;
     return matchesSearch && matchesType;
   });
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Library</h1>
           <p className="text-text-muted text-sm mt-0.5">
-            {sources.length} referência{sources.length !== 1 ? "s" : ""} cadastrada{sources.length !== 1 ? "s" : ""}
+            {sources.length} saved reference{sources.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setShowForm(true)}>
+        <button className="btn-primary" onClick={openCreateForm}>
           <Plus size={16} />
-          Nova source
+          New source
         </button>
       </div>
 
-      {/* Formulário */}
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-sm font-semibold text-text-primary mb-4">Nova referência</h2>
+          <h2 className="text-sm font-semibold text-text-primary mb-4">
+            {editingSource ? "Edit source" : "New reference"}
+          </h2>
           <NewSourceForm
+            initialData={editingSource}
             onSave={handleSave}
-            onCancel={() => setShowForm(false)}
+            onCancel={closeForm}
             loading={saving}
           />
         </div>
       )}
 
-      {/* Filtros */}
       <div className="mb-4">
         <SourceFilters
           search={search}
@@ -89,7 +110,6 @@ export default function SourcesPage() {
         />
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array(6).fill(0).map((_, i) => (
@@ -98,35 +118,34 @@ export default function SourcesPage() {
         </div>
       )}
 
-      {/* Vazio */}
       {!loading && filtered.length === 0 && (
         <EmptyState
           icon={BookOpen}
-          title={search || typeFilter ? "Nenhuma source encontrada" : "Nenhuma source ainda"}
+          title={search || typeFilter ? "No sources found" : "No sources yet"}
           description={
             search || typeFilter
-              ? "Tente outro termo ou remova os filtros."
-              : "Adicione sua primeira referência de conteúdo."
+              ? "Try another search term or remove the filters."
+              : "Add your first content reference."
           }
           action={
             !search && !typeFilter && (
-              <button className="btn-primary" onClick={() => setShowForm(true)}>
-                <Plus size={16} /> Adicionar source
+              <button className="btn-primary" onClick={openCreateForm}>
+                <Plus size={16} /> Add source
               </button>
             )
           }
         />
       )}
 
-      {/* Grid de cards */}
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((source) => (
             <SourceCard
               key={source.id}
               source={source}
-              onSelect={() => {}}
-              selected={false}
+              onSelect={() => openEditForm(source)}
+              selected={editingSource?.id === source.id}
+              selectedLabel="Open"
             />
           ))}
         </div>
