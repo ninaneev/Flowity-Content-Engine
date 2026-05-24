@@ -100,7 +100,7 @@ export default function DashboardPage() {
         <h2 className="text-sm font-semibold text-text-primary mb-2">Approval flow</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-text-muted">
           <p><strong className="text-text-secondary">1. Idea/Draft:</strong> content created manually or by Generator.</p>
-          <p><strong className="text-text-secondary">2. Reviewed:</strong> human editorial approval before publishing.</p>
+          <p><strong className="text-text-secondary">2. Revised:</strong> human editorial approval before publishing.</p>
           <p><strong className="text-text-secondary">3. Scheduled:</strong> n8n can publish when the date arrives.</p>
           <p><strong className="text-text-secondary">4. Published/Failed:</strong> automation result is recorded.</p>
         </div>
@@ -110,7 +110,7 @@ export default function DashboardPage() {
         {[
           { status: "idea", label: "Idea" },
           { status: "draft", label: "Draft" },
-          { status: "revised", label: "Reviewed" },
+          { status: "revised", label: "Revised" },
           { status: "scheduled", label: "Scheduled" },
           { status: "published", label: "Published" },
           { status: "failed", label: "Failed" },

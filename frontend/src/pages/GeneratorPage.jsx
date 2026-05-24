@@ -114,9 +114,7 @@ export default function GeneratorPage() {
     );
   }
 
-  function handleClearSources(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleClearSources() {
     setSelected([]);
     setResult(null);
     setError("");

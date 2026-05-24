@@ -152,6 +152,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 options={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
               />
               <p className="text-[11px] text-text-muted mt-1">{STATUS_HELP[form.status] || STATUS_HELP.draft}</p>
+              {form.status === "scheduled" && !form.scheduled_at && (
+                <p className="text-[11px] text-amber-400 mt-1 font-medium">
+                  ⚠ A publish date is required for scheduled posts — n8n will not pick this up without one.
+                </p>
+              )}
             </div>
             <div>
               <label className="label">Channel</label>
