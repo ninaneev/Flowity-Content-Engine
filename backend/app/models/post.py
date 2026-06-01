@@ -18,7 +18,7 @@ class Post(Base):
     alt_title: Mapped[str | None] = mapped_column(String(280), comment="Título alternativo")
 
     # ── Canal e configurações ─────────────────────────────────────
-    channel: Mapped[str] = mapped_column(String(20), default="linkedin", comment="linkedin | x")
+    channel: Mapped[str] = mapped_column(String(20), default="linkedin", comment="linkedin | x | newsletter")
     tone: Mapped[str | None] = mapped_column(String(50), comment="estratégico | educativo | inspiracional | direto")
     objective: Mapped[str | None] = mapped_column(String(100))
     format: Mapped[str | None] = mapped_column(String(50), comment="lista | narrativa | pergunta | dado")

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 VALID_STATUS = {"idea", "draft", "revised", "scheduled", "publishing", "published", "failed"}
-VALID_CHANNELS = {"linkedin", "x"}
+VALID_CHANNELS = {"linkedin", "x", "newsletter"}
 
 
 class PostBase(BaseModel):

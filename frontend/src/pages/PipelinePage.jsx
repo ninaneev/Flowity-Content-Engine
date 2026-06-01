@@ -12,6 +12,12 @@ const PIPELINE_COLUMNS = [
   { status: "published", label: "Published" },
 ];
 
+const CHANNEL_LABELS = {
+  linkedin: "LinkedIn",
+  x: "X",
+  newsletter: "Newsletter",
+};
+
 export default function PipelinePage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +41,7 @@ export default function PipelinePage() {
 
   async function handleSave(data) {
     await postsApi.update(selectedPost.id, data);
-    fetchPosts();
+    await fetchPosts();
   }
 
   function postsByStatus(status) {
@@ -70,15 +76,27 @@ export default function PipelinePage() {
     const post = posts.find((p) => p.id === id);
     if (!post || post.status === targetStatus) return;
 
-    // Optimistic update so the card moves instantly
-    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, status: targetStatus } : p));
+    if (targetStatus === "scheduled") {
+      setSelectedPost({
+        ...post,
+        status: "scheduled",
+        scheduled_at: post.scheduled_at ? post.scheduled_at.slice(0, 16) : "",
+      });
+      return;
+    }
+
+    const updatePayload = { status: targetStatus, scheduled_at: null };
+
+    // Optimistic update so the card moves instantly and leaves the calendar when unscheduled
+    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, ...updatePayload } : p));
 
     try {
-      await postsApi.update(id, { status: targetStatus });
+      await postsApi.update(id, updatePayload);
+      await fetchPosts();
     } catch (e) {
       console.error(e);
       // Revert on failure
-      setPosts((prev) => prev.map((p) => p.id === id ? { ...p, status: post.status } : p));
+      setPosts((prev) => prev.map((p) => p.id === id ? { ...p, status: post.status, scheduled_at: post.scheduled_at } : p));
     }
   }
 
@@ -144,7 +162,7 @@ export default function PipelinePage() {
                     >
                       <p className="text-text-primary text-sm font-medium line-clamp-2 mb-2">{post.hook}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-text-muted">{post.channel === "linkedin" ? "LinkedIn" : "X"}</span>
+                        <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         {post.scheduled_at && (
                           <span className="text-xs text-text-muted">
                             {format(new Date(post.scheduled_at), "MMM d")}

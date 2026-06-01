@@ -13,7 +13,7 @@ const STATUS_CONFIG = {
     color: "text-status-draft bg-status-draft/10 border-status-draft/30",
   },
   revised: {
-    label: "Reviewed",
+    label: "Revised",
     icon: Eye,
     color: "text-status-revised bg-status-revised/10 border-status-revised/30",
   },

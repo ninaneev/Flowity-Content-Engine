@@ -17,7 +17,7 @@ function newPostForDate(date = new Date()) {
     tone: "strategic",
     objective: "",
     format: "list",
-    status: "idea",
+    status: "scheduled",
     scheduled_at: format(scheduled, "yyyy-MM-dd'T'HH:mm"),
     generation_mode: "manual",
     notes: "",
@@ -59,6 +59,16 @@ export default function DashboardPage() {
     await postsApi.create(data);
     setCreatingPost(null);
     await fetchPosts();
+  }
+
+  async function handleEditPost(calendarPost) {
+    try {
+      const res = await postsApi.get(calendarPost.id);
+      setSelectedPost(res.data);
+    } catch (err) {
+      console.error("Error loading full post:", err);
+      setSelectedPost(calendarPost);
+    }
   }
 
   function handleAddPost(date = new Date()) {
@@ -133,7 +143,7 @@ export default function DashboardPage() {
           posts={posts}
           month={month}
           onAddPost={handleAddPost}
-          onEditPost={setSelectedPost}
+          onEditPost={handleEditPost}
         />
       )}
 

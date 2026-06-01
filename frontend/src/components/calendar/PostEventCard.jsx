@@ -1,5 +1,5 @@
 import React from "react";
-import { Linkedin, Twitter } from "lucide-react";
+import { Linkedin, Mail, Twitter } from "lucide-react";
 
 const STATUS_BG = {
   idea: "bg-bg-elevated border-border",
@@ -13,7 +13,7 @@ const STATUS_BG = {
 
 export default function PostEventCard({ post, onClick }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
-  const Icon = post.channel === "linkedin" ? Linkedin : Twitter;
+  const Icon = post.channel === "linkedin" ? Linkedin : post.channel === "newsletter" ? Mail : Twitter;
 
   return (
     <div

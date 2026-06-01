@@ -21,11 +21,13 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
 
 
 def get_for_calendar(db: Session, year: int, month: int) -> list[Post]:
-    """Retorna posts agendados em um dado mês para o calendário."""
+    """Retorna somente posts com status scheduled no mês do calendário."""
     from sqlalchemy import extract
     return (
         db.query(Post)
         .filter(
+            Post.status == "scheduled",
+            Post.scheduled_at.isnot(None),
             extract("year", Post.scheduled_at) == year,
             extract("month", Post.scheduled_at) == month,
         )

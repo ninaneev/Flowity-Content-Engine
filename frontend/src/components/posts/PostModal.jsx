@@ -23,11 +23,18 @@ const STATUS_HELP = {
   failed: "Automation reported a failure.",
 };
 
-function normalizeForApi(form) {
+const CHANNEL_LABELS = {
+  linkedin: "LinkedIn",
+  x: "X / Twitter",
+  newsletter: "Newsletter",
+};
+
+function normalizeForApi(form, original = {}) {
+  const movedOutOfScheduled = original.status === "scheduled" && form.status !== "scheduled";
   return {
     ...form,
     hook: form.hook?.trim() || "New post",
-    scheduled_at: form.scheduled_at || null,
+    scheduled_at: movedOutOfScheduled ? null : (form.scheduled_at || null),
     source_ids: form.source_ids || [],
   };
 }
@@ -47,13 +54,23 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
   }, [onClose]);
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      if (name === "status" && value !== "scheduled") {
+        return { ...prev, status: value, scheduled_at: "" };
+      }
+      return { ...prev, [name]: value };
+    });
   }
 
   async function handleSave() {
+    if (form.status === "scheduled" && !form.scheduled_at) {
+      window.alert("Choose a schedule date/time before moving this post to Scheduled.");
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(normalizeForApi(form));
+      await onSave(normalizeForApi(form, post));
       onClose();
     } finally {
       setSaving(false);
@@ -76,7 +93,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 {mode === "create" ? "New post" : `Post #${post.id}`}
               </p>
               <p className="text-xs text-text-muted">
-                {form.channel === "linkedin" ? "LinkedIn" : "X / Twitter"}
+                {CHANNEL_LABELS[form.channel] || form.channel || "LinkedIn"}
               </p>
             </div>
           </div>
@@ -89,7 +106,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           <div className="card bg-bg-elevated/40">
             <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
-              Use <strong className="text-text-secondary">Revised</strong> for manual approval. Only use <strong className="text-text-secondary">Scheduled</strong> when the content and date are ready for automated publishing.
+              Calendar sync rule: only <strong className="text-text-secondary">Scheduled</strong> posts with a date appear on the calendar. Moving a post out of Scheduled clears its calendar date.
             </p>
           </div>
 
@@ -167,6 +184,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 options={[
                   { value: "linkedin", label: "LinkedIn" },
                   { value: "x",        label: "X (Twitter)" },
+                  { value: "newsletter", label: "Newsletter" },
                 ]}
               />
             </div>
