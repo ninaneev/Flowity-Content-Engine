@@ -154,7 +154,7 @@ content-type: image/png
 
 ## Referências
 
-- `docs/PI1/architecture.md` e `docs/PI1/setup.md`
+- `PI1/architecture.md` e `PI1/setup.md`
 - FastAPI - Deployment: https://fastapi.tiangolo.com/deployment/
 - Alembic: https://alembic.sqlalchemy.org/
 - Docker - Manage data in Docker: https://docs.docker.com/storage/

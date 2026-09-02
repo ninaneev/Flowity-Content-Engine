@@ -120,7 +120,7 @@ export default function SettingsPage() {
             <code className="bg-bg-elevated px-1 rounded">.env</code> with your
             Supabase URL. See{" "}
             <code className="bg-bg-elevated px-1 rounded">
-              docs/PI1/supabase-setup.md
+              PI1/supabase-setup.md
             </code>{" "}
             for the full setup guide.
           </p>

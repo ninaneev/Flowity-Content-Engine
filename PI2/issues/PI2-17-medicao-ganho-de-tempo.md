@@ -23,8 +23,8 @@ Andrea Nina Maciel Cressoni
 
 ## Arquivos que você vai criar ou editar
 
-- `docs/PI2/medicao-desempenho.md` - protocolo do teste, linha de base e planilha de resultados
-- `docs/PI2/dados/tempos-producao.csv` - dados brutos coletados
+- `PI2/medicao-desempenho.md` - protocolo do teste, linha de base e planilha de resultados
+- `PI2/dados/tempos-producao.csv` - dados brutos coletados
 - `backend/app/models/post.py` - novos campos de tempo declarado
 - `backend/app/schemas/post.py` - expõe os novos campos
 - `frontend/src/components/posts/PostModal.jsx` - campo "tempo gasto fora da ferramenta (min)"
@@ -41,9 +41,9 @@ git checkout -b feat/pi2-17-medicao-tempo
 
 **Passo 2 - Registrar a linha de base do processo manual**
 
-Crie `docs/PI2/medicao-desempenho.md` com a tabela da linha de base, reconstituída junto à Flowity AI
+Crie `PI2/medicao-desempenho.md` com a tabela da linha de base, reconstituída junto à Flowity AI
 a partir dos registros de maio de 2026 (o levantamento já está em
-`docs/PI2/perguntas-continuidade-pi1.md`, seção 2, Pergunta 1):
+`PI2/perguntas-continuidade-pi1.md`, seção 2, Pergunta 1):
 
 | Etapa | Tempo manual | Ferramenta |
 |---|---|---|
@@ -102,12 +102,12 @@ padrão, média de ferramentas usadas e percentual de imagens com texto alternat
 
 Colete 10 publicações por fluxo. As do fluxo manual são cronometradas em uma sessão de reconstituição
 com a Flowity AI (a pessoa refaz o processo antigo com um post real); as do fluxo PI 2 são medidas em
-uso normal, ao longo das quinzenas 4 a 6. Registre tudo em `docs/PI2/dados/tempos-producao.csv` com as
+uso normal, ao longo das quinzenas 4 a 6. Registre tudo em `PI2/dados/tempos-producao.csv` com as
 colunas: `id_post,workflow,data,minutos_ferramenta,minutos_externos,ferramentas,alt_preenchido`.
 
 **Passo 7 - Escrever a análise**
 
-Feche `docs/PI2/medicao-desempenho.md` com: tabela comparativa dos três fluxos, gráfico de barras do
+Feche `PI2/medicao-desempenho.md` com: tabela comparativa dos três fluxos, gráfico de barras do
 tempo médio, cálculo do percentual de redução e uma seção de limitações honesta (amostra pequena, uma
 única empresa participante, parte do tempo é autodeclarada). Limitação declarada vale mais na banca do
 que número inflado.
@@ -115,7 +115,7 @@ que número inflado.
 **Passo 8 - Commit e Pull Request**
 
 ```bash
-git add docs/PI2 backend/app frontend/src
+git add PI2 backend/app frontend/src
 git commit -m "docs(pi2): protocolo e instrumentacao da medicao de ganho de tempo"
 git push origin feat/pi2-17-medicao-tempo
 ```
@@ -147,17 +147,17 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/reports/performance
 
 ## Definition of Done
 
-- [ ] `docs/PI2/medicao-desempenho.md` criado com linha de base, protocolo, resultados e limitações
+- [ ] `PI2/medicao-desempenho.md` criado com linha de base, protocolo, resultados e limitações
 - [ ] Campos `external_minutes`, `tools_used` e `workflow` criados no modelo e na migração
 - [ ] Campos disponíveis na API e preenchíveis pelo PostModal, com `<label>` associado
 - [ ] Endpoint `GET /reports/performance` funcionando e documentado no `/docs`
-- [ ] CSV com no mínimo 30 registros (10 por fluxo) versionado em `docs/PI2/dados/`
+- [ ] CSV com no mínimo 30 registros (10 por fluxo) versionado em `PI2/dados/`
 - [ ] Seção de resultados pronta para ser colada no Relatório Final
 - [ ] Pull Request aberto com `Closes #<numero-da-issue>`
 
 ## Referências
 
-- `docs/PI2/perguntas-continuidade-pi1.md` - levantamento com a comunidade externa
+- `PI2/perguntas-continuidade-pi1.md` - levantamento com a comunidade externa
 - ISO/IEC 25010:2011 - modelo de qualidade (eficiência de desempenho e usabilidade)
 - PRESSMAN, R. S.; MAXIM, B. R. Engenharia de software: uma abordagem profissional. 8. ed. 2016
 - SQLAlchemy 2.0: https://docs.sqlalchemy.org/

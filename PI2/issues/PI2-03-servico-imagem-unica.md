@@ -333,5 +333,5 @@ Resposta `201 Created`:
 - Pillow - `textbbox` para medir texto: https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html#PIL.ImageDraw.ImageDraw.textbbox
 - WCAG 2.1 - Critério 1.1.1 Conteúdo não textual: https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html
 - WCAG 2.1 - Critério 1.4.3 Contraste mínimo: https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
-- Documentação interna: `docs/PI1/architecture.md`, `CLAUDE.md` (seção Brand Colors)
+- Documentação interna: `PI1/architecture.md`, `CLAUDE.md` (seção Brand Colors)
 - Issues anteriores: PI2-01 (modelo `PostAsset`) e PI2-02 (API de assets)

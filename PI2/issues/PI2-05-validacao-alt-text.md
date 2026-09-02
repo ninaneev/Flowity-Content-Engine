@@ -332,5 +332,5 @@ Depois de corrigir os dois slides, o mesmo `PATCH` de status retorna `200 OK`.
 - W3C WAI - Como escrever textos alternativos: https://www.w3.org/WAI/tutorials/images/
 - Pydantic v2 - `field_validator`: https://docs.pydantic.dev/latest/concepts/validators/
 - FastAPI - `HTTPException` e tratamento de erros: https://fastapi.tiangolo.com/tutorial/handling-errors/
-- Documentação interna: `docs/PI1/architecture.md`
+- Documentação interna: `PI1/architecture.md`
 - Issues anteriores: PI2-01, PI2-02, PI2-03 e PI2-04

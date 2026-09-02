@@ -391,7 +391,7 @@ Adicione um bloco de ajuda visível na `CarouselPage.jsx`, acima do builder, com
 
 **Passo 8 - Rodar o roteiro de teste manual com NVDA**
 
-Baixe o NVDA em https://www.nvaccess.org/download/ (gratuito, Windows). Instale, abra e siga o roteiro. Anote o que o leitor falou em cada passo, em `docs/PI2/evidencias/nvda-roteiro.md`.
+Baixe o NVDA em https://www.nvaccess.org/download/ (gratuito, Windows). Instale, abra e siga o roteiro. Anote o que o leitor falou em cada passo, em `PI2/evidencias/nvda-roteiro.md`.
 
 ```text
 ROTEIRO DE TESTE COM NVDA - Flowity Content Engine (PI 2)
@@ -463,7 +463,7 @@ git add frontend/src/lib/useFocusTrap.js \
         frontend/src/components/posts/PostModal.jsx \
         frontend/src/components/calendar/ \
         frontend/src/pages/CarouselPage.jsx \
-        docs/PI2/evidencias/nvda-roteiro.md
+        PI2/evidencias/nvda-roteiro.md
 
 git commit -m "feat(a11y): navegacao por teclado e leitor de tela no carrossel e no calendario
 
@@ -544,7 +544,7 @@ DEPOIS
 - [ ] Mudança de slide e de ordem anunciadas por região `aria-live="polite"`
 - [ ] Grade do calendário com `role="grid"`, células com `role="gridcell"` e navegação por setas
 - [ ] Tabela de atalhos visível na interface dentro de um `<details>`
-- [ ] Roteiro NVDA executado e resultado registrado em `docs/PI2/evidencias/nvda-roteiro.md`
+- [ ] Roteiro NVDA executado e resultado registrado em `PI2/evidencias/nvda-roteiro.md`
 - [ ] `npm run build` executa sem erros
 - [ ] Pull Request aberto com `Closes #<numero-da-issue>`
 

@@ -23,7 +23,7 @@ Diego Gustavo Franco
 - `backend/app/main.py` - registra os `exception_handler` e enriquece os metadados do app
 - `backend/app/routes/assets.py` - acrescenta `summary`, `description`, `tags` e `responses` em todas as rotas
 - `backend/app/schemas/post_asset.py` - acrescenta `model_config` com `json_schema_extra`
-- `docs/PI2/api-midia.md` - checklist do contrato e tabela de códigos de erro
+- `PI2/api-midia.md` - checklist do contrato e tabela de códigos de erro
 
 ## Passo a passo
 
@@ -254,7 +254,7 @@ class RenderCarouselRequest(BaseModel):
 
 **Passo 6 - Escrever a checklist do contrato**
 
-Crie `docs/PI2/api-midia.md` contendo a tabela de endpoints abaixo, a tabela de códigos de erro e um exemplo de requisição e resposta por endpoint. Toda rota criada no PI 2 precisa aparecer em `/docs` com `summary`, `description`, `tags` e `responses`:
+Crie `PI2/api-midia.md` contendo a tabela de endpoints abaixo, a tabela de códigos de erro e um exemplo de requisição e resposta por endpoint. Toda rota criada no PI 2 precisa aparecer em `/docs` com `summary`, `description`, `tags` e `responses`:
 
 | Endpoint | Issue | Tag | Códigos documentados |
 |---|---|---|---|
@@ -296,14 +296,14 @@ Abra `http://localhost:8000/docs` e confira visualmente as tags e os exemplos.
 **Passo 8 - Commit e Pull Request**
 
 ```bash
-git add backend/app/core/errors.py backend/app/main.py backend/app/routes/assets.py backend/app/schemas/post_asset.py docs/PI2/api-midia.md
+git add backend/app/core/errors.py backend/app/main.py backend/app/routes/assets.py backend/app/schemas/post_asset.py PI2/api-midia.md
 git commit -m "feat(backend): padroniza contrato de erro e documenta a API de midia no OpenAPI
 
 Cria o envelope unico {error: {code, message, field}} com handlers para
 ApiError, HTTPException e RequestValidationError. Acrescenta
 response_model, summary, description, tags e responses em todas as rotas
 de midia do PI 2 e exemplos nos schemas via json_schema_extra. Inclui a
-checklist do contrato em docs/PI2/api-midia.md."
+checklist do contrato em PI2/api-midia.md."
 git push -u origin feat/pi2-06-contrato-api-midia
 gh pr create --base main --title "[PI2][P1][Backend] Consolidar o contrato da API de publicacao com midia" --body "Closes #<numero-da-issue>"
 ```
@@ -354,7 +354,7 @@ Trecho do OpenAPI gerado, mostrando os metadados exigidos:
 | Cobertura de metadados | Script do Passo 7 listando rotas sem `summary`, `description` ou `tags` | Lista vazia nas 8 rotas do PI 2 |
 | Padronização de erro | Provocar 404, 413, 415 e 422 e comparar o corpo | 4 de 4 no formato `{"error": {"code", "message", "field"}}` |
 | Exemplos no Swagger | Abrir `/docs` e conferir o painel Example Value | 4 schemas de mídia com exemplo preenchido |
-| Endpoints presentes na checklist | Conferir `docs/PI2/api-midia.md` contra `app.openapi()["paths"]` | 8 de 8 endpoints documentados |
+| Endpoints presentes na checklist | Conferir `PI2/api-midia.md` contra `app.openapi()["paths"]` | 8 de 8 endpoints documentados |
 | Compatibilidade com o PI 1 | `GET /posts/`, `GET /sources/` e `POST /generation/preview` | 3 de 3 continuam respondendo 200 |
 
 ## Definition of Done
@@ -364,7 +364,7 @@ Trecho do OpenAPI gerado, mostrando os metadados exigidos:
 - [ ] Todas as rotas de mídia com `response_model`, `summary`, `description`, `tags` e `responses`
 - [ ] `HTTPException` das rotas de mídia substituída por `ApiError`
 - [ ] `json_schema_extra` com exemplo em `PostAssetResponse`, `PostAssetUpdate`, `AssetOrderUpdate` e `RenderCarouselRequest`
-- [ ] `docs/PI2/api-midia.md` criado com a tabela de endpoints e a tabela de códigos de erro
+- [ ] `PI2/api-midia.md` criado com a tabela de endpoints e a tabela de códigos de erro
 - [ ] Script de verificação do OpenAPI executado com saída colada no PR
 - [ ] Rotas do PI 1 sem regressão
 - [ ] Pull Request aberto com `Closes #<numero-da-issue>`
@@ -377,5 +377,5 @@ Trecho do OpenAPI gerado, mostrando os metadados exigidos:
 - FastAPI - Path operation configuration (`summary`, `description`, `tags`): https://fastapi.tiangolo.com/tutorial/path-operation-configuration/
 - Pydantic v2 - `json_schema_extra` e customização do JSON Schema: https://docs.pydantic.dev/latest/concepts/json_schema/
 - Especificação OpenAPI 3.1: https://spec.openapis.org/oas/latest.html
-- Documentação interna: `docs/PI1/architecture.md`, `docs/PI1/shadow-working-guide.md`
+- Documentação interna: `PI1/architecture.md`, `PI1/shadow-working-guide.md`
 - Issues anteriores: PI2-02, PI2-03, PI2-04 e PI2-05

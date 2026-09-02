@@ -82,18 +82,22 @@ PI-Univesp/
 ├── infra/n8n/
 │   └── flowity-publishing.json # Workflow n8n (importar no painel)
 │
-├── docs/
-│   ├── PI1/                    # Documentação do PI 1
-│   │   ├── supabase-setup.md       # SQL + instruções do banco
-│   │   ├── architecture.md         # Diagrama do sistema
-│   │   ├── team-tasks.md           # Tarefas dos 7 integrantes
-│   │   └── shadow-working-guide.md # Guia issue→branch→PR
-│   └── PI2/                    # Documentação do PI 2 (imagens, carrossel, acessibilidade)
-│       ├── plano-de-acao-pi2-texto.md
-│       ├── perguntas-continuidade-pi1.md
-│       ├── referencias-bibliograficas.md
-│       ├── team-tasks-pi2.md
-│       └── issues/                 # Corpo de cada issue do PI 2 (#79 a #96)
+├── PI1/                        # Documentação e entregas do PI 1
+│   ├── supabase-setup.md       # SQL + instruções do banco
+│   ├── architecture.md         # Diagrama do sistema
+│   ├── team-tasks.md           # Tarefas dos 7 integrantes
+│   ├── shadow-working-guide.md # Guia issue→branch→PR
+│   └── Projeto-Final.pdf       # Relatório final e termos assinados
+│
+├── PI2/                        # Documentação do PI 2 (imagens, carrossel, acessibilidade)
+│   ├── README.md               # Índice do PI 2
+│   ├── plano-de-acao-pi2-texto.md
+│   ├── perguntas-continuidade-pi1.md
+│   ├── referencias-bibliograficas.md
+│   ├── team-tasks-pi2.md
+│   └── issues/                 # Corpo de cada issue do PI 2 (#79 a #96)
+│
+├── docs/                       # Notas operacionais de conteúdo (fora do PI)
 │
 ├── docker-compose.yml
 ├── .env.example
@@ -285,7 +289,7 @@ com **acessibilidade obrigatória** (texto alternativo em toda imagem, navegaç�
 WCAG 2.1 AA, HTML semântico), aplicação **em nuvem**, API consolidada, **análise de dados** das
 publicações e **testes automatizados** (pytest + Vitest).
 
-- Documentação: `docs/PI2/` (comece pelo `docs/PI2/README.md`)
+- Documentação: `PI2/` (comece pelo `PI2/README.md`)
 - Issues: #79 a #96, label `sprint:pi2`, projeto "Flowity Content Engine - PI 2"
 - Novas tabelas previstas: `post_assets` (imagens e slides, com `alt_text` obrigatório),
   `post_metrics` (métricas de publicação), `alert_settings` (limite de engajamento)

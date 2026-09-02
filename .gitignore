@@ -35,3 +35,7 @@ package-lock.json
 # ── Docker / temp ────────────────────────────────────────────────
 *.sqlite3
 infra/n8n/.n8n/
+
+# Backups locais do SQLite
+flowity.db.bak-*
+backend/flowity.db.bak-*

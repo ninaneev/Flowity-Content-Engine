@@ -434,5 +434,5 @@ curl -X PUT "http://localhost:8000/posts/12/assets/order" \
 - FastAPI - Static Files: https://fastapi.tiangolo.com/tutorial/static-files/
 - FastAPI - Bigger Applications e `APIRouter`: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 - Pydantic v2 - `model_validate` e `from_attributes`: https://docs.pydantic.dev/latest/concepts/models/
-- Documentação interna: `docs/PI1/architecture.md`, `docs/PI1/shadow-working-guide.md`
+- Documentação interna: `PI1/architecture.md`, `PI1/shadow-working-guide.md`
 - Issue anterior: PI2-01 (modelo `PostAsset`)

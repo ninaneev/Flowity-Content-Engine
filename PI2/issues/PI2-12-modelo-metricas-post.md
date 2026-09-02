@@ -762,4 +762,4 @@ curl -s "http://localhost:8000/metrics/summary?from=2026-08-01T00:00:00&to=2026-
 - Python - Módulo `csv` da biblioteca padrão: https://docs.python.org/3/library/csv.html
 - Python - `datetime.isocalendar()`: https://docs.python.org/3/library/datetime.html#datetime.date.isocalendar
 - LinkedIn - Métricas de análise de publicações: https://www.linkedin.com/help/linkedin/answer/a551152
-- Documentação interna: `docs/PI1/architecture.md` e `CLAUDE.md` na raiz do repositório
+- Documentação interna: `PI1/architecture.md` e `CLAUDE.md` na raiz do repositório

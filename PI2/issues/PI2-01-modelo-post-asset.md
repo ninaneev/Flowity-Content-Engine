@@ -306,4 +306,4 @@ Os assets voltam ordenados por `position` e somem junto com o post, que é exata
 - Alembic - Tutorial e operações: https://alembic.sqlalchemy.org/en/latest/tutorial.html
 - Alembic - `op.create_table`: https://alembic.sqlalchemy.org/en/latest/ops.html
 - WCAG 2.1 - Critério 1.1.1 Conteúdo não textual: https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html
-- Documentação interna: `docs/PI1/architecture.md` e `docs/PI1/supabase-setup.md`
+- Documentação interna: `PI1/architecture.md` e `PI1/supabase-setup.md`

@@ -397,5 +397,5 @@ Erro `422` com slides de menos:
 - Pillow - `ImageDraw.textbbox`: https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html
 - LinkedIn - Especificações de documentos e carrossel: https://www.linkedin.com/help/linkedin/answer/a564144
 - WCAG 2.1 - Critério 1.1.1 Conteúdo não textual: https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html
-- Documentação interna: `docs/PI1/architecture.md`, `CLAUDE.md` (seção Brand Colors)
+- Documentação interna: `PI1/architecture.md`, `CLAUDE.md` (seção Brand Colors)
 - Issues anteriores: PI2-01, PI2-02 e PI2-03

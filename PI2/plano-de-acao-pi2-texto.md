@@ -122,7 +122,7 @@ estratégico com qualidade, disponibilidade e inclusão de pessoas com deficiên
 |---|---|---|---|---|
 | Retomar o relatório, o repositório e os resultados do PI 1. | Andrea Cressoni; Tiago Ferreira | 10/08/2026 | 12/08/2026 | Registrar decisões na ata inicial. |
 | Analisar limitações do protótipo e requisitos oficiais do PI 2. | João Maike; Davi Bueno | 10/08/2026 | 14/08/2026 | Foco em imagens, acessibilidade, nuvem, API e testes. |
-| Realizar levantamento bibliográfico sobre acessibilidade digital (LBI, eMAG, WCAG 2.1) e JavaScript. | Pedro Simonetti; Roger de Paula | 11/08/2026 | 18/08/2026 | Organizar referências em `docs/PI2/referencias-bibliograficas.md`. |
+| Realizar levantamento bibliográfico sobre acessibilidade digital (LBI, eMAG, WCAG 2.1) e JavaScript. | Pedro Simonetti; Roger de Paula | 11/08/2026 | 18/08/2026 | Organizar referências em `PI2/referencias-bibliograficas.md`. |
 | Diagnosticar código, banco de dados, implantação e pendências do projeto. | Jeferson Ferreira; Diego Franco | 13/08/2026 | 21/08/2026 | Gerar backlog técnico priorizado. |
 | Reunir o grupo com o facilitador para validar o direcionamento inicial. | Todos os integrantes | 22/08/2026 | 23/08/2026 | Registrar orientações e responsáveis. |
 
@@ -132,7 +132,7 @@ estratégico com qualidade, disponibilidade e inclusão de pessoas com deficiên
 
 | Atividade | Responsável | Início | Finalização | Observação |
 |---|---|---|---|---|
-| Retomar o contato com a Flowity AI e aplicar o roteiro de perguntas de continuidade do PI 1. | Andrea Cressoni; João Maike | 24/08/2026 | 26/08/2026 | Registrado em `docs/PI2/perguntas-continuidade-pi1.md`. |
+| Retomar o contato com a Flowity AI e aplicar o roteiro de perguntas de continuidade do PI 1. | Andrea Cressoni; João Maike | 24/08/2026 | 26/08/2026 | Registrado em `PI2/perguntas-continuidade-pi1.md`. |
 | Delimitar problema, questão de pesquisa, objetivo e escopo do PI 2. | Tiago Ferreira; Davi Bueno | 24/08/2026 | 28/08/2026 | Evitar repetição do escopo do PI 1. |
 | Definir requisitos funcionais, não funcionais e critérios de aceitação. | Pedro Simonetti; Roger de Paula | 26/08/2026 | 30/08/2026 | Incluir imagens, carrossel, texto alternativo, API, nuvem e testes. |
 | Elaborar o plano de ação, abrir as issues do PI 2 no GitHub e distribuir prazos. | Jeferson Ferreira; Diego Franco | 27/08/2026 | 31/08/2026 | Conferir participação de todo o grupo. |

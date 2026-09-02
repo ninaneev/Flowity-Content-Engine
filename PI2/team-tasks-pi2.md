@@ -1,6 +1,6 @@
 # Tarefas dos Integrantes - PI 2 (Flowity Content Engine 2.0)
 
-> Continuação de `docs/PI1/team-tasks.md`. As tarefas do PI 1 continuam lá, para consulta.
+> Continuação de `PI1/team-tasks.md`. As tarefas do PI 1 continuam lá, para consulta.
 > Cada tarefa aqui é uma **issue** no GitHub, no projeto **Flowity Content Engine - PI 2**.
 > Cada integrante trabalha numa **branch separada**. Toda alteração entra por **Pull Request**,
 > aprovado pelo líder antes do merge em `main`.
@@ -17,9 +17,9 @@ carrossel para o LinkedIn, com **acessibilidade obrigatória** (texto alternativ
 navegação por teclado, contraste conforme WCAG 2.1 AA, HTML semântico), rodando **em nuvem**, com
 **análise de dados** das publicações e **testes automatizados**.
 
-O levantamento que originou esse escopo está em `docs/PI2/perguntas-continuidade-pi1.md`.
-A bibliografia está em `docs/PI2/referencias-bibliograficas.md`.
-O texto do Plano de Ação está em `docs/PI2/plano-de-acao-pi2-texto.md`.
+O levantamento que originou esse escopo está em `PI2/perguntas-continuidade-pi1.md`.
+A bibliografia está em `PI2/referencias-bibliograficas.md`.
+O texto do Plano de Ação está em `PI2/plano-de-acao-pi2-texto.md`.
 
 ---
 
@@ -138,7 +138,7 @@ cd frontend && npm install && npm run dev
 ```
 
 Front-end em http://localhost:5173, documentação da API em http://localhost:8000/docs.
-Se algo não subir, veja `docs/PI1/setup.md`.
+Se algo não subir, veja `PI1/setup.md`.
 
 **Passo 3 - Crie a branch com o nome exato que está na issue.**
 
@@ -163,7 +163,7 @@ tela, e a linha `Closes #<numero>`.
 | Retrospectiva | Após a revisão | 15 min |
 
 Entregas oficiais no AVA: Plano de Ação (01/09), Relatório Parcial (30/09), Relatório Final e vídeo
-(06/11). Datas completas em `docs/PI2/plano-de-acao-pi2-texto.md`.
+(06/11). Datas completas em `PI2/plano-de-acao-pi2-texto.md`.
 
 ---
 

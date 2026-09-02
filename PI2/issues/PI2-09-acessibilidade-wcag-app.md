@@ -45,7 +45,7 @@ Antes de mudar qualquer coisa, gere a linha de base. Suba a aplicação, abra o 
 1. Lighthouse (aba Lighthouse do DevTools), categoria "Accessibility", em `/`, `/sources`, `/generator`, `/pipeline` e `/settings`.
 2. axe DevTools, botão "Scan ALL of my page", nas mesmas cinco telas.
 
-Salve as capturas em `docs/PI2/evidencias/antes-*.png`. Elas vão para o corpo do PR.
+Salve as capturas em `PI2/evidencias/antes-*.png`. Elas vão para o corpo do PR.
 
 **Passo 3 - Corrigir o `index.html`**
 
@@ -390,7 +390,7 @@ cd frontend
 npm run dev
 ```
 
-Rode de novo Lighthouse e axe DevTools nas cinco telas e salve as capturas em `docs/PI2/evidencias/depois-*.png`. Teste também sem mouse: carregue `/`, aperte Tab uma vez - o skip link "Pular para o conteúdo principal" deve aparecer no canto superior esquerdo; aperte Enter e o foco deve ir para o `<main>`.
+Rode de novo Lighthouse e axe DevTools nas cinco telas e salve as capturas em `PI2/evidencias/depois-*.png`. Teste também sem mouse: carregue `/`, aperte Tab uma vez - o skip link "Pular para o conteúdo principal" deve aparecer no canto superior esquerdo; aperte Enter e o foco deve ir para o `<main>`.
 
 **Passo 13 - Commit e Pull Request**
 
@@ -403,7 +403,7 @@ git add frontend/index.html \
         frontend/src/components/posts/PostModal.jsx \
         frontend/src/components/shared/ \
         frontend/src/pages/ \
-        docs/PI2/evidencias/
+        PI2/evidencias/
 
 git commit -m "feat(a11y): conformidade WCAG 2.1 AA na aplicacao
 
@@ -471,7 +471,7 @@ CONTRASTE CORRIGIDO
 
 ## Definition of Done
 
-- [ ] Capturas de tela do Lighthouse e do axe DevTools ANTES salvas em `docs/PI2/evidencias/`
+- [ ] Capturas de tela do Lighthouse e do axe DevTools ANTES salvas em `PI2/evidencias/`
 - [ ] `lang="pt-BR"` confirmado no `index.html` e `<meta name="description">` adicionada
 - [ ] Skip link "Pular para o conteúdo principal" implementado, invisível por padrão e visível ao receber foco
 - [ ] Landmarks `header`, `nav` (com `aria-label`), `main` (com `id="conteudo-principal"` e `tabIndex={-1}`) e `footer` presentes no `AppShell`
