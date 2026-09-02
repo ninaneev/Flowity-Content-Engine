@@ -290,7 +290,7 @@ WCAG 2.1 AA, HTML semântico), aplicação **em nuvem**, API consolidada, **aná
 publicações e **testes automatizados** (pytest + Vitest).
 
 - Documentação: `PI2/` (comece pelo `PI2/README.md`)
-- Issues: #79 a #96, label `sprint:pi2`, projeto "Flowity Content Engine - PI 2"
+- Issues: 16 tarefas (T1 a T16), label `sprint:pi2`, projeto "Flowity Content Engine - PI 2"
 - Novas tabelas previstas: `post_assets` (imagens e slides, com `alt_text` obrigatório),
   `post_metrics` (métricas de publicação), `alert_settings` (limite de engajamento)
 - Regra que vale para todo código novo de tela: nenhuma imagem sem `alt`, nada clicável que não seja
