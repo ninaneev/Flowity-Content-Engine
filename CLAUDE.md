@@ -83,10 +83,17 @@ PI-Univesp/
 │   └── flowity-publishing.json # Workflow n8n (importar no painel)
 │
 ├── docs/
-│   ├── supabase-setup.md       # SQL + instruções do banco
-│   ├── architecture.md         # Diagrama do sistema
-│   ├── team-tasks.md           # Tarefas dos 7 integrantes
-│   └── shadow-working-guide.md # Guia issue→branch→PR
+│   ├── PI1/                    # Documentação do PI 1
+│   │   ├── supabase-setup.md       # SQL + instruções do banco
+│   │   ├── architecture.md         # Diagrama do sistema
+│   │   ├── team-tasks.md           # Tarefas dos 7 integrantes
+│   │   └── shadow-working-guide.md # Guia issue→branch→PR
+│   └── PI2/                    # Documentação do PI 2 (imagens, carrossel, acessibilidade)
+│       ├── plano-de-acao-pi2-texto.md
+│       ├── perguntas-continuidade-pi1.md
+│       ├── referencias-bibliograficas.md
+│       ├── team-tasks-pi2.md
+│       └── issues/                 # Corpo de cada issue do PI 2 (#79 a #96)
 │
 ├── docker-compose.yml
 ├── .env.example
@@ -268,3 +275,19 @@ When spawning subagents (Agent/Task tool), the routing block is automatically in
 | `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
 | `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
 | `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
+
+---
+
+## PI 2 (em andamento)
+
+Escopo: gerar a peça completa dentro da aplicação — texto, **imagem única** e **carrossel do LinkedIn** —
+com **acessibilidade obrigatória** (texto alternativo em toda imagem, navegação por teclado, contraste
+WCAG 2.1 AA, HTML semântico), aplicação **em nuvem**, API consolidada, **análise de dados** das
+publicações e **testes automatizados** (pytest + Vitest).
+
+- Documentação: `docs/PI2/` (comece pelo `docs/PI2/README.md`)
+- Issues: #79 a #96, label `sprint:pi2`, projeto "Flowity Content Engine - PI 2"
+- Novas tabelas previstas: `post_assets` (imagens e slides, com `alt_text` obrigatório),
+  `post_metrics` (métricas de publicação), `alert_settings` (limite de engajamento)
+- Regra que vale para todo código novo de tela: nenhuma imagem sem `alt`, nada clicável que não seja
+  `button`/`a`, foco visível, contraste mínimo 4.5:1

@@ -61,7 +61,7 @@ Sua branch é um galho separado — você mexe só no seu galho, sem afetar o tr
 ## Etapa 3 — Fazer o código
 
 1. Abra o VS Code (ou outro editor) na pasta do projeto
-2. Encontre os arquivos da sua tarefa (estão indicados na issue e em `docs/team-tasks.md`)
+2. Encontre os arquivos da sua tarefa (estão indicados na issue e em `docs/PI1/team-tasks.md`)
 3. Leia os comentários `TODO` dentro dos arquivos — eles explicam exatamente o que fazer
 4. Faça as alterações
 5. Teste antes de commitar (veja "Como testar" em cada tarefa)

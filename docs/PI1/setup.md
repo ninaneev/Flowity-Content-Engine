@@ -125,4 +125,4 @@ Depois de fazer o setup, você está pronto para:
 3. Fazer commits regulares
 4. Abrir um PR quando terminar
 
-Veja `docs/shadow-working-guide.md` para o fluxo Git completo.
+Veja `docs/PI1/shadow-working-guide.md` para o fluxo Git completo.

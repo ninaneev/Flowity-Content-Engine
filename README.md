@@ -42,7 +42,7 @@ cd PI-Univesp
 cp .env.example .env
 ```
 Abra o `.env` e preencha:
-- `DATABASE_URL` → URL do Supabase (veja `docs/supabase-setup.md`)
+- `DATABASE_URL` → URL do Supabase (veja `docs/PI1/supabase-setup.md`)
 - `JWT_SECRET` → string aleatória (gere com `python -c "import secrets; print(secrets.token_hex(32))"`)
 - `ADMIN_PASSWORD_HASH` → hash bcrypt da sua senha
 
@@ -84,11 +84,11 @@ PI-Univesp/
 
 ## Documentação
 
-- [`docs/supabase-setup.md`](docs/supabase-setup.md) — SQL e configuração do banco
-- [`docs/team-tasks.md`](docs/team-tasks.md) — Tarefas dos integrantes
-- [`docs/shadow-working-guide.md`](docs/shadow-working-guide.md) — Guia de onboarding técnico
-- [`docs/architecture.md`](docs/architecture.md) — Arquitetura do sistema
-- [`docs/funcionamento-plataforma.md`](docs/funcionamento-plataforma.md) — Fluxo completo com screenshots numerados
+- [`docs/PI1/supabase-setup.md`](docs/PI1/supabase-setup.md) — SQL e configuração do banco
+- [`docs/PI1/team-tasks.md`](docs/PI1/team-tasks.md) — Tarefas dos integrantes
+- [`docs/PI1/shadow-working-guide.md`](docs/PI1/shadow-working-guide.md) — Guia de onboarding técnico
+- [`docs/PI1/architecture.md`](docs/PI1/architecture.md) — Arquitetura do sistema
+- [`docs/PI1/funcionamento-plataforma.md`](docs/PI1/funcionamento-plataforma.md) — Fluxo completo com screenshots numerados
 
 ## Fluxo de trabalho do time
 
@@ -97,7 +97,7 @@ PI-Univesp/
 3. Toda alteração vai por **Pull Request**
 4. O PR precisa de **aprovação do líder** antes de ser mergeado na `main`
 
-Veja [`docs/shadow-working-guide.md`](docs/shadow-working-guide.md) para o passo a passo completo.
+Veja [`docs/PI1/shadow-working-guide.md`](docs/PI1/shadow-working-guide.md) para o passo a passo completo.
 
 ---
 
