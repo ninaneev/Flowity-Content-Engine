@@ -2,8 +2,10 @@
 Conexão com o banco de dados via SQLAlchemy.
 Funciona com Supabase (PostgreSQL) ou SQLite local.
 """
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
 from app.core.config import settings
 
 # ── Engine ────────────────────────────────────────────────────────────────────
@@ -43,5 +45,6 @@ def get_db():
 
 def create_tables():
     """Cria todas as tabelas no banco. Chamado no startup da API."""
-    from app.models import source, post, generation  # noqa: F401 — garante que os modelos são registrados
+    from app.models import generation, post, post_asset, source  # noqa: F401 — registra os modelos
+
     Base.metadata.create_all(bind=engine)
