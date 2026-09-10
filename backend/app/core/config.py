@@ -2,12 +2,19 @@
 Configurações do sistema.
 Lê tudo do arquivo .env via pydantic-settings.
 """
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     # ── Banco de dados ────────────────────────────────────────────
     DATABASE_URL: str = "sqlite:///./flowity.db"
+
+    # ── Mídia (PI 2) ──────────────────────────────────────────────
+    MEDIA_DIR: str = "./media"
+    MEDIA_URL_PREFIX: str = "/media"
+    MAX_UPLOAD_BYTES: int = 5 * 1024 * 1024
+    ALLOWED_IMAGE_MIME: str = "image/png,image/jpeg,image/webp"
 
     # ── Autenticação ──────────────────────────────────────────────
     JWT_SECRET: str = "troque-isso-por-uma-string-aleatoria-de-64-chars"
