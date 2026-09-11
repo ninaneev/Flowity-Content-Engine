@@ -5,7 +5,7 @@ from app.db.database import get_db
 from app.schemas.metric import MetricCreate, MetricResponse, MetricsSummary
 from app.repositories import metrics as metric_repo
 from app.repositories import posts as post_repo
-from app.core.auth import get_current_admin  # Ajuste o import do módulo de autenticação de admin
+from app.core.security import get_current_admin  # Ajuste o import do módulo de autenticação de admin
 
 router = APIRouter()
 
