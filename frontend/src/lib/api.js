@@ -101,6 +101,19 @@ export const assetsApi = {
   remove: (id) => api.delete(`/assets/${id}`),
 };
 
+/** Baixa um arquivo autenticado (ex.: o PDF do carrossel) e salva com o nome indicado. */
+export async function apiDownload(url, nomeArquivo) {
+  const resposta = await api.get(url, { responseType: "blob" });
+  const href = URL.createObjectURL(resposta.data);
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+}
+
 /** Monta a URL completa de um arquivo servido pelo backend (ex.: "/media/posts/1/a.png"). */
 export function mediaUrl(path) {
   if (!path || /^https?:\/\//.test(path)) return path;
