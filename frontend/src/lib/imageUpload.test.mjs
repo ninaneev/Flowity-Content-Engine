@@ -50,6 +50,18 @@ test("mensagemDeErro lê o detail do backend", () => {
     "Formato não suportado"
   );
   assert.equal(mensagemDeErro({ response: { data: { detail: "Post não encontrado" } } }), "Post não encontrado");
+  assert.equal(
+    mensagemDeErro({
+      response: {
+        data: {
+          detail: {
+            error: { code: "acessibilidade_pendente", message: "1 imagem(ns) sem texto alternativo válido." },
+          },
+        },
+      },
+    }),
+    "1 imagem(ns) sem texto alternativo válido."
+  );
   assert.match(mensagemDeErro({ request: {} }), /Sem conexão/);
   assert.equal(mensagemDeErro({}, "padrão"), "padrão");
 });
