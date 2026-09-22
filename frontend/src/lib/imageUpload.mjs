@@ -42,6 +42,8 @@ export function mensagemDeErro(erro, padrao = "Não foi possível concluir a aç
   const detail = erro?.response?.data?.detail;
   if (typeof detail === "string" && detail) return detail;
   if (detail && typeof detail.message === "string") return detail.message;
+  // formato do 422 "acessibilidade_pendente" da Tarefa 6: { error: { code, message } }
+  if (detail?.error && typeof detail.error.message === "string") return detail.error.message;
   if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg;
   if (erro?.request && !erro?.response) return "Sem conexão com o servidor. Confira se o backend está rodando.";
   return padrao;
