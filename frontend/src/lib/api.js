@@ -93,6 +93,13 @@ export const metricsApi = {
   create: (postId, data) => api.post(`/posts/${postId}/metrics`, data),
 };
 
+// ALERTS (PI 2)
+export const alertsApi = {
+  getSettings: () => api.get("/settings/alerts"),
+  updateSettings: (data) => api.put("/settings/alerts", data),
+  list: () => api.get("/alerts"),
+};
+
 // AUTOMATION
 export const automationApi = {
   config: () => api.get("/automation/config"),

@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.db.database import create_tables
-from app.routes import assets, auth, automation, generation, metrics, posts, sources
+from app.routes import alerts, assets, auth, automation, generation, metrics, posts, sources
 
 Path(settings.MEDIA_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -74,6 +74,8 @@ app.include_router(automation.router, prefix="/automation", tags=["n8n Automatio
 app.include_router(assets.router, tags=["Media Assets"])
 # Inclusão do router das Métricas (PI 2)
 app.include_router(metrics.router, prefix="", tags=["Metrics"])
+# Alertas de engajamento baixo (PI 2, T14)
+app.include_router(alerts.router, tags=["Alerts"])
 
 app.mount(
     settings.MEDIA_URL_PREFIX,
