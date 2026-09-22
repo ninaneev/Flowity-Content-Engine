@@ -1,14 +1,13 @@
 """Modelo ORM da tabela posts."""
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
-from typing import TYPE_CHECKING
-
 
 if TYPE_CHECKING:
     from app.models.post_asset import PostAsset
-
+    from app.models.post_metric import PostMetric
 
 
 class Post(Base):
@@ -48,6 +47,15 @@ class Post(Base):
         "PostAsset",
         back_populates="post",
         order_by="PostAsset.position",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    # ── Métricas (PI 2) ───────────────────────────────────────────
+    metrics: Mapped[list["PostMetric"]] = relationship(
+        "PostMetric",
+        back_populates="post",
+        order_by="PostMetric.collected_at",
         cascade="all, delete-orphan",
         lazy="selectin",
     )

@@ -43,5 +43,5 @@ def get_db():
 
 def create_tables():
     """Cria todas as tabelas no banco. Chamado no startup da API."""
-    from app.models import source, post, generation, post_asset  # noqa: F401 — garante que os modelos são registrados
+    from app.models import source, post, generation, post_asset, post_metric  # noqa: F401 — garante que os modelos são registrados
     Base.metadata.create_all(bind=engine)
