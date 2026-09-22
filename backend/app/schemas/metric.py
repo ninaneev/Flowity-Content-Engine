@@ -57,6 +57,14 @@ class ResumoPlataforma(BaseModel):
     posts: int             # Quantidade de posts analisados nessa plataforma
     impressions: int       # Soma total de impressões
     engagement_rate: float # Média da taxa de engajamento da plataforma
+    interacoes: int = 0    # Soma de curtidas + comentários + compartilhamentos (PI 2, T13)
+
+
+class ResumoDiaSemana(BaseModel):
+    """Engajamento médio dos posts publicados em um dia da semana (PI 2, T13)."""
+    dia: int               # 0 = domingo ... 6 = sábado (mesma convenção do "dow" do PostgreSQL)
+    media: float           # Taxa média de engajamento dos posts publicados nesse dia
+    publicacoes: int       # Quantas coletas entraram na média
 
 
 class MetricsSummary(BaseModel):
@@ -64,3 +72,6 @@ class MetricsSummary(BaseModel):
     total_publicados: int                   # Total de posts únicos com métricas
     engagement_rate: float                  # Taxa média geral de engajamento
     por_plataforma: list[ResumoPlataforma]  # Lista contendo os resumos por rede
+    total_impressoes: int = 0               # Soma das impressões (PI 2, T13)
+    total_interacoes: int = 0               # Soma das interações (PI 2, T13)
+    por_dia_semana: list[ResumoDiaSemana] = []  # Engajamento por dia da semana (PI 2, T13)
