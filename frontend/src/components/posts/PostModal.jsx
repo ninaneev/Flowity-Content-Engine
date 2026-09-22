@@ -23,6 +23,13 @@ const STATUS_HELP = {
   failed: "Automation reported a failure.",
 };
 
+const WORKFLOW_OPTIONS = [
+  { value: "", label: "Não informado" },
+  { value: "manual", label: "manual" },
+  { value: "pi1", label: "pi1" },
+  { value: "pi2", label: "pi2" },
+];
+
 const CHANNEL_LABELS = {
   linkedin: "LinkedIn",
   x: "X / Twitter",
@@ -36,6 +43,13 @@ function normalizeForApi(form, original = {}) {
     hook: form.hook?.trim() || "New post",
     scheduled_at: movedOutOfScheduled ? null : (form.scheduled_at || null),
     source_ids: form.source_ids || [],
+    // Medição de tempo (PI 2, T16): vazio vira null
+    external_minutes:
+      form.external_minutes === "" || form.external_minutes == null
+        ? null
+        : Number(form.external_minutes),
+    tools_used: form.tools_used?.trim() || null,
+    workflow: form.workflow || null,
   };
 }
 
@@ -212,6 +226,56 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               />
             </div>
           </div>
+
+          <fieldset className="card bg-bg-elevated/40 space-y-4">
+            <legend className="px-1 text-sm font-semibold text-text-primary">
+              Medição de tempo (PI 2)
+            </legend>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="label" htmlFor="post-external-minutes">
+                  Tempo gasto fora da ferramenta (min)
+                </label>
+                <input
+                  id="post-external-minutes"
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  name="external_minutes"
+                  value={form.external_minutes ?? ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="post-workflow">Fluxo</label>
+                <select
+                  id="post-workflow"
+                  className="select"
+                  name="workflow"
+                  value={form.workflow || ""}
+                  onChange={handleChange}
+                >
+                  {WORKFLOW_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="label" htmlFor="post-tools-used">Ferramentas usadas</label>
+              <input
+                id="post-tools-used"
+                className="input"
+                name="tools_used"
+                maxLength={200}
+                value={form.tools_used || ""}
+                onChange={handleChange}
+                placeholder="Ex.: Canva, Google Docs"
+              />
+            </div>
+          </fieldset>
 
           <div>
             <label className="label">Notes</label>

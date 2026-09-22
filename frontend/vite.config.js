@@ -13,6 +13,7 @@ export default defineConfig({
       "/posts":      { target: "http://backend:8000", changeOrigin: true },
       "/generation": { target: "http://backend:8000", changeOrigin: true },
       "/automation": { target: "http://backend:8000", changeOrigin: true },
+      "/reports":    { target: "http://backend:8000", changeOrigin: true },
       "/health":     { target: "http://backend:8000", changeOrigin: true },
     },
   },
