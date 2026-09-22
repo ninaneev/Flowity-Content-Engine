@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
+import { Link } from "react-router-dom";
 import StatusBadge from "../shared/StatusBadge";
 import SelectField from "../shared/SelectField";
 import PostImageUploader from "./PostImageUploader";
@@ -362,6 +363,15 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
         </div>
 
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
+          {post.id && (
+            <Link
+              to={`/carousel/${post.id}`}
+              className={`mr-auto inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border border-border
+                bg-bg-elevated text-text-primary hover:border-flowity-purple ${FOCO}`}
+            >
+              Montar carrossel
+            </Link>
+          )}
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : mode === "create" ? "Create post" : "Save changes"}

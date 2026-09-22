@@ -79,6 +79,11 @@ export const postsApi = {
   update:   (id, data)      => api.put(`/posts/${id}`, data),
   calendar: (month)         => api.get("/posts/calendar", { params: { month } }),
   pipeline: ()              => api.get("/posts/", { params: {} }),
+  // Depende do endpoint da Tarefa 8 (#82): POST /posts/{id}/render/carousel
+  render: {
+    carousel: (postId, slides) =>
+      api.post(`/posts/${postId}/render/carousel`, { slides }),
+  },
 };
 
 // ASSETS (imagens do post)
