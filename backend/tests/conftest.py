@@ -23,7 +23,7 @@ from app.core.config import settings  # noqa: E402
 from app.core.security import get_current_admin  # noqa: E402
 from app.db.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import generation, post, post_asset, post_metric, source  # noqa: E402,F401
+from app.models import alert_setting, generation, post, post_asset, post_metric, source  # noqa: E402,F401
 
 settings.MEDIA_DIR = _MEDIA_TMP
 

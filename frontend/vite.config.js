@@ -14,6 +14,9 @@ export default defineConfig({
       "/generation": { target: "http://backend:8000", changeOrigin: true },
       "/automation": { target: "http://backend:8000", changeOrigin: true },
       "/metrics":    { target: "http://backend:8000", changeOrigin: true },
+      "/alerts":     { target: "http://backend:8000", changeOrigin: true },
+      // Só a API: "/settings" sozinho também é a rota da tela de Settings.
+      "^/settings/alerts": { target: "http://backend:8000", changeOrigin: true },
       "/health":     { target: "http://backend:8000", changeOrigin: true },
     },
   },

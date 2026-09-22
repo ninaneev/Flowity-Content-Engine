@@ -3,6 +3,7 @@ import { metricsApi } from "../lib/api";
 import StatCard from "../components/analytics/StatCard";
 import BarChart from "../components/analytics/BarChart";
 import PlatformCompare from "../components/analytics/PlatformCompare";
+import AlertBanner from "../components/alerts/AlertBanner";
 import { formatarNumero, formatarPercentual } from "../components/analytics/format";
 
 export default function AnalyticsPage() {
@@ -26,6 +27,8 @@ export default function AnalyticsPage() {
           Em que dia o engajamento é maior e qual plataforma rende mais por publicação.
         </p>
       </div>
+
+      <AlertBanner />
 
       {carregando && (
         <p role="status" className="text-sm text-text-secondary">
