@@ -55,6 +55,7 @@ class Post(Base):
     metrics: Mapped[list["PostMetric"]] = relationship(
         "PostMetric",
         back_populates="post",
+        order_by="PostMetric.collected_at",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
