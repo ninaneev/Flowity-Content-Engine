@@ -2,7 +2,9 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.services.accessibility import ALT_MAX, ALT_MIN, validar_alt_text
 
 
 class PostAssetResponse(BaseModel):
@@ -27,6 +29,24 @@ class PostAssetResponse(BaseModel):
 class PostAssetUpdate(BaseModel):
     alt_text: str | None = None
     caption: str | None = None
+
+    @field_validator("alt_text")
+    @classmethod
+    def validate_alt_text(cls, v: str | None) -> str | None:
+        if v is None:
+            return v          # campo nao enviado no PATCH, mantem o valor atual
+        return validar_alt_text(v)
+
+
+class AltTextIn(BaseModel):
+    """Valida o alt_text que chega por formulario multipart no upload."""
+
+    alt_text: str = Field(..., min_length=ALT_MIN, max_length=ALT_MAX)
+
+    @field_validator("alt_text")
+    @classmethod
+    def validate_alt_text(cls, v: str) -> str:
+        return validar_alt_text(v)
 
 
 class AssetOrderUpdate(BaseModel):
