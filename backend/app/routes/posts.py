@@ -3,9 +3,28 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.schemas.post import PostCreate, PostUpdate, PostResponse, CalendarPost
 from app.repositories import posts as post_repo
+from app.repositories import post_assets as asset_repo
 from app.core.security import get_current_admin
 
 router = APIRouter()
+
+STATUS_QUE_EXIGEM_ACESSIBILIDADE = {"scheduled", "published"}
+
+
+def _garantir_acessibilidade(db, post_id: int, novo_status: str | None) -> None:
+    """Bloqueia agendar/publicar post com imagem sem texto alternativo válido.
+
+    Base: Lei 13.146/2015, art. 63, e eMAG, recomendação 3.6.
+    """
+    if novo_status not in STATUS_QUE_EXIGEM_ACESSIBILIDADE:
+        return
+    pendentes = asset_repo.sem_alt_text_valido(db, post_id)
+    if pendentes:
+        raise HTTPException(status_code=422, detail={"error": {
+            "code": "acessibilidade_pendente",
+            "message": f"{len(pendentes)} imagem(ns) sem texto alternativo válido.",
+            "field": "assets.alt_text",
+            "asset_ids": [a.id for a in pendentes]}})
 
 
 @router.get("/", response_model=list[PostResponse])
@@ -61,7 +80,10 @@ def get_post(post_id: int, db: Session = Depends(get_db), _admin=Depends(get_cur
 
 
 @router.put("/{post_id}", response_model=PostResponse)
+@router.patch("/{post_id}", response_model=PostResponse, summary="Atualiza parte dos campos do post")
 def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db), _admin=Depends(get_current_admin)):
+    if "status" in post.model_fields_set:
+        _garantir_acessibilidade(db, post_id, post.status)
     updated = post_repo.update(db, post_id, post)
 
     if not updated:
