@@ -81,6 +81,27 @@ export const postsApi = {
   pipeline: ()              => api.get("/posts/", { params: {} }),
 };
 
+// ASSETS (imagens do post)
+export const assetsApi = {
+  list: (postId) => api.get(`/posts/${postId}/assets`),
+  upload: (postId, file, altText) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("alt_text", altText);
+    return api.post(`/posts/${postId}/assets`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  update: (id, data) => api.patch(`/assets/${id}`, data),
+  remove: (id) => api.delete(`/assets/${id}`),
+};
+
+/** Monta a URL completa de um arquivo servido pelo backend (ex.: "/media/posts/1/a.png"). */
+export function mediaUrl(path) {
+  if (!path || /^https?:\/\//.test(path)) return path;
+  return `${BASE_URL.replace(/\/$/, "")}${path}`;
+}
+
 // GENERATION
 export const generationApi = {
   preview:    (data) => api.post("/generation/preview", data),
