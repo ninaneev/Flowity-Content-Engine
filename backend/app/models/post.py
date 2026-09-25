@@ -1,7 +1,7 @@
 """Modelo ORM da tabela posts."""
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Text, DateTime, func
+from sqlalchemy import String, Text, DateTime, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
 
@@ -39,6 +39,17 @@ class Post(Base):
     # ── Geração ───────────────────────────────────────────────────
     generation_mode: Mapped[str | None] = mapped_column(String(20), comment="template | ollama | manual")
     notes: Mapped[str | None] = mapped_column(Text)
+
+    # ── Medição de tempo (PI 2, T16) ──────────────────────────────
+    external_minutes: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, comment="Minutos gastos fora da ferramenta"
+    )
+    tools_used: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="Ferramentas externas usadas"
+    )
+    workflow: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, comment="manual | pi1 | pi2"
+    )
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
