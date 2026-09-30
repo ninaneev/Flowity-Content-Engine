@@ -87,6 +87,12 @@ export const generationApi = {
   createPost: (data) => api.post("/generation/create-post", data),
 };
 
+// METRICS (PI 2)
+export const metricsApi = {
+  summary: (params) => api.get("/metrics/summary", { params }),
+  create: (postId, data) => api.post(`/posts/${postId}/metrics`, data),
+};
+
 // AUTOMATION
 export const automationApi = {
   config: () => api.get("/automation/config"),

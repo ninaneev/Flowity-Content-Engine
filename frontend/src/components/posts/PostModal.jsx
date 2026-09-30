@@ -97,8 +97,8 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               </p>
             </div>
           </div>
-          <button className="btn-ghost" onClick={onClose}>
-            <X size={16} />
+          <button className="btn-ghost" onClick={onClose} aria-label="Fechar">
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
@@ -111,10 +111,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">Hook / main title</label>
+            <label className="label" htmlFor="post-hook">Hook / main title</label>
             <textarea
               className="textarea text-base font-medium"
-              name="hook"
+              id="post-hook"
+                name="hook"
               value={form.hook || ""}
               onChange={handleChange}
               rows={2}
@@ -124,10 +125,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">Post body</label>
+            <label className="label" htmlFor="post-body">Post body</label>
             <textarea
               className="textarea"
-              name="body"
+              id="post-body"
+                name="body"
               value={form.body || ""}
               onChange={handleChange}
               rows={8}
@@ -136,10 +138,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">CTA (call to action)</label>
+            <label className="label" htmlFor="post-cta">CTA (call to action)</label>
             <input
               className="input"
-              name="cta"
+              id="post-cta"
+                name="cta"
               value={form.cta || ""}
               onChange={handleChange}
               placeholder="Example: Comment with your take..."
@@ -147,10 +150,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">X version (max 280 chars)</label>
+            <label className="label" htmlFor="post-short-x">X version (max 280 chars)</label>
             <input
               className="input"
-              name="short_x"
+              id="post-short-x"
+                name="short_x"
               value={form.short_x || ""}
               onChange={handleChange}
               maxLength={280}
@@ -161,8 +165,9 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Status</label>
+              <label className="label" htmlFor="post-status">Status</label>
               <SelectField
+                id="post-status"
                 name="status"
                 value={form.status || "draft"}
                 onChange={handleChange}
@@ -176,8 +181,9 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               )}
             </div>
             <div>
-              <label className="label">Channel</label>
+              <label className="label" htmlFor="post-channel">Channel</label>
               <SelectField
+                id="post-channel"
                 name="channel"
                 value={form.channel || "linkedin"}
                 onChange={handleChange}
@@ -192,19 +198,21 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Schedule</label>
+              <label className="label" htmlFor="post-scheduled-at">Schedule</label>
               <input
                 className="input"
                 type="datetime-local"
+                id="post-scheduled-at"
                 name="scheduled_at"
                 value={form.scheduled_at ? form.scheduled_at.slice(0, 16) : ""}
                 onChange={handleChange}
               />
             </div>
             <div>
-              <label className="label">Creation mode</label>
+              <label className="label" htmlFor="post-generation-mode">Creation mode</label>
               <input
                 className="input"
+                id="post-generation-mode"
                 name="generation_mode"
                 value={form.generation_mode || "manual"}
                 onChange={handleChange}
@@ -214,10 +222,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">Notes</label>
+            <label className="label" htmlFor="post-notes">Notes</label>
             <textarea
               className="textarea"
-              name="notes"
+              id="post-notes"
+                name="notes"
               value={form.notes || ""}
               onChange={handleChange}
               rows={3}
