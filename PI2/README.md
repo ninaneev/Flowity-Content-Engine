@@ -16,9 +16,12 @@ publicações e testes automatizados.
 |---|---|
 | [`team-tasks-pi2.md`](team-tasks-pi2.md) | **Comece por aqui.** As 16 tarefas com o passo a passo completo, na ordem de execução |
 | [`plano-de-acao-pi2-texto.md`](plano-de-acao-pi2-texto.md) | Texto pronto de cada campo do Plano de Ação, incluindo as 7 quinzenas |
-| [`Plano_de_Acao_PI2_Flowity_Content_Engine.docx`](Plano_de_Acao_PI2_Flowity_Content_Engine.docx) | Documento oficial entregue no AVA |
+| [`Plano_de_Acao_PI2_Flowity_Content_Engine_v2.docx`](Plano_de_Acao_PI2_Flowity_Content_Engine_v2.docx) | **Versão a entregar no AVA.** Revisada em 10/09/2026 contra as rubricas oficiais de avaliação do PI |
+| [`Plano_de_Acao_PI2_Flowity_Content_Engine_v2.pdf`](Plano_de_Acao_PI2_Flowity_Content_Engine_v2.pdf) | Mesma versão 2 em PDF, para leitura e conferência |
+| [`Plano_de_Acao_PI2_Flowity_Content_Engine.docx`](Plano_de_Acao_PI2_Flowity_Content_Engine.docx) | Versão 1, mantida apenas como histórico |
 | [`perguntas-continuidade-pi1.md`](perguntas-continuidade-pi1.md) | Levantamento com a comunidade externa: o novo problema e as respostas às 5 perguntas do grupo |
-| [`referencias-bibliograficas.md`](referencias-bibliograficas.md) | Bibliografia em ABNT, com indicação de onde usar cada referência no relatório |
+| [`referencias-bibliograficas-v2.md`](referencias-bibliograficas-v2.md) | **Bibliografia válida.** Janela de 5 a 6 anos, exceções justificadas e protocolo de busca dos artigos científicos que faltam |
+| [`referencias-bibliograficas.md`](referencias-bibliograficas.md) | Versão 1, mantida apenas como histórico |
 | [`issues/`](issues/) | Texto de cada issue do GitHub (a versão curta; o passo a passo está no `team-tasks-pi2.md`) |
 
 ## Quadro no GitHub

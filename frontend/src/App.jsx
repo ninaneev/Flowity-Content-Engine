@@ -6,6 +6,7 @@ import SourcesPage from "./pages/SourcesPage";
 import GeneratorPage from "./pages/GeneratorPage";
 import PipelinePage from "./pages/PipelinePage";
 import SettingsPage from "./pages/SettingsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 import LoginPage from "./pages/LoginPage";
 
 function ProtectedRoute({ children }) {
@@ -29,6 +30,7 @@ export default function App() {
                 <Route path="/sources" element={<SourcesPage />} />
                 <Route path="/generator" element={<GeneratorPage />} />
                 <Route path="/pipeline" element={<PipelinePage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
