@@ -92,4 +92,10 @@ export const automationApi = {
   config: () => api.get("/automation/config"),
 };
 
+// METRICS
+export const metricsApi = {
+  summary: (params) => api.get("/metrics/summary", { params }),
+  create: (postId, data) => api.post(`/posts/${postId}/metrics`, data),
+};
+
 export default api;
