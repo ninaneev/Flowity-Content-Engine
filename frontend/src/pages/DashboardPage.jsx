@@ -90,13 +90,13 @@ export default function DashboardPage() {
             <Plus size={16} /> New post
           </button>
           <div className="flex items-center gap-1 bg-bg-surface border border-border rounded-lg p-1">
-            <button className="btn-ghost p-1.5" onClick={() => setMonth(subMonths(month, 1))}>
+            <button aria-label="Previous month" className="btn-ghost p-1.5" onClick={() => setMonth(subMonths(month, 1))}>
               <ChevronLeft size={16} />
             </button>
             <span className="text-sm font-medium text-text-primary px-2 min-w-36 text-center">
               {format(month, "MMMM yyyy")}
             </span>
-            <button className="btn-ghost p-1.5" onClick={() => setMonth(addMonths(month, 1))}>
+            <button aria-label="Next month" className="btn-ghost p-1.5" onClick={() => setMonth(addMonths(month, 1))}>
               <ChevronRight size={16} />
             </button>
           </div>

@@ -6,10 +6,14 @@ import { ChevronDown } from "lucide-react";
  * Hides the native arrow and shows an animated ChevronDown instead.
  *
  * Props:
- *   options  – array of { value, label } objects
- *   value, onChange, name, required, disabled – passed to native select
- *   selectClassName – extra classes for the <select> element
- *   wrapperClassName – extra classes for the wrapper <div>
+ *   options            – array of { value, label } objects
+ *   value, onChange    – native select props
+ *   name, required,
+ *   disabled           – native select props
+ *   selectClassName    – extra classes for the <select> element
+ *   wrapperClassName   – extra classes for the wrapper <div>
+ *   aria-label,
+ *   aria-labelledby    – accessibility props
  */
 export default function SelectField({
   name,
@@ -20,6 +24,7 @@ export default function SelectField({
   disabled,
   selectClassName = "",
   wrapperClassName = "",
+  ...selectProps
 }) {
   const [focused, setFocused] = useState(false);
 
@@ -34,6 +39,7 @@ export default function SelectField({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={`select pr-8 ${selectClassName}`}
+        {...selectProps}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -41,8 +47,10 @@ export default function SelectField({
           </option>
         ))}
       </select>
+
       <ChevronDown
         size={14}
+        aria-hidden="true"
         className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none transition-transform duration-200 ${
           focused ? "rotate-180" : ""
         }`}

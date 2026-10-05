@@ -28,7 +28,7 @@ export default {
         text: {
           primary:   "#F0F2FF",
           secondary: "#A8B3C7",
-          muted:     "#5C6A82",
+          muted:     "#7C8AA3",
         },
         // ── Status dos posts ─────────────────────────────────────────
         status: {
