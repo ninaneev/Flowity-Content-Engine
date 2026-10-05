@@ -1,7 +1,14 @@
+
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Calendar, BookOpen, Sparkles, LayoutList, Settings, LogOut, Zap
+  Calendar,
+  BookOpen,
+  Sparkles,
+  LayoutList,
+  Settings,
+  LogOut,
+  Zap,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -22,16 +29,25 @@ export default function AppShell({ children }) {
 
   return (
     <div className="flex h-screen bg-bg-base overflow-hidden">
+      <a href="#conteudo-principal" className="skip-link">
+        Pular para o conteúdo principal
+      </a>
+
       <aside className="w-56 flex-shrink-0 bg-bg-surface border-r border-border flex flex-col">
-        <div className="px-5 py-5 border-b border-border">
+        <header className="px-5 py-5 border-b border-border">
           <div className="flex items-center gap-2">
-            <Zap size={18} className="text-flowity-cyan" />
+            <Zap size={18} className="text-flowity-cyan" aria-hidden="true" />
             <span className="font-bold text-sm gradient-text">Flowity</span>
           </div>
-          <p className="text-text-muted text-xs mt-0.5 pl-6">Content Engine</p>
-        </div>
+          <p className="text-text-muted text-xs mt-0.5 pl-6">
+            Content Engine
+          </p>
+        </header>
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5">
+        <nav
+          aria-label="Navegação principal"
+          className="flex-1 px-2 py-3 space-y-0.5"
+        >
           {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
@@ -45,7 +61,7 @@ export default function AppShell({ children }) {
                 }`
               }
             >
-              <Icon size={16} />
+              <Icon size={16} aria-hidden="true" />
               {label}
             </NavLink>
           ))}
@@ -53,16 +69,21 @@ export default function AppShell({ children }) {
 
         <div className="px-2 py-3 border-t border-border">
           <button
+            type="button"
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-muted hover:text-status-failed hover:bg-bg-elevated w-full transition-all duration-150"
           >
-            <LogOut size={16} />
+            <LogOut size={16} aria-hidden="true" />
             Log out
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
+      <main
+        id="conteudo-principal"
+        tabIndex={-1}
+        className="flex-1 overflow-y-auto"
+      >
         {children}
       </main>
     </div>

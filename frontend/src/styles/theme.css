@@ -31,6 +31,39 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+
+/* Acessibilidade: foco visível pelo teclado */
+:focus-visible {
+  outline: 2px solid #1CD8DE;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Link para pular a navegação */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.625rem 1rem;
+  border-radius: 0 0 8px 0;
+  background: var(--color-cyan);
+  color: #07080F;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  left: 0;
+  outline: 2px solid #F0F2FF;
+  outline-offset: 2px;
+}
+
 /* ── Scrollbar (webkit) ──────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
@@ -49,11 +82,14 @@ body {
   }
 
   /* Primary button — purple gradient */
-  .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
-           text-white transition-all duration-200 cursor-pointer;
-    background: var(--gradient);
-  }
+.btn-primary {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+         transition-all duration-200 cursor-pointer;
+  color: #07080F;
+  background: var(--gradient);
+}
+
+  
   .btn-primary:hover {
     opacity: 0.9;
     transform: translateY(-1px);

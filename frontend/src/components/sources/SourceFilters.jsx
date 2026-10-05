@@ -23,21 +23,36 @@ export default function SourceFilters({
   return (
     <div className="flex items-center gap-2">
       <div className="relative flex-1">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-        <input
-          className="input pl-8 text-sm bg-bg-surface focus:ring-1 focus:ring-flowity-cyan transition"
-          placeholder="Search sources..."
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+        <Search
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+          aria-hidden="true"
         />
+
+        <input
+  type="text"
+  aria-label="Search sources"
+  className="input pl-8 text-sm bg-bg-surface focus:ring-1 focus:ring-flowity-cyan transition"
+  placeholder="Search sources..."
+  value={search}
+  onChange={(e) => onSearchChange(e.target.value)}
+/>
       </div>
 
-      <SelectField
-        value={typeFilter}
-        onChange={(e) => onTypeFilterChange(e.target.value)}
-        options={[{ value: "", label: "All types" }, ...SOURCE_TYPE_OPTIONS]}
-        selectClassName={`w-40 text-sm ${typeFilter ? "text-flowity-cyan border-flowity-cyan" : "text-text-muted"}`}
-      />
+ <SelectField
+  value={typeFilter}
+  onChange={(e) => onTypeFilterChange(e.target.value)}
+  options={[
+    { value: "", label: "All types" },
+    ...SOURCE_TYPE_OPTIONS,
+  ]}
+  aria-label="Filter sources by type"
+  selectClassName={`w-40 text-sm ${
+    typeFilter
+      ? "text-flowity-cyan border-flowity-cyan"
+      : "text-text-muted"
+  }`}
+/>
     </div>
   );
 }
