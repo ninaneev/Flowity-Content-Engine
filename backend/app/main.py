@@ -85,7 +85,7 @@ app.mount(
 # ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def on_startup():
-    """Create database tables on startup when they do not exist yet."""
+    """Create tables on startup (SQLite only; PostgreSQL uses `alembic upgrade head`)."""
     create_tables()
     print(f"{settings.APP_NAME} started. Docs at http://localhost:8000/docs")
 

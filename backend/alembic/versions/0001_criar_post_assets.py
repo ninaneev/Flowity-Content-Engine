@@ -1,7 +1,7 @@
 """cria tabela post_assets
 
 Revision ID: 89380bd00e80
-Revises: 
+Revises: 3f2b7c1d9a10
 Create Date: 2026-09-09 13:12:51.983681
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '89380bd00e80'
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = '3f2b7c1d9a10'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
