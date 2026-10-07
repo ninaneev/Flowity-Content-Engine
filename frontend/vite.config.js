@@ -14,6 +14,8 @@ export default defineConfig({
       "/generation": { target: "http://backend:8000", changeOrigin: true },
       "/automation": { target: "http://backend:8000", changeOrigin: true },
       "/health":     { target: "http://backend:8000", changeOrigin: true },
+      "/assets":     { target: "http://backend:8000", changeOrigin: true },
+      "/media":      { target: "http://backend:8000", changeOrigin: true },
     },
   },
 });
