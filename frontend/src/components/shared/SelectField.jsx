@@ -7,11 +7,12 @@ import { ChevronDown } from "lucide-react";
  *
  * Props:
  *   options  – array of { value, label } objects
- *   value, onChange, name, required, disabled – passed to native select
+ *   id, value, onChange, name, required, disabled – passed to native select
  *   selectClassName – extra classes for the <select> element
  *   wrapperClassName – extra classes for the wrapper <div>
  */
 export default function SelectField({
+  id,
   name,
   value,
   onChange,
@@ -26,6 +27,7 @@ export default function SelectField({
   return (
     <div className={`relative ${wrapperClassName}`}>
       <select
+        id={id}
         name={name}
         value={value}
         onChange={onChange}
