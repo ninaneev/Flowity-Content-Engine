@@ -42,23 +42,21 @@ async def validation_exception_handler(_, exc: RequestValidationError):
 
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# Permite que o frontend Vite se comunique com o backend (porta 8000)
+# Origens vêm de CORS_ORIGINS (variável de ambiente). No desenvolvimento o
+# padrão libera o Vite local; em produção, só a URL do frontend publicado.
+_PRIVATE_NETWORK_ORIGIN_REGEX = (
+    r"^http://("
+    r"localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|"
+    r"192\.168\.\d{1,3}\.\d{1,3}|"
+    r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+    r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
+    r"):\d+$"
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:5174",  # Vite fallback when 5173 is busy
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://localhost:3000",  # Fallback
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_origin_regex=(
-        r"^http://("
-        r"localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|"
-        r"192\.168\.\d{1,3}\.\d{1,3}|"
-        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
-        r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
-        r"):\d+$"
+        _PRIVATE_NETWORK_ORIGIN_REGEX if settings.CORS_ALLOW_PRIVATE_NETWORK else None
     ),
     allow_credentials=True,
     allow_methods=["*"],

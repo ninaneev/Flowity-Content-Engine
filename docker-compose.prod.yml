@@ -1,0 +1,46 @@
+# ══════════════════════════════════════════════════════════════════════
+#  Flowity Content Engine — composição de PRODUÇÃO (ensaio local)
+#  Reproduz na sua máquina o que o Render faz em nuvem:
+#    1. "migrate" roda  alembic upgrade head  (etapa de release)
+#    2. "backend" sobe sem --reload, com a mídia num volume persistente
+#  Como rodar:
+#    docker compose -f docker-compose.prod.yml up --build
+#  O banco é o do DATABASE_URL do seu arquivo de ambiente (Supabase ou outro).
+#  O frontend de produção vai para a Vercel — ver infra/deploy/README.md.
+# ══════════════════════════════════════════════════════════════════════
+
+services:
+
+  migrate:
+    build: ./backend
+    env_file:
+      - .env
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - MEDIA_DIR=/var/data/media
+      - CORS_ALLOW_PRIVATE_NETWORK=false
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --proxy-headers
+    volumes:
+      - media_data:/var/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  media_data:
