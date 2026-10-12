@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { MAX_CARACTERES } from "../../lib/carouselSlides.mjs";
 
@@ -10,17 +10,12 @@ const BOTAO =
    bg-bg-elevated text-text-primary hover:border-flowity-purple
    disabled:text-text-secondary disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-border ${FOCO}`;
 
-/** Nome curto do papel do slide, mostrado junto do número. */
 function papel(indice, total) {
   if (indice === 0) return "capa";
   if (indice === total - 1) return "fechamento";
   return "conteúdo";
 }
 
-/**
- * Um slide do carrossel: número, texto editável e botões de ordem.
- * A reordenação é por botões (<button> de verdade), sem drag-and-drop.
- */
 export default function SlideCard({
   id,
   indice,
@@ -32,33 +27,105 @@ export default function SlideCard({
   onMover,
   onRemover,
   onFocar,
+  onNavegar,
 }) {
   const numero = indice + 1;
   const campoId = `slide-${id}-texto`;
   const contadorId = `slide-${id}-contador`;
   const vazio = !texto.trim();
 
+  const textareaRef = useRef(null);
+
+  function handleKeyDown(e) {
+    // O comportamento de teclado do card só deve acontecer
+    // quando o próprio card estiver focado.
+    if (e.target !== e.currentTarget) return;
+
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      textareaRef.current?.focus();
+      return;
+    }
+
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      onNavegar?.(-1);
+      return;
+    }
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      onNavegar?.(1);
+    }
+  }
+
   return (
     <li
       data-slide-id={id}
+      role="group"
+      aria-roledescription="slide"
+      aria-label={`Slide ${numero} de ${total}`}
       aria-current={atual ? "true" : undefined}
+      tabIndex={0}
       className={`rounded-lg border p-3 bg-bg-surface transition-colors ${
         atual ? "border-flowity-purple" : "border-border"
       }`}
       onFocus={onFocar}
+      onKeyDown={handleKeyDown}
     >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-text-primary">
-          Slide {numero} de {total}
-          <span className="ml-2 text-xs font-normal text-text-secondary">({papel(indice, total)})</span>
-          {atual && <span className="ml-2 text-xs font-medium text-flowity-purple">em pré-visualização</span>}
-        </h3>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="min-w-0">
+          <h3 className="font-medium text-text-primary">
+            Slide {numero} de {total}
+          </h3>
+
+          <p className="text-xs text-text-secondary">
+            {papel(indice, total)}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className={BOTAO}
+            onClick={() => onMover(-1)}
+            disabled={indice === 0}
+            aria-label={`Mover slide ${numero} para cima`}
+          >
+            <ArrowUp size={14} aria-hidden="true" />
+            Subir
+          </button>
+
+          <button
+            type="button"
+            className={BOTAO}
+            onClick={() => onMover(1)}
+            disabled={indice === total - 1}
+            aria-label={`Mover slide ${numero} para baixo`}
+          >
+            <ArrowDown size={14} aria-hidden="true" />
+            Descer
+          </button>
+
+          <button
+            type="button"
+            className={BOTAO}
+            onClick={onRemover}
+            disabled={!podeRemover}
+            aria-label={`Remover slide ${numero}`}
+          >
+            <Trash2 size={14} aria-hidden="true" />
+            Remover
+          </button>
+        </div>
       </div>
 
       <label htmlFor={campoId} className="sr-only">
         Texto do slide {numero} de {total}
       </label>
+
       <textarea
+        ref={textareaRef}
         id={campoId}
         className="textarea"
         rows={3}
@@ -68,36 +135,24 @@ export default function SlideCard({
         aria-invalid={vazio ? "true" : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
-      <p id={contadorId} className={`text-xs mt-1 ${vazio ? "text-amber-300" : "text-text-secondary"}`}>
-        {vazio ? "Slide sem texto. " : ""}
-        {texto.length}/{MAX_CARACTERES} caracteres
-      </p>
 
-      <div className="flex flex-wrap gap-2 mt-2">
-        <button
-          type="button"
-          id={`slide-${id}-subir`}
-          className={BOTAO}
-          disabled={indice === 0}
-          onClick={() => onMover(-1)}
+      <div className="flex items-center justify-between mt-1">
+        <span
+          id={contadorId}
+          className={`text-xs ${
+            texto.length >= MAX_CARACTERES
+              ? "text-flowity-pink"
+              : "text-text-secondary"
+          }`}
         >
-          <ArrowUp size={14} aria-hidden="true" />
-          Mover para cima<span className="sr-only"> o slide {numero}</span>
-        </button>
-        <button
-          type="button"
-          id={`slide-${id}-descer`}
-          className={BOTAO}
-          disabled={indice === total - 1}
-          onClick={() => onMover(1)}
-        >
-          <ArrowDown size={14} aria-hidden="true" />
-          Mover para baixo<span className="sr-only"> o slide {numero}</span>
-        </button>
-        <button type="button" className={`${BOTAO} ml-auto`} disabled={!podeRemover} onClick={onRemover}>
-          <Trash2 size={14} aria-hidden="true" />
-          Remover slide<span className="sr-only"> {numero}</span>
-        </button>
+          {texto.length}/{MAX_CARACTERES}
+        </span>
+
+        {vazio && (
+          <span className="text-xs text-flowity-pink">
+            Preencha este slide.
+          </span>
+        )}
       </div>
     </li>
   );

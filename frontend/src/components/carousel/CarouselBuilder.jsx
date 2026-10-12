@@ -46,6 +46,17 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
     setItens((lista) => lista.map((item, i) => (i === indice ? { ...item, texto } : item)));
   }
 
+  function navegarSlide(direcao) {
+  setAtual((indiceAtual) => {
+    const novoIndice = Math.max(
+      0,
+      Math.min(indiceAtual + direcao, itens.length - 1)
+    );
+
+    return novoIndice;
+  });
+}
+
   function moverSlide(indice, direcao) {
     const item = itens[indice];
     const destino = indice + direcao;
@@ -117,9 +128,11 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
             atual={indice === atual}
             podeRemover={itens.length > MIN_SLIDES}
             onChange={(texto) => alterarTexto(indice, texto)}
+            
             onMover={(direcao) => moverSlide(indice, direcao)}
             onRemover={() => removerSlide(indice)}
             onFocar={() => setAtual(indice)}
+            onNavegar={(direcao) => navegarSlide(direcao)}
           />
         ))}
       </ol>
@@ -161,13 +174,22 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
         </p>
       )}
       {erro && (
-        <p role="alert" className="text-sm text-red-300 font-medium">
-          Erro: {erro}
-        </p>
-      )}
-      <p role="status" aria-live="polite" className="text-sm text-emerald-300">
-        {aviso}
-      </p>
+  <p role="alert" className="text-sm text-red-300 font-medium">
+    Erro: {erro}
+  </p>
+)}
+
+<p
+  role="status"
+  aria-live="polite"
+  className="sr-only"
+>
+  Slide {atual + 1} de {itens.length}
+</p>
+
+<p role="status" aria-live="polite" className="text-sm text-emerald-300">
+  {aviso}
+</p>
     </section>
   );
 }
