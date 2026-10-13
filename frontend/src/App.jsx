@@ -8,6 +8,7 @@ import PipelinePage from "./pages/PipelinePage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import CarouselPage from "./pages/CarouselPage";
+import CarouselBuilder from "./components/carousel/CarouselBuilder";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("flowity_token");
@@ -32,8 +33,9 @@ export default function App() {
                 <Route path="/pipeline" element={<PipelinePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/carousel/:postId" element={<CarouselPage />} />
+                <Route path="/carousel" element={<CarouselBuilder />} />
                 {/* Sem post escolhido, o carrossel começa pelo Pipeline */}
-                <Route path="/carousel" element={<Navigate to="/pipeline" replace />} />
+                {/* <Route path="/carousel" element={<Navigate to="/pipeline" replace />} /> */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AppShell>

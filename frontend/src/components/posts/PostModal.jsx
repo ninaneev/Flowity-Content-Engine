@@ -181,28 +181,22 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
     setForm(post || {});
   }, [post]);
 
+  // escape fecha o modal
   useEffect(() => {
-  const elementoAnterior = document.activeElement;
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
-  const handleKey = (e) => {
-    if (e.key === "Escape") {
-      onClose();
-    }
-  };
-
-  window.addEventListener("keydown", handleKey);
-
-  return () => {
-    window.removeEventListener("keydown", handleKey);
-
-    if (
-      elementoAnterior &&
-      typeof elementoAnterior.focus === "function"
-    ) {
-      elementoAnterior.focus();
-    }
-  };
-}, [onClose]);
+  // ao fechar, o foco volta para quem abriu o modal "roda só ao abrir e ao fechar"
+  useEffect(() => {
+    const elementoAnterior = document.activeElement;
+    return () => elementoAnterior?.focus?.();
+  }, []);
 
   function handleChange(e) {
     const { name, value } = e.target;

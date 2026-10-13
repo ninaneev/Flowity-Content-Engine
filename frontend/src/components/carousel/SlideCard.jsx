@@ -77,6 +77,9 @@ export default function SlideCard({
         <div className="min-w-0">
           <h3 className="font-medium text-text-primary">
             Slide {numero} de {total}
+            {atual && (
+              <span className="ml-2 text-xs font-medium text-flowity-purple"> em pré-visualização</span>
+            )}
           </h3>
 
           <p className="text-xs text-text-secondary">
@@ -87,6 +90,7 @@ export default function SlideCard({
         <div className="flex items-center gap-1">
           <button
             type="button"
+            id={`slide-${id}-subir`}
             className={BOTAO}
             onClick={() => onMover(-1)}
             disabled={indice === 0}
@@ -96,8 +100,10 @@ export default function SlideCard({
             Subir
           </button>
 
+
           <button
             type="button"
+            id={`slide-${id}-descer`}
             className={BOTAO}
             onClick={() => onMover(1)}
             disabled={indice === total - 1}
@@ -141,7 +147,7 @@ export default function SlideCard({
           id={contadorId}
           className={`text-xs ${
             texto.length >= MAX_CARACTERES
-              ? "text-flowity-pink"
+              ? "text-amber-300"
               : "text-text-secondary"
           }`}
         >
@@ -149,7 +155,7 @@ export default function SlideCard({
         </span>
 
         {vazio && (
-          <span className="text-xs text-flowity-pink">
+          <span className="text-xs text-amber-300">
             Preencha este slide.
           </span>
         )}
