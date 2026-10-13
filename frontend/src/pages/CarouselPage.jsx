@@ -57,6 +57,11 @@ function CarrosselGerado({ carrossel }) {
         {carrossel?.total_slides ?? slides.length} slides em PNG 1080x1350 e um PDF
         {kb ? ` de ${kb} KB` : ""}, pronto para subir como documento no LinkedIn.
       </p>
+      {carrossel?.pdf_url && (
+        <a href={mediaUrl(carrossel.pdf_url)} target="_blank" rel="noreferrer" className="inline-flex rounded-md border border-border px-3 py-2 text-sm font-medium hover:border-flowity-purple">
+          Abrir PDF do carrossel
+        </a>
+      )}
       {slides.length > 0 && (
         <ul className="grid grid-cols-3 sm:grid-cols-5 gap-2" aria-label="Slides gerados">
           {slides.map((slide, i) => (
