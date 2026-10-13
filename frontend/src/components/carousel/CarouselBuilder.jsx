@@ -27,6 +27,7 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
 
   const textos = itens.map((i) => i.texto);
   const bloqueio = motivoParaNaoGerar(textos);
+  const postIdValido = Number.isInteger(Number(postId)) && Number(postId) > 0;
 
   useEffect(() => {
     onChange?.({ textos, atual });
@@ -80,6 +81,10 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
   }
 
   async function gerar() {
+    if (!postIdValido) {
+      setErro("Não foi possível identificar a publicação. Volte ao Pipeline e abra o carrossel a partir de um post.");
+      return;
+    }
     if (bloqueio || gerando) return;
     setGerando(true);
     setErro("");
@@ -139,7 +144,7 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
         <button
           type="button"
           onClick={gerar}
-          disabled={Boolean(bloqueio) || gerando}
+          disabled={!postIdValido || Boolean(bloqueio) || gerando}
           aria-busy={gerando ? "true" : undefined}
           aria-describedby={bloqueio ? "gerar-bloqueio" : undefined}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
@@ -155,6 +160,11 @@ export default function CarouselBuilder({ postId, slidesIniciais, onChange, onGe
         )}
       </div>
 
+      {!postIdValido && !erro && (
+        <p role="alert" className="text-sm text-amber-300">
+          Selecione uma publicação no Pipeline antes de gerar o carrossel.
+        </p>
+      )}
       {bloqueio && (
         <p id="gerar-bloqueio" className="text-sm text-amber-300">
           Para gerar: {bloqueio}
