@@ -51,3 +51,18 @@ class AltTextIn(BaseModel):
 
 class AssetOrderUpdate(BaseModel):
     asset_ids: list[int] = Field(..., min_length=1, description="IDs dos assets na ordem desejada")
+
+
+class RenderImageRequest(BaseModel):
+    """Corpo opcional de POST /posts/{id}/render/image; o que faltar vem do post."""
+
+    hook: str | None = Field(None, max_length=280)
+    cta: str | None = Field(None, max_length=280)
+    alt_text: str | None = None
+
+    @field_validator("alt_text")
+    @classmethod
+    def validate_alt_text(cls, v: str | None) -> str | None:
+        if v is None:
+            return v          # sem alt_text, o renderizador gera um a partir do hook
+        return validar_alt_text(v)
