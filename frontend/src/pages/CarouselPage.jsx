@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import CarouselBuilder from "../components/carousel/CarouselBuilder";
+import CarouselExport from "../components/carousel/CarouselExport";
+import PublishChecklist from "../components/carousel/PublishChecklist";
 import { FOCO } from "../components/carousel/SlideCard";
-import { mediaUrl, postsApi } from "../lib/api";
+import { assetsApi, mediaUrl, postsApi } from "../lib/api";
 import { mensagemDeErro } from "../lib/imageUpload.mjs";
 import { slidesDoPost } from "../lib/carouselSlides.mjs";
 
@@ -80,6 +82,19 @@ export default function CarouselPage() {
   const [erro, setErro] = useState("");
   const [estado, setEstado] = useState({ textos: [], atual: 0 });
   const [carrossel, setCarrossel] = useState(null);
+  const [imagens, setImagens] = useState([]);
+  const [pdfBaixado, setPdfBaixado] = useState(false);
+
+  // A cada carrossel gerado, relê todas as imagens do post para a checklist de alt text.
+  function aoGerar(dados) {
+    setCarrossel(dados);
+    setPdfBaixado(false);
+    setImagens(Array.isArray(dados?.slides) ? dados.slides : []);
+    assetsApi
+      .list(postId)
+      .then(({ data }) => Array.isArray(data) && setImagens(data))
+      .catch(() => {}); // se falhar, a checklist usa os slides devolvidos pela geração
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -126,7 +141,7 @@ export default function CarouselPage() {
             postId={post.id}
             slidesIniciais={slidesDoPost(post)}
             onChange={setEstado}
-            onGerado={setCarrossel}
+            onGerado={aoGerar}
           />
           <aside aria-labelledby="previa-titulo" className="lg:sticky lg:top-6 space-y-3">
             <h2 id="previa-titulo" className="text-base font-semibold text-text-primary">
@@ -137,7 +152,21 @@ export default function CarouselPage() {
         </div>
       )}
 
-      {carrossel && <CarrosselGerado carrossel={carrossel} />}
+      {/* Download e checklist só aparecem depois que o carrossel foi gerado ao menos uma vez */}
+      {carrossel && post && (
+        <div className="space-y-6">
+          <CarrosselGerado carrossel={carrossel} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <CarouselExport post={post} carrossel={carrossel} onBaixado={() => setPdfBaixado(true)} />
+            <PublishChecklist
+              post={post}
+              totalSlides={carrossel.total_slides ?? carrossel.slides?.length ?? 0}
+              imagens={imagens}
+              pdfBaixado={pdfBaixado}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
