@@ -7,7 +7,7 @@ from alembic import context
 
 from app.core.config import settings
 from app.db.database import Base
-from app.models import source, post, generation, post_asset, post_metric  # noqa: F401
+from app.models import source, post, generation, post_asset, post_metric, alert_setting  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

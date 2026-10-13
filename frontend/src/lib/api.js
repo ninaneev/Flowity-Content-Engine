@@ -131,6 +131,13 @@ export const reportsApi = {
   performance: () => api.get("/reports/performance"),
 };
 
+// ALERTS (PI 2)
+export const alertsApi = {
+  getSettings: () => api.get("/settings/alerts"),
+  updateSettings: (data) => api.put("/settings/alerts", data),
+  list: () => api.get("/alerts"),
+};
+
 // AUTOMATION
 export const automationApi = {
   config: () => api.get("/automation/config"),

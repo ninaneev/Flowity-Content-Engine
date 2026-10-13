@@ -22,6 +22,10 @@ const resumoFake = {
 
 vi.mock("../lib/api", () => ({
   metricsApi: { summary: vi.fn(() => Promise.resolve({ data: resumoFake })) },
+  alertsApi: {
+    list: vi.fn(() => Promise.resolve({ data: [] })),
+    getSettings: vi.fn(() => Promise.resolve({ data: { min_engagement_rate: 0.02 } })),
+  },
 }));
 
 describe("AnalyticsPage", () => {
