@@ -115,7 +115,7 @@ export default function CarouselPage() {
   }, [postId]);
 
   useEffect(() => {
-    if (!post?.id || !slidesCarregados || !estado.textos.length) return undefined;
+    if (!post?.id || !slidesCarregados || estado.textos.length < 3 || estado.textos.length > 10 || estado.textos.some((texto) => !texto.trim())) return undefined;
     const timeout = window.setTimeout(() => {
       postsApi.slides.save(post.id, estado.textos)
         .catch((err) => setErro(mensagemDeErro(err, "Não foi possível salvar os textos dos slides.")));
