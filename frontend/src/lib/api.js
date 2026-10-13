@@ -79,7 +79,11 @@ export const postsApi = {
   update:   (id, data)      => api.put(`/posts/${id}`, data),
   calendar: (month)         => api.get("/posts/calendar", { params: { month } }),
   pipeline: ()              => api.get("/posts/", { params: {} }),
-  // Depende do endpoint da Tarefa 8 (#82): POST /posts/{id}/render/carousel
+  slides: {
+    list: (postId) => api.get(`/posts/${postId}/slides`),
+    save: (postId, slides) => api.put(`/posts/${postId}/slides`, { slides }),
+  },
+  // Geração de PNG e PDF do carrossel
   render: {
     carousel: (postId, slides) =>
       api.post(`/posts/${postId}/render/carousel`, { slides }),
