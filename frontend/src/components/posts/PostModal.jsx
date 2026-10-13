@@ -157,6 +157,13 @@ const STATUS_HELP = {
   failed: "Automation reported a failure.",
 };
 
+const WORKFLOW_OPTIONS = [
+  { value: "", label: "Não informado" },
+  { value: "manual", label: "manual" },
+  { value: "pi1", label: "pi1" },
+  { value: "pi2", label: "pi2" },
+];
+
 const CHANNEL_LABELS = {
   linkedin: "LinkedIn",
   x: "X / Twitter",
@@ -170,6 +177,13 @@ function normalizeForApi(form, original = {}) {
     hook: form.hook?.trim() || "New post",
     scheduled_at: movedOutOfScheduled ? null : (form.scheduled_at || null),
     source_ids: form.source_ids || [],
+    // Medição de tempo (PI 2, T16): vazio vira null
+    external_minutes:
+      form.external_minutes === "" || form.external_minutes == null
+        ? null
+        : Number(form.external_minutes),
+    tools_used: form.tools_used?.trim() || null,
+    workflow: form.workflow || null,
   };
 }
 
@@ -231,8 +245,8 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               </p>
             </div>
           </div>
-          <button className="btn-ghost" onClick={onClose}>
-            <X size={16} />
+          <button className="btn-ghost" onClick={onClose} aria-label="Fechar">
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
@@ -245,10 +259,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">Hook / main title</label>
+            <label className="label" htmlFor="post-hook">Hook / main title</label>
             <textarea
               className="textarea text-base font-medium"
-              name="hook"
+              id="post-hook"
+                name="hook"
               value={form.hook || ""}
               onChange={handleChange}
               rows={2}
@@ -258,10 +273,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">Post body</label>
+            <label className="label" htmlFor="post-body">Post body</label>
             <textarea
               className="textarea"
-              name="body"
+              id="post-body"
+                name="body"
               value={form.body || ""}
               onChange={handleChange}
               rows={8}
@@ -270,10 +286,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">CTA (call to action)</label>
+            <label className="label" htmlFor="post-cta">CTA (call to action)</label>
             <input
               className="input"
-              name="cta"
+              id="post-cta"
+                name="cta"
               value={form.cta || ""}
               onChange={handleChange}
               placeholder="Example: Comment with your take..."
@@ -281,10 +298,11 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
 
           <div>
-            <label className="label">X version (max 280 chars)</label>
+            <label className="label" htmlFor="post-short-x">X version (max 280 chars)</label>
             <input
               className="input"
-              name="short_x"
+              id="post-short-x"
+                name="short_x"
               value={form.short_x || ""}
               onChange={handleChange}
               maxLength={280}
@@ -297,8 +315,9 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Status</label>
+              <label className="label" htmlFor="post-status">Status</label>
               <SelectField
+                id="post-status"
                 name="status"
                 value={form.status || "draft"}
                 onChange={handleChange}
@@ -312,8 +331,9 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               )}
             </div>
             <div>
-              <label className="label">Channel</label>
+              <label className="label" htmlFor="post-channel">Channel</label>
               <SelectField
+                id="post-channel"
                 name="channel"
                 value={form.channel || "linkedin"}
                 onChange={handleChange}
@@ -328,19 +348,21 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Schedule</label>
+              <label className="label" htmlFor="post-scheduled-at">Schedule</label>
               <input
                 className="input"
                 type="datetime-local"
+                id="post-scheduled-at"
                 name="scheduled_at"
                 value={form.scheduled_at ? form.scheduled_at.slice(0, 16) : ""}
                 onChange={handleChange}
               />
             </div>
             <div>
-              <label className="label">Creation mode</label>
+              <label className="label" htmlFor="post-generation-mode">Creation mode</label>
               <input
                 className="input"
+                id="post-generation-mode"
                 name="generation_mode"
                 value={form.generation_mode || "manual"}
                 onChange={handleChange}
@@ -349,11 +371,62 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
             </div>
           </div>
 
+          <fieldset className="card bg-bg-elevated/40 space-y-4">
+            <legend className="px-1 text-sm font-semibold text-text-primary">
+              Medição de tempo (PI 2)
+            </legend>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="label" htmlFor="post-external-minutes">
+                  Tempo gasto fora da ferramenta (min)
+                </label>
+                <input
+                  id="post-external-minutes"
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  name="external_minutes"
+                  value={form.external_minutes ?? ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="post-workflow">Fluxo</label>
+                <select
+                  id="post-workflow"
+                  className="select"
+                  name="workflow"
+                  value={form.workflow || ""}
+                  onChange={handleChange}
+                >
+                  {WORKFLOW_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="label" htmlFor="post-tools-used">Ferramentas usadas</label>
+              <input
+                id="post-tools-used"
+                className="input"
+                name="tools_used"
+                maxLength={200}
+                value={form.tools_used || ""}
+                onChange={handleChange}
+                placeholder="Ex.: Canva, Google Docs"
+              />
+            </div>
+          </fieldset>
+
           <div>
-            <label className="label">Notes</label>
+            <label className="label" htmlFor="post-notes">Notes</label>
             <textarea
               className="textarea"
-              name="notes"
+              id="post-notes"
+                name="notes"
               value={form.notes || ""}
               onChange={handleChange}
               rows={3}
