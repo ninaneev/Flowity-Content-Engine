@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -11,7 +12,8 @@ from app.core.security import get_current_admin
 from app.db.database import get_db
 from app.repositories import post_assets as asset_repo
 from app.repositories import posts as post_repo
-from app.schemas.post_asset import AssetOrderUpdate, PostAssetResponse, PostAssetUpdate
+from app.schemas.post_asset import AltTextIn, AssetOrderUpdate, PostAssetResponse, PostAssetUpdate
+from app.services.accessibility import ALT_MAX, ALT_MIN, AltTextInvalido, validar_alt_text
 
 router = APIRouter()
 
@@ -28,6 +30,22 @@ def _error(status_code: int, code: str, message: str) -> HTTPException:
         status_code=status_code,
         detail={"code": code, "message": message},
     )
+
+
+def _mensagem_alt_text(erro: ValidationError) -> str:
+    """Traduz o erro do AltTextIn para a mensagem em português da regra."""
+    for item in erro.errors():
+        causa = (item.get("ctx") or {}).get("error")
+        if isinstance(causa, AltTextInvalido):
+            return str(causa)
+    return f"O texto alternativo precisa ter de {ALT_MIN} a {ALT_MAX} caracteres."
+
+
+def _validar_alt_text_form(valor: str) -> str:
+    try:
+        return AltTextIn(alt_text=valor).alt_text
+    except ValidationError as erro:
+        raise _error(422, "INVALID_ALT_TEXT", _mensagem_alt_text(erro)) from erro
 
 
 def _media_root() -> Path:
@@ -66,13 +84,11 @@ async def upload_asset(
 ):
     if not post_repo.get_by_id(db, post_id):
         raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+    alt_text = _validar_alt_text_form(alt_text)
     if file.content_type not in ALLOWED_MIME:
         raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Formato não suportado: {file.content_type}")
     if kind not in {"image", "carousel_slide"}:
         raise _error(422, "INVALID_ASSET_KIND", "kind deve ser image ou carousel_slide")
-    alt_text = alt_text.strip()
-    if not alt_text:
-        raise _error(422, "INVALID_ALT_TEXT", "alt_text não pode ser vazio")
 
     content = await file.read(settings.MAX_UPLOAD_BYTES + 1)
     if len(content) > settings.MAX_UPLOAD_BYTES:
@@ -133,10 +149,13 @@ def update_asset(
     asset = asset_repo.get_by_id(db, asset_id)
     if not asset:
         raise _error(404, "ASSET_NOT_FOUND", "Asset não encontrado")
-    if "alt_text" in data.model_fields_set and (data.alt_text is None or not data.alt_text.strip()):
-        raise _error(422, "INVALID_ALT_TEXT", "alt_text não pode ser vazio")
-    if data.alt_text is not None:
-        data.alt_text = data.alt_text.strip()
+    # O PostAssetUpdate já normaliza e valida o alt_text enviado (mesma regra do upload).
+    # Aqui só sobra o caso de alguém mandar "alt_text": null de propósito.
+    if "alt_text" in data.model_fields_set:
+        try:
+            data.alt_text = validar_alt_text(data.alt_text)
+        except AltTextInvalido as erro:
+            raise _error(422, "INVALID_ALT_TEXT", str(erro)) from erro
     return _com_url(asset_repo.update(db, asset, data))
 
 
