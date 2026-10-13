@@ -55,10 +55,14 @@ def client(sessao):
         finally:
             db.close()
 
+    # Devolve os overrides do conftest no fim (clear() apagava a autenticação
+    # falsa dos arquivos de teste que rodam depois deste).
+    anteriores = dict(app.dependency_overrides)
     app.dependency_overrides[get_db] = _get_db
     app.dependency_overrides[get_current_admin] = lambda: "admin"
     yield TestClient(app)
     app.dependency_overrides.clear()
+    app.dependency_overrides.update(anteriores)
 
 
 def _criar_post(sessao, **campos):

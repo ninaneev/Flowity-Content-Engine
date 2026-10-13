@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Calendar, BookOpen, Sparkles, LayoutList, Settings, LogOut, Zap, Layers
+  Calendar, BookOpen, Sparkles, LayoutList, Layers, BarChart3, Settings, LogOut, Zap
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: "/pipeline", icon: LayoutList, label: "Pipeline" },
   // Sem post escolhido, /carousel leva ao Pipeline (ver App.jsx)
   { to: "/carousel", icon: Layers, label: "Carrossel" },
+  { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
