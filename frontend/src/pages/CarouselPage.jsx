@@ -77,6 +77,9 @@ function CarrosselGerado({ carrossel }) {
 export default function CarouselPage() {
   const { postId } = useParams();
   const [post, setPost] = useState(null);
+  const [slidesIniciais, setSlidesIniciais] = useState(null);
+  const [slidesCarregados, setSlidesCarregados] = useState(false);
+  const [estado, setEstado] = useState({ textos: [], atual: 0 });
   const [erro, setErro] = useState("");
   const [estado, setEstado] = useState({ textos: [], atual: 0 });
   const [carrossel, setCarrossel] = useState(null);
@@ -85,14 +88,40 @@ export default function CarouselPage() {
     let ativo = true;
     setPost(null);
     setErro("");
-    postsApi
-      .get(postId)
-      .then(({ data }) => ativo && setPost(data))
-      .catch((err) => ativo && setErro(mensagemDeErro(err, "Não foi possível carregar o post.")));
+    setSlidesCarregados(false);
+    Promise.all([postsApi.get(postId), postsApi.slides.list(postId)])
+      .then(([postResponse, slidesResponse]) => {
+        if (!ativo) return;
+        setPost(postResponse.data);
+        const rows = slidesResponse.data?.slides || [];
+        setSlidesIniciais(rows.length ? rows.map((row) => row.slide_text) : slidesDoPost(postResponse.data));
+        setSlidesCarregados(true);
+      })
+      .catch(async (err) => {
+        if (!ativo) return;
+        try {
+          const { data } = await postsApi.get(postId);
+          if (!ativo) return;
+          setPost(data);
+          setSlidesIniciais(slidesDoPost(data));
+          setSlidesCarregados(true);
+        } catch (postError) {
+          if (ativo) setErro(mensagemDeErro(postError || err, "Não foi possível carregar a publicação."));
+        }
+      });
     return () => {
       ativo = false;
     };
   }, [postId]);
+
+  useEffect(() => {
+    if (!post?.id || !slidesCarregados || !estado.textos.length) return undefined;
+    const timeout = window.setTimeout(() => {
+      postsApi.slides.save(post.id, estado.textos)
+        .catch((err) => setErro(mensagemDeErro(err, "Não foi possível salvar os textos dos slides.")));
+    }, 700);
+    return () => window.clearTimeout(timeout);
+  }, [post?.id, slidesCarregados, estado.textos]);
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
@@ -118,13 +147,14 @@ export default function CarouselPage() {
         </p>
       )}
       {!post && !erro && <p className="text-sm text-text-secondary">Carregando o post...</p>}
+      {post && !slidesCarregados && !erro && <p role="status" className="text-sm text-text-secondary">Carregando slides salvos...</p>}
 
-      {post && (
+      {post && slidesCarregados && (
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] gap-8 items-start">
           <CarouselBuilder
             key={post.id}
             postId={post.id}
-            slidesIniciais={slidesDoPost(post)}
+            slidesIniciais={slidesIniciais || slidesDoPost(post)}
             onChange={setEstado}
             onGerado={setCarrossel}
           />
