@@ -49,10 +49,14 @@ def client(sessao):
         finally:
             db.close()
 
+    # Guarda os overrides do conftest e devolve no fim; clear() apagava
+    # a autenticação falsa dos testes que rodam depois deste arquivo.
+    anteriores = dict(app.dependency_overrides)
     app.dependency_overrides[get_db] = _get_db
     app.dependency_overrides[get_current_admin] = lambda: "admin"
     yield TestClient(app)
     app.dependency_overrides.clear()
+    app.dependency_overrides.update(anteriores)
 
 
 @pytest.fixture
