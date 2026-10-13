@@ -66,3 +66,21 @@ class RenderImageRequest(BaseModel):
         if v is None:
             return v          # sem alt_text, o renderizador gera um a partir do hook
         return validar_alt_text(v)
+
+
+class RenderCarouselRequest(BaseModel):
+    """Corpo opcional de POST /posts/{id}/render/carousel.
+
+    Sem `slides`, o corpo do post é dividido automaticamente (capa + conteúdo + CTA).
+    A quantidade (3 a 10) é conferida na rota, para responder 422 com mensagem clara.
+    """
+
+    slides: list[str] | None = None
+
+
+class CarouselResponse(BaseModel):
+    post_id: int
+    total_slides: int
+    slides: list[PostAssetResponse]
+    pdf_url: str
+    pdf_size_bytes: int
