@@ -79,7 +79,46 @@ export const postsApi = {
   update:   (id, data)      => api.put(`/posts/${id}`, data),
   calendar: (month)         => api.get("/posts/calendar", { params: { month } }),
   pipeline: ()              => api.get("/posts/", { params: {} }),
+  // Depende do endpoint da Tarefa 8 (#82): POST /posts/{id}/render/carousel
+  render: {
+    carousel: (postId, slides) =>
+      api.post(`/posts/${postId}/render/carousel`, { slides }),
+  },
 };
+
+// ASSETS (imagens do post)
+export const assetsApi = {
+  list: (postId) => api.get(`/posts/${postId}/assets`),
+  upload: (postId, file, altText) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("alt_text", altText);
+    return api.post(`/posts/${postId}/assets`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  update: (id, data) => api.patch(`/assets/${id}`, data),
+  remove: (id) => api.delete(`/assets/${id}`),
+};
+
+/** Baixa um arquivo autenticado (ex.: o PDF do carrossel) e salva com o nome indicado. */
+export async function apiDownload(url, nomeArquivo) {
+  const resposta = await api.get(url, { responseType: "blob" });
+  const href = URL.createObjectURL(resposta.data);
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+}
+
+/** Monta a URL completa de um arquivo servido pelo backend (ex.: "/media/posts/1/a.png"). */
+export function mediaUrl(path) {
+  if (!path || /^https?:\/\//.test(path)) return path;
+  return `${BASE_URL.replace(/\/$/, "")}${path}`;
+}
 
 // GENERATION
 export const generationApi = {
@@ -87,10 +126,9 @@ export const generationApi = {
   createPost: (data) => api.post("/generation/create-post", data),
 };
 
-// METRICS (PI 2)
-export const metricsApi = {
-  summary: (params) => api.get("/metrics/summary", { params }),
-  create: (postId, data) => api.post(`/posts/${postId}/metrics`, data),
+// REPORTS (PI 2)
+export const reportsApi = {
+  performance: () => api.get("/reports/performance"),
 };
 
 // AUTOMATION

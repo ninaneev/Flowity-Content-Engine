@@ -1,7 +1,141 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
+import { Link } from "react-router-dom";
 import StatusBadge from "../shared/StatusBadge";
 import SelectField from "../shared/SelectField";
+import PostImageUploader from "./PostImageUploader";
+import { assetsApi, mediaUrl } from "../../lib/api";
+import { mensagemDeErro } from "../../lib/imageUpload.mjs";
+
+const FOCO =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
+
+/** Seção "Imagens do post": lista as imagens enviadas e abre o envio de uma nova. */
+function PostImagesSection({ postId }) {
+  const tituloRef = useRef(null);
+  const [imagens, setImagens] = useState([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [aviso, setAviso] = useState("");
+  const [removendo, setRemovendo] = useState(null);
+
+  const carregar = useCallback(async () => {
+    if (!postId) return;
+    setCarregando(true);
+    setErro("");
+    try {
+      const { data } = await assetsApi.list(postId);
+      setImagens(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setErro(mensagemDeErro(err, "Não foi possível carregar as imagens do post."));
+    } finally {
+      setCarregando(false);
+    }
+  }, [postId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function remover(imagem, indice) {
+    setRemovendo(imagem.id);
+    setErro("");
+    setAviso("");
+    try {
+      await assetsApi.remove(imagem.id);
+      setImagens((lista) => lista.filter((i) => i.id !== imagem.id));
+      setAviso(`Imagem ${indice + 1} removida.`);
+      tituloRef.current?.focus(); // o botão clicado some; o foco volta ao título da seção
+    } catch (err) {
+      setErro(mensagemDeErro(err, "Não foi possível remover a imagem."));
+    } finally {
+      setRemovendo(null);
+    }
+  }
+
+  return (
+    <section aria-labelledby="imagens-do-post-titulo" className="card bg-bg-elevated/40 space-y-4">
+      <div>
+        <h3
+          id="imagens-do-post-titulo"
+          ref={tituloRef}
+          tabIndex={-1}
+          className="text-sm font-semibold text-text-primary focus:outline-none"
+        >
+          Imagens do post
+        </h3>
+        <p className="text-xs text-text-secondary mt-1">
+          Toda imagem precisa de texto alternativo: sem ele, ela não existe para quem usa leitor de tela.
+        </p>
+      </div>
+
+      {!postId ? (
+        <p className="text-sm text-text-secondary">
+          Crie o post primeiro. Depois de salvo, abra-o de novo para enviar imagens.
+        </p>
+      ) : (
+        <>
+          {carregando && <p className="text-sm text-text-secondary">Carregando imagens...</p>}
+          {!carregando && imagens.length === 0 && !erro && (
+            <p className="text-sm text-text-secondary">Nenhuma imagem enviada ainda.</p>
+          )}
+          {imagens.length > 0 && (
+            <ul className="space-y-2" aria-label="Imagens já enviadas">
+              {imagens.map((imagem, indice) => (
+                <li
+                  key={imagem.id}
+                  className="flex items-start gap-3 rounded-lg border border-border bg-bg-surface p-2"
+                >
+                  <img
+                    src={mediaUrl(imagem.url)}
+                    alt={imagem.alt_text}
+                    className="h-16 w-16 flex-shrink-0 rounded object-cover bg-bg-base"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-text-secondary">
+                      Imagem {indice + 1} · texto alternativo:
+                    </p>
+                    <p className="text-sm text-text-primary break-words">{imagem.alt_text}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => remover(imagem, indice)}
+                    disabled={removendo === imagem.id}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium border border-border
+                      bg-bg-elevated text-red-300 hover:border-red-300 disabled:cursor-wait ${FOCO}`}
+                  >
+                    {removendo === imagem.id ? "Removendo..." : "Remover"}
+                    <span className="sr-only"> imagem {indice + 1}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {erro && (
+            <p role="alert" className="text-sm text-red-300 font-medium">
+              Erro: {erro}
+            </p>
+          )}
+          <p role="status" aria-live="polite" className="text-sm text-emerald-300">
+            {aviso}
+          </p>
+
+          <div className="border-t border-border pt-4">
+            <h4 className="text-xs font-semibold text-text-primary mb-3">Enviar nova imagem</h4>
+            <PostImageUploader
+              postId={postId}
+              onUploaded={(nova) => {
+                setAviso("");
+                setImagens((lista) => [...lista, nova]);
+              }}
+            />
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
 
 const STATUSES = ["idea", "draft", "revised", "scheduled", "publishing", "published", "failed"];
 const STATUS_LABELS = {
@@ -23,6 +157,13 @@ const STATUS_HELP = {
   failed: "Automation reported a failure.",
 };
 
+const WORKFLOW_OPTIONS = [
+  { value: "", label: "Não informado" },
+  { value: "manual", label: "manual" },
+  { value: "pi1", label: "pi1" },
+  { value: "pi2", label: "pi2" },
+];
+
 const CHANNEL_LABELS = {
   linkedin: "LinkedIn",
   x: "X / Twitter",
@@ -36,6 +177,13 @@ function normalizeForApi(form, original = {}) {
     hook: form.hook?.trim() || "New post",
     scheduled_at: movedOutOfScheduled ? null : (form.scheduled_at || null),
     source_ids: form.source_ids || [],
+    // Medição de tempo (PI 2, T16): vazio vira null
+    external_minutes:
+      form.external_minutes === "" || form.external_minutes == null
+        ? null
+        : Number(form.external_minutes),
+    tools_used: form.tools_used?.trim() || null,
+    workflow: form.workflow || null,
   };
 }
 
@@ -163,6 +311,8 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
             <p className="text-[11px] text-text-muted mt-1">{(form.short_x || "").length}/280 characters</p>
           </div>
 
+          <PostImagesSection postId={post.id} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="post-status">Status</label>
@@ -221,6 +371,56 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
             </div>
           </div>
 
+          <fieldset className="card bg-bg-elevated/40 space-y-4">
+            <legend className="px-1 text-sm font-semibold text-text-primary">
+              Medição de tempo (PI 2)
+            </legend>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="label" htmlFor="post-external-minutes">
+                  Tempo gasto fora da ferramenta (min)
+                </label>
+                <input
+                  id="post-external-minutes"
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  name="external_minutes"
+                  value={form.external_minutes ?? ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="post-workflow">Fluxo</label>
+                <select
+                  id="post-workflow"
+                  className="select"
+                  name="workflow"
+                  value={form.workflow || ""}
+                  onChange={handleChange}
+                >
+                  {WORKFLOW_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="label" htmlFor="post-tools-used">Ferramentas usadas</label>
+              <input
+                id="post-tools-used"
+                className="input"
+                name="tools_used"
+                maxLength={200}
+                value={form.tools_used || ""}
+                onChange={handleChange}
+                placeholder="Ex.: Canva, Google Docs"
+              />
+            </div>
+          </fieldset>
+
           <div>
             <label className="label" htmlFor="post-notes">Notes</label>
             <textarea
@@ -236,6 +436,15 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
         </div>
 
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
+          {post.id && (
+            <Link
+              to={`/carousel/${post.id}`}
+              className={`mr-auto inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border border-border
+                bg-bg-elevated text-text-primary hover:border-flowity-purple ${FOCO}`}
+            >
+              Montar carrossel
+            </Link>
+          )}
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : mode === "create" ? "Create post" : "Save changes"}

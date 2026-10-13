@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.post_asset import PostAsset
 from app.schemas.post_asset import PostAssetUpdate
+from app.services.accessibility import alt_text_valido
 
 
 def create(
@@ -87,3 +88,8 @@ def next_position(db: Session, post_id: int) -> int:
         .first()
     )
     return asset.position + 1 if asset else 0
+
+
+def sem_alt_text_valido(db: Session, post_id: int) -> list[PostAsset]:
+    """Assets do post cujo alt_text reprova na regra de acessibilidade."""
+    return [asset for asset in list_by_post(db, post_id) if not alt_text_valido(asset.alt_text)]
