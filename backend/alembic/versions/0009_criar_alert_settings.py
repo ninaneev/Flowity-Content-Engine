@@ -1,7 +1,7 @@
 """cria tabela alert_settings
 
 Revision ID: 5c1e7a9d2b40
-Revises: ab51b67c9eb3
+Revises: 9e4b2f6a1c83
 Create Date: 2026-09-22 11:00:00
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "5c1e7a9d2b40"
-down_revision: Union[str, Sequence[str], None] = "ab51b67c9eb3"
+down_revision: Union[str, Sequence[str], None] = "9e4b2f6a1c83"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -11,7 +12,17 @@ from app.core.security import get_current_admin
 from app.db.database import get_db
 from app.repositories import post_assets as asset_repo
 from app.repositories import posts as post_repo
-from app.schemas.post_asset import AssetOrderUpdate, PostAssetResponse, PostAssetUpdate
+from app.schemas.post_asset import (
+    AltTextIn,
+    AssetOrderUpdate,
+    CarouselResponse,
+    PostAssetResponse,
+    PostAssetUpdate,
+    RenderCarouselRequest,
+    RenderImageRequest,
+)
+from app.services import carousel_renderer, image_renderer
+from app.services.accessibility import ALT_MAX, ALT_MIN, AltTextInvalido, validar_alt_text
 
 router = APIRouter()
 
@@ -28,6 +39,22 @@ def _error(status_code: int, code: str, message: str) -> HTTPException:
         status_code=status_code,
         detail={"code": code, "message": message},
     )
+
+
+def _mensagem_alt_text(erro: ValidationError) -> str:
+    """Traduz o erro do AltTextIn para a mensagem em português da regra."""
+    for item in erro.errors():
+        causa = (item.get("ctx") or {}).get("error")
+        if isinstance(causa, AltTextInvalido):
+            return str(causa)
+    return f"O texto alternativo precisa ter de {ALT_MIN} a {ALT_MAX} caracteres."
+
+
+def _validar_alt_text_form(valor: str) -> str:
+    try:
+        return AltTextIn(alt_text=valor).alt_text
+    except ValidationError as erro:
+        raise _error(422, "INVALID_ALT_TEXT", _mensagem_alt_text(erro)) from erro
 
 
 def _media_root() -> Path:
@@ -66,13 +93,11 @@ async def upload_asset(
 ):
     if not post_repo.get_by_id(db, post_id):
         raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+    alt_text = _validar_alt_text_form(alt_text)
     if file.content_type not in ALLOWED_MIME:
         raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Formato não suportado: {file.content_type}")
     if kind not in {"image", "carousel_slide"}:
         raise _error(422, "INVALID_ASSET_KIND", "kind deve ser image ou carousel_slide")
-    alt_text = alt_text.strip()
-    if not alt_text:
-        raise _error(422, "INVALID_ALT_TEXT", "alt_text não pode ser vazio")
 
     content = await file.read(settings.MAX_UPLOAD_BYTES + 1)
     if len(content) > settings.MAX_UPLOAD_BYTES:
@@ -133,10 +158,13 @@ def update_asset(
     asset = asset_repo.get_by_id(db, asset_id)
     if not asset:
         raise _error(404, "ASSET_NOT_FOUND", "Asset não encontrado")
-    if "alt_text" in data.model_fields_set and (data.alt_text is None or not data.alt_text.strip()):
-        raise _error(422, "INVALID_ALT_TEXT", "alt_text não pode ser vazio")
-    if data.alt_text is not None:
-        data.alt_text = data.alt_text.strip()
+    # O PostAssetUpdate já normaliza e valida o alt_text enviado (mesma regra do upload).
+    # Aqui só sobra o caso de alguém mandar "alt_text": null de propósito.
+    if "alt_text" in data.model_fields_set:
+        try:
+            data.alt_text = validar_alt_text(data.alt_text)
+        except AltTextInvalido as erro:
+            raise _error(422, "INVALID_ALT_TEXT", str(erro)) from erro
     return _com_url(asset_repo.update(db, asset, data))
 
 
@@ -176,3 +204,107 @@ def delete_asset(
     path = _asset_path(asset)
     asset_repo.delete(db, asset)
     path.unlink(missing_ok=True)
+
+
+@router.post(
+    "/posts/{post_id}/render/image",
+    response_model=PostAssetResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Gera o card 1200x1200 do post",
+)
+def render_image(
+    post_id: int,
+    data: RenderImageRequest | None = None,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    post = post_repo.get_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post não encontrado")
+    hook = ((data.hook if data else None) or post.hook or "").strip()
+    if not hook:
+        raise HTTPException(status_code=422, detail="O post precisa de um hook.")
+    cta = (data.cta if data else None) or post.cta
+    try:
+        alt_text = validar_alt_text((data.alt_text if data else None) or image_renderer.alt_text_padrao(hook))
+    except AltTextInvalido as erro:
+        raise _error(422, "INVALID_ALT_TEXT", str(erro)) from erro
+
+    caminho_relativo = f"posts/{post_id}/card-{uuid.uuid4().hex}.png"
+    destino = _media_root() / caminho_relativo
+    meta = image_renderer.renderizar_card(hook, cta, destino)
+    try:
+        asset = asset_repo.create(
+            db,
+            post_id=post_id,
+            kind="image",
+            position=asset_repo.next_position(db, post_id),
+            file_path=caminho_relativo,
+            alt_text=alt_text,
+            caption=None,
+            **meta,
+        )
+    except Exception:
+        destino.unlink(missing_ok=True)
+        raise
+    return _com_url(asset)
+
+
+@router.post(
+    "/posts/{post_id}/render/carousel",
+    response_model=CarouselResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Gera os slides e o PDF do carrossel",
+)
+def render_carousel(
+    post_id: int,
+    data: RenderCarouselRequest | None = None,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    post = post_repo.get_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post não encontrado")
+    slides = (data.slides if data else None) or carousel_renderer.dividir_em_slides(
+        post.hook, post.body, post.cta)
+    try:
+        carousel_renderer.validar_quantidade(slides)
+    except ValueError as erro:
+        raise HTTPException(status_code=422, detail=str(erro))
+
+    pasta_relativa = f"posts/{post_id}"
+    pasta = _media_root() / pasta_relativa
+    prefixo = f"carrossel-{uuid.uuid4().hex[:12]}"
+    resultado = carousel_renderer.renderizar_carrossel(slides, pasta, prefixo)
+    arquivos = [pasta / item["arquivo"] for item in resultado["slides"]] + [pasta / resultado["pdf"]]
+
+    try:
+        inicio = asset_repo.next_position(db, post_id)
+        assets = []
+        for deslocamento, item in enumerate(resultado["slides"]):
+            asset = asset_repo.create(
+                db,
+                post_id=post_id,
+                kind="carousel_slide",
+                position=inicio + deslocamento,
+                file_path=f"{pasta_relativa}/{item['arquivo']}",
+                alt_text=validar_alt_text(item["alt_text"]),
+                caption=None,
+                width=item["width"],
+                height=item["height"],
+                size_bytes=item["size_bytes"],
+                mime_type=item["mime_type"],
+            )
+            assets.append(_com_url(asset))
+    except Exception:
+        for arquivo in arquivos:
+            arquivo.unlink(missing_ok=True)
+        raise
+
+    return CarouselResponse(
+        post_id=post_id,
+        total_slides=len(assets),
+        slides=[PostAssetResponse.model_validate(asset) for asset in assets],
+        pdf_url=f"{settings.MEDIA_URL_PREFIX.rstrip('/')}/{pasta_relativa}/{resultado['pdf']}",
+        pdf_size_bytes=resultado["pdf_size_bytes"],
+    )

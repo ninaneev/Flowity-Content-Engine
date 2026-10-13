@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.db.database import create_tables
-from app.routes import alerts, assets, auth, automation, generation, metrics, posts, sources
+from app.routes import alerts, assets, auth, automation, generation, metrics, posts, reports, sources
 
 Path(settings.MEDIA_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -42,23 +42,21 @@ async def validation_exception_handler(_, exc: RequestValidationError):
 
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# Permite que o frontend Vite se comunique com o backend (porta 8000)
+# Origens vêm de CORS_ORIGINS (variável de ambiente). No desenvolvimento o
+# padrão libera o Vite local; em produção, só a URL do frontend publicado.
+_PRIVATE_NETWORK_ORIGIN_REGEX = (
+    r"^http://("
+    r"localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|"
+    r"192\.168\.\d{1,3}\.\d{1,3}|"
+    r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+    r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
+    r"):\d+$"
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:5174",  # Vite fallback when 5173 is busy
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://localhost:3000",  # Fallback
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_origin_regex=(
-        r"^http://("
-        r"localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|"
-        r"192\.168\.\d{1,3}\.\d{1,3}|"
-        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
-        r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}"
-        r"):\d+$"
+        _PRIVATE_NETWORK_ORIGIN_REGEX if settings.CORS_ALLOW_PRIVATE_NETWORK else None
     ),
     allow_credentials=True,
     allow_methods=["*"],
@@ -74,6 +72,8 @@ app.include_router(automation.router, prefix="/automation", tags=["n8n Automatio
 app.include_router(assets.router, tags=["Media Assets"])
 # Inclusão do router das Métricas (PI 2)
 app.include_router(metrics.router, prefix="", tags=["Metrics"])
+# Relatório de tempo de produção (PI 2, T16)
+app.include_router(reports.router, prefix="/reports", tags=["Reports"])
 # Alertas de engajamento baixo (PI 2, T14)
 app.include_router(alerts.router, tags=["Alerts"])
 
@@ -87,7 +87,7 @@ app.mount(
 # ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def on_startup():
-    """Create database tables on startup when they do not exist yet."""
+    """Create tables on startup (SQLite only; PostgreSQL uses `alembic upgrade head`)."""
     create_tables()
     print(f"{settings.APP_NAME} started. Docs at http://localhost:8000/docs")
 
