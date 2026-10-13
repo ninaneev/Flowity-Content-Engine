@@ -92,6 +92,7 @@ export default function CarouselBuilder({
 
   const textos = itens.map((item) => item.texto);
   const bloqueio = motivoParaNaoGerar(textos);
+  const postIdValido = Number.isInteger(Number(postId)) && Number(postId) > 0;
 
   /*
    * Informa ao componente pai o conteúdo e o slide atual.
@@ -292,12 +293,12 @@ export default function CarouselBuilder({
    * Envia os textos para o backend gerar o carrossel.
    */
   async function gerar() {
-    if (bloqueio || gerando) {
+    if (!postIdValido) {
+      setErro("Não foi possível identificar a publicação. Volte ao Pipeline e abra o carrossel a partir de um post.");
       return;
     }
 
-    if (!postId) {
-      setErro("Não foi possível identificar a publicação.");
+    if (bloqueio || gerando) {
       return;
     }
 
@@ -405,7 +406,7 @@ export default function CarouselBuilder({
         <button
           type="button"
           onClick={gerar}
-          disabled={Boolean(bloqueio) || gerando}
+          disabled={!postIdValido || Boolean(bloqueio) || gerando}
           aria-busy={gerando ? "true" : undefined}
           aria-describedby={
             bloqueio ? "gerar-bloqueio" : undefined
@@ -428,6 +429,12 @@ export default function CarouselBuilder({
           </span>
         )}
       </div>
+
+      {!postIdValido && !erro && (
+        <p role="alert" className="text-sm text-amber-300">
+          Selecione uma publicação no Pipeline antes de gerar o carrossel.
+        </p>
+      )}
 
       {bloqueio && (
         <p
