@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { Layers } from "lucide-react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
 import { postsApi } from "../lib/api";
@@ -161,7 +163,7 @@ export default function PipelinePage() {
                       onClick={() => setSelectedPost(post)}
                     >
                       <p className="text-text-primary text-sm font-medium line-clamp-2 mb-2">{post.hook}</p>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         {post.scheduled_at && (
                           <span className="text-xs text-text-muted">
@@ -169,6 +171,16 @@ export default function PipelinePage() {
                           </span>
                         )}
                       </div>
+                      <Link
+                        to={`/carousel/${post.id}`}
+                        onClick={(event) => event.stopPropagation()}
+                        draggable="false"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-primary hover:border-flowity-purple"
+                        aria-label={`Abrir carrossel do post ${post.id}`}
+                      >
+                        <Layers size={13} aria-hidden="true" />
+                        Editar carrossel
+                      </Link>
                     </div>
                   ))}
                 </div>
