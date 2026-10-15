@@ -86,7 +86,6 @@ export default function CarouselPage() {
   const [slidesCarregados, setSlidesCarregados] = useState(false);
   const [estado, setEstado] = useState({ textos: [], atual: 0 });
   const [erro, setErro] = useState("");
-  const [estado, setEstado] = useState({ textos: [], atual: 0 });
   const [carrossel, setCarrossel] = useState(null);
 
   useEffect(() => {

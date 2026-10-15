@@ -32,14 +32,15 @@ export default function SlideCard({
   const numero = indice + 1;
   const campoId = `slide-${id}-texto`;
   const contadorId = `slide-${id}-contador`;
+  const instrucaoId = `slide-${id}-instrucao`;
   const vazio = !texto.trim();
 
   const textareaRef = useRef(null);
 
   function handleKeyDown(e) {
-    // O comportamento de teclado do card só deve acontecer
-    // quando o próprio card estiver focado.
-    if (e.target !== e.currentTarget) return;
+    // Só trata atalhos quando o próprio cartão está focado.
+    // Assim, não interfere nos botões nem na digitação do textarea.
+    if (e.target !== e.currentTarget || e.defaultPrevented) return;
 
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -66,19 +67,27 @@ export default function SlideCard({
       aria-roledescription="slide"
       aria-label={`Slide ${numero} de ${total}`}
       aria-current={atual ? "true" : undefined}
+      aria-describedby={instrucaoId}
       tabIndex={0}
       className={`rounded-lg border p-3 bg-bg-surface transition-colors ${
         atual ? "border-flowity-purple" : "border-border"
-      }`}
+      } ${FOCO}`}
       onFocus={onFocar}
       onKeyDown={handleKeyDown}
     >
+      <p id={instrucaoId} className="sr-only">
+        Pressione Enter ou Espaço para editar o texto deste slide.
+        Use as setas esquerda e direita para navegar entre os slides.
+      </p>
+
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="min-w-0">
           <h3 className="font-medium text-text-primary">
             Slide {numero} de {total}
             {atual && (
-              <span className="ml-2 text-xs font-medium text-flowity-purple"> em pré-visualização</span>
+              <span className="ml-2 text-xs font-medium text-flowity-purple">
+                em pré-visualização
+              </span>
             )}
           </h3>
 
@@ -99,7 +108,6 @@ export default function SlideCard({
             <ArrowUp size={14} aria-hidden="true" />
             Subir
           </button>
-
 
           <button
             type="button"

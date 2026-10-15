@@ -165,12 +165,59 @@ export default function CarouselBuilder({
    * Navega entre os slides com as setas.
    * O foco acompanha o slide selecionado.
    */
-  function navegarSlide(direcao) {
-    const novoIndice = Math.max(0, Math.min(atual + direcao, itens.length - 1));
-    setAtual(novoIndice); 
-    // leva o foco para o cartao do novo slide
-    const cartao = document.querySelector(`[data-slide-id="${itens[novoIndice].id}"]`);
+  function navegarSlide(indice, direcao) {
+    if (itens.length === 0) {
+      return;
+    }
+
+    const novoIndice = Math.max(
+      0,
+      Math.min(indice + direcao, itens.length - 1)
+    );
+
+    setAtual(novoIndice);
+
+    // Leva o foco para o cartão do slide selecionado.
+    const item = itens[novoIndice];
+    const cartao = document.querySelector(
+      `[data-slide-id="${item.id}"]`
+    );
+
     cartao?.focus();
+  }
+
+  /*
+   * Permite navegar pelos slides com as setas esquerda/direita.
+   * Não intercepta as setas enquanto a pessoa está digitando.
+   */
+  function handleListaKeyDown(event) {
+    // Evita processar novamente uma tecla já tratada por um slide.
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    const alvo = event.target;
+
+    if (
+      alvo instanceof HTMLElement &&
+      alvo.closest(
+        'input, textarea, select, [contenteditable="true"]'
+      )
+    ) {
+      return;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      navegarSlide(atual, 1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      navegarSlide(atual, -1);
+    }
   }
   /*
    * Reordena os slides e devolve o foco a um controle
@@ -353,8 +400,10 @@ export default function CarouselBuilder({
       </div>
 
       <ol
-        aria-label="Slides do carrossel"
+        aria-label="Slides do carrossel. Use as setas esquerda e direita para navegar."
         className="space-y-3"
+        onKeyDown={handleListaKeyDown}
+        tabIndex={0}
       >
         {itens.map((item, indice) => (
           <SlideCard
