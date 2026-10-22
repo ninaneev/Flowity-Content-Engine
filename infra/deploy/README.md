@@ -123,12 +123,19 @@ alembic current        # mostra a revisão aplicada (vazio = Alembic nunca rodou
 alembic heads          # mostra a revisão mais nova do repositório
 ```
 
-- Se `alembic current` vier vazio **e as tabelas novas do PI 2 (`post_assets`, `post_metrics`)
-  ainda não existirem** no Supabase (Table Editor): nada a fazer, o deploy aplica tudo.
-- Se vier vazio **mas alguma delas já existir** (criada pelo `create_tables()` em algum teste
-  apontado para o Supabase): marque como aplicada a última revisão cuja tabela já existe, para o
-  Alembic não tentar criá-la de novo — `alembic stamp <id_da_revisao>` (o id está no topo de cada
-  arquivo em `backend/alembic/versions/`). Depois `alembic upgrade head` aplica só o que falta.
+Não é preciso carimbar à mão: o comando de migração do projeto é `python -m app.db.migrate`
+(`backend/app/db/migrate.py`). Ele roda no `migrate` dos dois docker-compose e no
+`preDeployCommand` do Render, e faz assim:
+
+- `alembic current` com revisão → só `alembic upgrade head`.
+- `alembic current` vazio (banco do PI 1) → olha quais tabelas/colunas já existem, faz
+  `alembic stamp` da última revisão que já está no banco e depois `alembic upgrade head`, que cria
+  só o que falta (`post_assets`, `post_metrics`, campos de tempo em `posts`, `alert_settings`).
+- Banco num estado que não bate com a cadeia (ex.: `post_metrics` existe mas `post_assets` não) →
+  para com erro e não muda nada. Confira as tabelas no Table Editor antes de seguir.
+
+Para aplicar só a migração no Supabase, a partir da raiz do repositório:
+`docker compose run --rm migrate`.
 
 ### 4.4 [VOCÊ FAZ] Criar o backend no Render
 
@@ -143,11 +150,12 @@ alembic heads          # mostra a revisão mais nova do repositório
    - `CORS_ORIGINS` → por enquanto `https://example.com` (volta aqui no passo 4.6)
 4. Confirme (**Apply**). Informe o cartão quando pedir (plano Starter).
 5. Acompanhe em **Events/Logs**: primeiro o build da imagem, depois o
-   `preDeployCommand: alembic upgrade head`, depois o start. Se a migração falhar, o deploy para e
+   `preDeployCommand: python -m app.db.migrate`, depois o start. Se a migração falhar, o deploy para e
    nada muda no ar — leia o log, corrija e clique **Manual Deploy**.
 6. Anote a URL pública, ex.: `https://flowity-content-engine-api.onrender.com`.
 
-Comando exato de migração usado no provedor (para o relatório): `alembic upgrade head`, configurado
+Comando exato de migração usado no provedor (para o relatório): `python -m app.db.migrate`
+(stamp automático do banco do PI 1 + `alembic upgrade head`), configurado
 como `preDeployCommand` no `render.yaml`, executado no diretório `/app` da imagem Docker do backend.
 
 ### 4.5 [VOCÊ FAZ] Criar o frontend na Vercel

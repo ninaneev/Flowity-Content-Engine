@@ -23,7 +23,8 @@ services:
 
     # Etapa de release: roda antes de cada deploy, numa instância separada.
     # Se a migração falhar, o deploy é cancelado e a versão anterior continua no ar.
-    preDeployCommand: alembic upgrade head
+    # app.db.migrate = carimba o banco do PI 1 (criado sem Alembic) e roda alembic upgrade head.
+    preDeployCommand: python -m app.db.migrate
 
     # Comando de produção (sem --reload). O Render injeta $PORT.
     dockerCommand: >-
