@@ -124,6 +124,19 @@ def test_regra_de_pronto_para_publicar(pg):
 
 
 @precisa_pg
+def test_post_com_imagem_fica_manual(pg):
+    pid = _post(pg, _agora_sp() - timedelta(minutes=5))
+    with pg.begin() as conn:
+        conn.execute(
+            text("insert into post_assets (post_id, kind, position, file_path, mime_type, alt_text, created_at, updated_at) "
+                 "values (:i, 'image', 0, 'x.png', 'image/png', 'alt', now(), now())"),
+            {"i": pid},
+        )
+    assert pid not in _ids_vencidos(pg)
+    assert _claim(pg) == []
+
+
+@precisa_pg
 def test_horario_e_de_sao_paulo_e_nao_utc(pg):
     # 1 minuto atrás no relógio UTC = cerca de 3 horas no futuro em São Paulo: não pode sair ainda
     utc_parede = datetime.utcnow().replace(microsecond=0) - timedelta(minutes=1)

@@ -14,7 +14,9 @@ Só adiciona coisas (nada é apagado nem alterado):
 
 Regra de "pronto para publicar":
   status = 'scheduled' e channel = 'linkedin' e scheduled_at <= agora em America/Sao_Paulo
-  e published_at is null e linkedin_post_urn is null.
+  e published_at is null e linkedin_post_urn is null
+  e o post NÃO tem imagem em post_assets (as imagens ficam no disco do backend local,
+  o Make não alcança; post com imagem continua manual para não sair sem a imagem).
 
 scheduled_at é gravado sem fuso, com o horário de parede que a Nina escolhe na tela
 (datetime-local do navegador, em São Paulo). Por isso a comparação usa
@@ -45,6 +47,7 @@ DUE_FILTER = f"""
   and {{a}}.scheduled_at <= (now() at time zone '{SCHEDULE_TZ}')
   and {{a}}.published_at is null
   and {{a}}.linkedin_post_urn is null
+  and not exists (select 1 from public.post_assets pa where pa.post_id = {{a}}.id)
 """
 
 COMMENTARY = (
