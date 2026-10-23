@@ -35,6 +35,10 @@ class Post(Base):
     )
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime)
     published_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # Preenchido pela automação (Make/n8n) depois que o LinkedIn aceita o post
+    linkedin_post_urn: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="URN do post no LinkedIn (urn:li:share:...)"
+    )
 
     # ── Geração ───────────────────────────────────────────────────
     generation_mode: Mapped[str | None] = mapped_column(String(20), comment="template | ollama | manual")

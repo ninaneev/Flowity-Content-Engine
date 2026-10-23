@@ -87,6 +87,7 @@ class PostUpdate(BaseModel):
 class PostResponse(PostBase):
     id: int
     published_at: datetime | None = None
+    linkedin_post_urn: str | None = None
     created_at: datetime
     updated_at: datetime
     source_ids: list[int] = []
