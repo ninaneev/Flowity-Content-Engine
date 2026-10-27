@@ -53,6 +53,6 @@ def create_tables() -> bool:
     """
     if not settings.DATABASE_URL.startswith("sqlite"):
         return False
-    from app.models import source, post, generation, post_asset, post_metric, carousel_slide  # noqa: F401 — garante que os modelos são registrados
+    from app.models import source, post, generation, post_asset, post_metric, alert_setting, carousel_slide  # noqa: F401 — garante que os modelos são registrados
     Base.metadata.create_all(bind=engine)
     return True

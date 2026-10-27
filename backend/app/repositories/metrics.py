@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.post_metric import PostMetric
-from app.schemas.metric import MetricCreate, MetricsSummary, ResumoPlataforma
+from app.schemas.metric import MetricCreate, MetricsSummary, ResumoDiaSemana, ResumoPlataforma
 
 
 def create(db: Session, post_id: int, data: MetricCreate) -> PostMetric:
@@ -68,6 +68,7 @@ def get_summary(db: Session) -> MetricsSummary:
             )
         )
         total_eng_rates.extend(rates)
+        por_plataforma[-1].interacoes = sum(_interacoes(i) for i in items)
 
     # Total de posts únicos com métricas cadastradas
     total_publicados = len({m.post_id for m in recent_list})
@@ -76,5 +77,33 @@ def get_summary(db: Session) -> MetricsSummary:
     return MetricsSummary(
         total_publicados=total_publicados,
         engagement_rate=round(overall_eng_rate, 4),
-        por_plataforma=por_plataforma
+        por_plataforma=por_plataforma,
+        total_impressoes=sum(m.impressions for m in recent_list),
+        total_interacoes=sum(_interacoes(m) for m in recent_list),
+        por_dia_semana=_por_dia_semana(recent_list),
     )
+
+
+def _interacoes(m: PostMetric) -> int:
+    """Mesma soma usada em PostMetric.engagement_rate."""
+    return m.likes + m.comments + m.shares
+
+
+def _por_dia_semana(recent_list: list[PostMetric]) -> list[ResumoDiaSemana]:
+    """Taxa média de engajamento agrupada pelo dia da semana da publicação.
+
+    A taxa é uma propriedade Python (não uma coluna), por isso a agregação é
+    feita aqui e não com func.avg no SQL. O dia segue a convenção "dow" do
+    PostgreSQL: 0 = domingo ... 6 = sábado. Posts sem published_at ficam de fora.
+    """
+    grupos: dict[int, list[float]] = {}
+    for m in recent_list:
+        publicado_em = m.post.published_at if m.post else None
+        if publicado_em is None:
+            continue
+        dia = (publicado_em.weekday() + 1) % 7  # weekday(): segunda = 0
+        grupos.setdefault(dia, []).append(m.engagement_rate)
+    return [
+        ResumoDiaSemana(dia=dia, media=round(sum(taxas) / len(taxas), 4), publicacoes=len(taxas))
+        for dia, taxas in sorted(grupos.items())
+    ]

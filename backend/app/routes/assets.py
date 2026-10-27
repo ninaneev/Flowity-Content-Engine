@@ -12,7 +12,16 @@ from app.core.security import get_current_admin
 from app.db.database import get_db
 from app.repositories import post_assets as asset_repo
 from app.repositories import posts as post_repo
-from app.schemas.post_asset import AltTextIn, AssetOrderUpdate, PostAssetResponse, PostAssetUpdate
+from app.schemas.post_asset import (
+    AltTextIn,
+    AssetOrderUpdate,
+    CarouselResponse,
+    PostAssetResponse,
+    PostAssetUpdate,
+    RenderCarouselRequest,
+    RenderImageRequest,
+)
+from app.services import carousel_renderer, image_renderer
 from app.services.accessibility import ALT_MAX, ALT_MIN, AltTextInvalido, validar_alt_text
 
 router = APIRouter()
@@ -195,3 +204,107 @@ def delete_asset(
     path = _asset_path(asset)
     asset_repo.delete(db, asset)
     path.unlink(missing_ok=True)
+
+
+@router.post(
+    "/posts/{post_id}/render/image",
+    response_model=PostAssetResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Gera o card 1200x1200 do post",
+)
+def render_image(
+    post_id: int,
+    data: RenderImageRequest | None = None,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    post = post_repo.get_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post não encontrado")
+    hook = ((data.hook if data else None) or post.hook or "").strip()
+    if not hook:
+        raise HTTPException(status_code=422, detail="O post precisa de um hook.")
+    cta = (data.cta if data else None) or post.cta
+    try:
+        alt_text = validar_alt_text((data.alt_text if data else None) or image_renderer.alt_text_padrao(hook))
+    except AltTextInvalido as erro:
+        raise _error(422, "INVALID_ALT_TEXT", str(erro)) from erro
+
+    caminho_relativo = f"posts/{post_id}/card-{uuid.uuid4().hex}.png"
+    destino = _media_root() / caminho_relativo
+    meta = image_renderer.renderizar_card(hook, cta, destino)
+    try:
+        asset = asset_repo.create(
+            db,
+            post_id=post_id,
+            kind="image",
+            position=asset_repo.next_position(db, post_id),
+            file_path=caminho_relativo,
+            alt_text=alt_text,
+            caption=None,
+            **meta,
+        )
+    except Exception:
+        destino.unlink(missing_ok=True)
+        raise
+    return _com_url(asset)
+
+
+@router.post(
+    "/posts/{post_id}/render/carousel",
+    response_model=CarouselResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Gera os slides e o PDF do carrossel",
+)
+def render_carousel(
+    post_id: int,
+    data: RenderCarouselRequest | None = None,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    post = post_repo.get_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post não encontrado")
+    slides = (data.slides if data else None) or carousel_renderer.dividir_em_slides(
+        post.hook, post.body, post.cta)
+    try:
+        carousel_renderer.validar_quantidade(slides)
+    except ValueError as erro:
+        raise HTTPException(status_code=422, detail=str(erro))
+
+    pasta_relativa = f"posts/{post_id}"
+    pasta = _media_root() / pasta_relativa
+    prefixo = f"carrossel-{uuid.uuid4().hex[:12]}"
+    resultado = carousel_renderer.renderizar_carrossel(slides, pasta, prefixo)
+    arquivos = [pasta / item["arquivo"] for item in resultado["slides"]] + [pasta / resultado["pdf"]]
+
+    try:
+        inicio = asset_repo.next_position(db, post_id)
+        assets = []
+        for deslocamento, item in enumerate(resultado["slides"]):
+            asset = asset_repo.create(
+                db,
+                post_id=post_id,
+                kind="carousel_slide",
+                position=inicio + deslocamento,
+                file_path=f"{pasta_relativa}/{item['arquivo']}",
+                alt_text=validar_alt_text(item["alt_text"]),
+                caption=None,
+                width=item["width"],
+                height=item["height"],
+                size_bytes=item["size_bytes"],
+                mime_type=item["mime_type"],
+            )
+            assets.append(_com_url(asset))
+    except Exception:
+        for arquivo in arquivos:
+            arquivo.unlink(missing_ok=True)
+        raise
+
+    return CarouselResponse(
+        post_id=post_id,
+        total_slides=len(assets),
+        slides=[PostAssetResponse.model_validate(asset) for asset in assets],
+        pdf_url=f"{settings.MEDIA_URL_PREFIX.rstrip('/')}/{pasta_relativa}/{resultado['pdf']}",
+        pdf_size_bytes=resultado["pdf_size_bytes"],
+    )

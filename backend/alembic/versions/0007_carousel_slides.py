@@ -1,13 +1,13 @@
 """create editable carousel slides table
 
 Revision ID: 0007_carousel_slides
-Revises: ab51b67c9eb3
+Revises: 5c1e7a9d2b40
 """
 from alembic import op
 import sqlalchemy as sa
 
 revision = "0007_carousel_slides"
-down_revision = "ab51b67c9eb3"
+down_revision = "5c1e7a9d2b40"
 branch_labels = None
 depends_on = None
 

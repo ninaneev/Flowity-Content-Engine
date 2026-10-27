@@ -26,6 +26,22 @@ services:
     networks:
       - flowity
 
+  # ── Migração (roda uma vez antes do backend) ───────────────────────
+  # Com DATABASE_URL do Supabase: carimba o banco do PI 1 se preciso e roda
+  # alembic upgrade head (cria post_assets, post_metrics, alert_settings...).
+  # Com SQLite: não faz nada (o startup da API cria as tabelas).
+  # Só a migração:  docker compose run --rm migrate
+  migrate:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    command: ["python", "-m", "app.db.migrate"]
+    restart: "no"
+    networks:
+      - flowity
+
   # ── Backend (FastAPI) ───────────────────────────────────────────────
   backend:
     build: ./backend
@@ -39,7 +55,10 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
-      - ollama
+      migrate:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_started
     networks:
       - flowity
 

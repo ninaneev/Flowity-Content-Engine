@@ -105,6 +105,19 @@ export const assetsApi = {
   remove: (id) => api.delete(`/assets/${id}`),
 };
 
+/** Baixa um arquivo autenticado (ex.: o PDF do carrossel) e salva com o nome indicado. */
+export async function apiDownload(url, nomeArquivo) {
+  const resposta = await api.get(url, { responseType: "blob" });
+  const href = URL.createObjectURL(resposta.data);
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+}
+
 /** Monta a URL completa de um arquivo servido pelo backend (ex.: "/media/posts/1/a.png"). */
 export function mediaUrl(path) {
   if (!path || /^https?:\/\//.test(path)) return path;
@@ -117,9 +130,27 @@ export const generationApi = {
   createPost: (data) => api.post("/generation/create-post", data),
 };
 
+// REPORTS (PI 2)
+export const reportsApi = {
+  performance: () => api.get("/reports/performance"),
+};
+
+// ALERTS (PI 2)
+export const alertsApi = {
+  getSettings: () => api.get("/settings/alerts"),
+  updateSettings: (data) => api.put("/settings/alerts", data),
+  list: () => api.get("/alerts"),
+};
+
 // AUTOMATION
 export const automationApi = {
   config: () => api.get("/automation/config"),
+};
+
+// METRICS
+export const metricsApi = {
+  summary: (params) => api.get("/metrics/summary", { params }),
+  create: (postId, data) => api.post(`/posts/${postId}/metrics`, data),
 };
 
 export default api;

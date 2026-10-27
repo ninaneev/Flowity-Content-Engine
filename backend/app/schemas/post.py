@@ -1,9 +1,19 @@
 """Schemas Pydantic para Posts."""
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 VALID_STATUS = {"idea", "draft", "revised", "scheduled", "publishing", "published", "failed"}
 VALID_CHANNELS = {"linkedin", "x", "newsletter"}
+VALID_WORKFLOWS = {"manual", "pi1", "pi2"}
+
+
+def _validar_workflow(v: str | None) -> str | None:
+    """Fluxo de produção usado na medição de tempo (PI 2, T16)."""
+    if v is None or v == "":
+        return None
+    if v not in VALID_WORKFLOWS:
+        raise ValueError("workflow deve ser: manual, pi1 ou pi2")
+    return v
 
 
 class PostBase(BaseModel):
@@ -20,6 +30,15 @@ class PostBase(BaseModel):
     scheduled_at: datetime | None = None
     generation_mode: str | None = None
     notes: str | None = None
+    # Medição de tempo (PI 2, T16)
+    external_minutes: int | None = Field(default=None, ge=0)
+    tools_used: str | None = Field(default=None, max_length=200)
+    workflow: str | None = None
+
+    @field_validator("workflow")
+    @classmethod
+    def validate_workflow(cls, v: str | None) -> str | None:
+        return _validar_workflow(v)
 
     @field_validator("channel")
     @classmethod
@@ -54,6 +73,15 @@ class PostUpdate(BaseModel):
     status: str | None = None
     scheduled_at: datetime | None = None
     notes: str | None = None
+    # Medição de tempo (PI 2, T16)
+    external_minutes: int | None = Field(default=None, ge=0)
+    tools_used: str | None = Field(default=None, max_length=200)
+    workflow: str | None = None
+
+    @field_validator("workflow")
+    @classmethod
+    def validate_workflow(cls, v: str | None) -> str | None:
+        return _validar_workflow(v)
 
 
 class PostResponse(PostBase):

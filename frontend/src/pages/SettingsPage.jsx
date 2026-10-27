@@ -8,6 +8,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { automationApi } from "../lib/api";
+import AlertSettingsCard from "../components/alerts/AlertSettingsCard";
 
 export default function SettingsPage() {
   const [config, setConfig] = useState(null);
@@ -31,6 +32,8 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-4">
+        <AlertSettingsCard />
+
         <div className="card">
           <div className="flex items-center gap-3 mb-3">
             <Bot size={18} className="text-flowity-purple" />

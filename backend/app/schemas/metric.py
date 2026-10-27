@@ -49,6 +49,12 @@ class MetricResponse(MetricCreate):
     # Permite a conversão automática de objetos do SQLAlchemy (ORM) para dict/JSON
     model_config = {"from_attributes": True}
 
+# ── Schema para agregação por dia da semana (Tarefa 13) ──────────────────────
+class ResumoDiaSemana(BaseModel):
+    """Média da taxa de engajamento num dia da semana (0 = domingo ... 6 = sábado)."""
+    dia: int          # Dia da semana da publicação (convenção "dow" do PostgreSQL)
+    media: float      # Média da taxa de engajamento nesse dia
+    publicacoes: int  # Quantidade de publicações que entraram na média
 
 # ── Schemas para a rota de resumo (dashboard) ──────────────────────────────────
 class ResumoPlataforma(BaseModel):
@@ -57,6 +63,7 @@ class ResumoPlataforma(BaseModel):
     posts: int             # Quantidade de posts analisados nessa plataforma
     impressions: int       # Soma total de impressões
     engagement_rate: float # Média da taxa de engajamento da plataforma
+    interacoes: int = 0    # Soma de curtidas + comentários + compartilhamentos (Tarefa 13)
 
 
 class MetricsSummary(BaseModel):
@@ -64,3 +71,7 @@ class MetricsSummary(BaseModel):
     total_publicados: int                   # Total de posts únicos com métricas
     engagement_rate: float                  # Taxa média geral de engajamento
     por_plataforma: list[ResumoPlataforma]  # Lista contendo os resumos por rede
+    # ── Campos do painel de análise (Tarefa 13) ──────────────────────────────
+    total_impressoes: int = 0                   # Soma das impressões da coleta mais recente
+    total_interacoes: int = 0                   # Soma das interações da coleta mais recente
+    por_dia_semana: list[ResumoDiaSemana] = []  # Média de engajamento por dia da semana
