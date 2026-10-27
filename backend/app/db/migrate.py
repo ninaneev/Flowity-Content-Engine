@@ -69,6 +69,7 @@ MARCADORES: list[tuple[str, Callable[[Inspector], bool]]] = [
     ("ab51b67c9eb3", _tem_tabelas("post_metrics")),
     ("9e4b2f6a1c83", _tem_colunas("posts", "external_minutes", "tools_used", "workflow")),
     ("5c1e7a9d2b40", _tem_tabelas("alert_settings")),
+    ("0007_carousel_slides", _tem_tabelas("carousel_slides")),
 ]
 
 # Sinais parciais: se algum existe sem a revisão inteira, o banco está num estado estranho.
