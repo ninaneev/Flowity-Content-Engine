@@ -1,7 +1,7 @@
 # ══════════════════════════════════════════════════════════════════════
 #  Flowity Content Engine — composição de PRODUÇÃO (ensaio local)
 #  Reproduz na sua máquina o que o Render faz em nuvem:
-#    1. "migrate" roda  alembic upgrade head  (etapa de release)
+#    1. "migrate" roda  python -m app.db.migrate  (stamp se preciso + alembic upgrade head)
 #    2. "backend" sobe sem --reload, com a mídia num volume persistente
 #  Como rodar:
 #    docker compose -f docker-compose.prod.yml up --build
@@ -15,7 +15,8 @@ services:
     build: ./backend
     env_file:
       - .env
-    command: ["alembic", "upgrade", "head"]
+    # Carimba o banco criado fora do Alembic (Supabase do PI 1) e roda alembic upgrade head.
+    command: ["python", "-m", "app.db.migrate"]
     restart: "no"
 
   backend:
