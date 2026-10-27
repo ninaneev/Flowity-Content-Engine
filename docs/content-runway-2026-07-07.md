@@ -36,7 +36,7 @@ Assumed LinkedIn daily posts.
 
 ## 2. Two-month target math
 
-Cadence per docs/CALL_IT_DECISIONS.md: weekly batch = 1 teaching anchor
+Cadence per docs/call-it/CALL_IT_DECISIONS.md: weekly batch = 1 teaching anchor
 (newsletter + anchor LinkedIn post, same day) + 5–6 daily spins; daily posts
 scheduled, never live; 4 rotating pillars (one per week):
 
