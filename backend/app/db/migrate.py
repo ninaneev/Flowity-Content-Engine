@@ -71,6 +71,8 @@ MARCADORES: list[tuple[str, Callable[[Inspector], bool]]] = [
     ("5c1e7a9d2b40", _tem_tabelas("alert_settings")),
     ("0007_carousel_slides", _tem_tabelas("carousel_slides")),
     ("7a3d9c2e4f15", _tem_colunas("posts", "linkedin_post_urn")),
+    # 0011 só recria a view e o claim (sem coluna nova); não dá para detectar pelo schema
+    ("8b4e1d6f3a27", _tem_colunas("posts", "linkedin_post_urn")),
 ]
 
 # Sinais parciais: se algum existe sem a revisão inteira, o banco está num estado estranho.
