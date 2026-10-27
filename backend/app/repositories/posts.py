@@ -21,15 +21,21 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
 
 
 def get_for_calendar(db: Session, year: int, month: int) -> list[Post]:
-    """Retorna somente posts com status scheduled no mês do calendário."""
-    from sqlalchemy import extract
+    """Retorna todos os posts com data no mês do calendário, de qualquer status.
+
+    A janela vai um dia além de cada ponta porque scheduled_at é guardado em UTC e a tela
+    mostra no fuso do navegador; a tela descarta o que cair fora do mês.
+    """
+    from datetime import timedelta
+
+    inicio = datetime(year, month, 1) - timedelta(days=1)
+    fim = (datetime(year + (month == 12), month % 12 + 1, 1)) + timedelta(days=1)
     return (
         db.query(Post)
         .filter(
-            Post.status == "scheduled",
             Post.scheduled_at.isnot(None),
-            extract("year", Post.scheduled_at) == year,
-            extract("month", Post.scheduled_at) == month,
+            Post.scheduled_at >= inicio,
+            Post.scheduled_at < fim,
         )
         .order_by(Post.scheduled_at)
         .all()
