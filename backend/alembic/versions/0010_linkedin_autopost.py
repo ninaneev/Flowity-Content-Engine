@@ -1,7 +1,7 @@
 """publicação automática no LinkedIn: coluna linkedin_post_urn + view e RPCs para o Make/n8n
 
 Revision ID: 7a3d9c2e4f15
-Revises: 5c1e7a9d2b40
+Revises: 0007_carousel_slides
 Create Date: 2026-10-22 21:00:00
 
 Só adiciona coisas (nada é apagado nem alterado):
@@ -33,7 +33,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "7a3d9c2e4f15"
-down_revision: Union[str, Sequence[str], None] = "5c1e7a9d2b40"
+down_revision: Union[str, Sequence[str], None] = "0007_carousel_slides"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
