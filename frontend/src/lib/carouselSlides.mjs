@@ -59,10 +59,10 @@ export function quantidadeValida(total) {
  * `textos` é a lista de textos dos slides, na ordem.
  */
 export function motivoParaNaoGerar(textos) {
-  const total = textos.length;
+  const total = textos?.length;
   if (total < MIN_SLIDES) return `O carrossel precisa de pelo menos ${MIN_SLIDES} slides. Agora tem ${total}.`;
   if (total > MAX_SLIDES) return `O carrossel pode ter no máximo ${MAX_SLIDES} slides. Agora tem ${total}.`;
-  const vazio = textos.findIndex((t) => !String(t || "").trim());
+  const vazio = textos?.findIndex((t) => !String(t || "").trim());
   if (vazio !== -1) return `O slide ${vazio + 1} está sem texto.`;
   return "";
 }

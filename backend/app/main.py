@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.db.database import create_tables
-from app.routes import alerts, assets, auth, automation, generation, metrics, posts, reports, sources
+from app.routes import alerts, assets, auth, automation, carousel, generation, metrics, posts, reports, sources
 
 Path(settings.MEDIA_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -67,6 +67,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(sources.router, prefix="/sources", tags=["Sources"])
 app.include_router(posts.router, prefix="/posts", tags=["Posts"])
+app.include_router(carousel.router, tags=["Carousel Rendering"])
 app.include_router(generation.router, prefix="/generation", tags=["AI Generation"])
 app.include_router(automation.router, prefix="/automation", tags=["n8n Automation"])
 app.include_router(assets.router, tags=["Media Assets"])

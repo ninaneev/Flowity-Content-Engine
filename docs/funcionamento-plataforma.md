@@ -109,6 +109,67 @@ O workflow do n8n deve ser importado a partir de `infra/n8n/flowity-publishing.j
 
 ---
 
+## Imagem 09 — Análise das publicações (Analytics)
+
+![Imagem 09 — Analytics](../images/09-analytics-painel.png)
+
+A tela **Analytics**, nova no menu lateral, mostra como as publicações estão performando:
+
+- números gerais: quantidade de publicações, impressões, interações (curtidas, comentários e compartilhamentos) e taxa média de engajamento;
+- gráfico de engajamento médio por dia da semana, para descobrir em que dia o público responde mais;
+- comparação LinkedIn x X, com a taxa normalizada (interações divididas por impressões);
+- faixa de alerta no topo, listando os posts publicados que ficaram abaixo do limite de engajamento definido nas configurações.
+
+As métricas são registradas manualmente por post (números lidos no LinkedIn ou no X).
+
+---
+
+## Imagem 10 — Limite de engajamento nas configurações
+
+![Imagem 10 — Settings, alertas](../images/10-settings-alertas-engajamento.png)
+
+Em **Settings**, o bloco **Alertas** guarda a taxa mínima de engajamento (em %). Quando um post publicado fica abaixo desse valor, ele aparece na faixa de alerta da tela Analytics. O valor é salvo no botão **Salvar limite** e vale para todos os posts.
+
+---
+
+## Imagem 11 — Editor de carrossel
+
+![Imagem 11 — Carrossel, editor](../images/11-carrossel-editor.png)
+
+A tela **Carrossel** (menu lateral, ou botão a partir de um post no Pipeline) transforma um post em um carrossel do LinkedIn:
+
+- de 3 a 10 slides, com capa, conteúdo e fechamento;
+- texto de cada slide com contador (até 220 caracteres);
+- botões para mover o slide para cima ou para baixo, remover e adicionar slide;
+- pré-visualização ao lado, que acompanha o slide selecionado;
+- navegação por teclado e leitor de tela (Tab percorre os slides).
+
+O texto dos slides é salvo automaticamente e carregado de novo na próxima vez que o post é aberto.
+
+---
+
+## Imagem 12 — Carrossel gerado, PDF e checklist de publicação
+
+![Imagem 12 — Carrossel gerado e checklist](../images/12-carrossel-exportar-checklist.png)
+
+Ao clicar em **Gerar carrossel**, a plataforma cria uma imagem PNG (1080x1350) por slide e um PDF único, que é o formato aceito pelo LinkedIn para carrosséis. A tela mostra:
+
+- as miniaturas dos slides gerados;
+- **Baixar PDF** e **Copiar legenda**, para colar no post do LinkedIn;
+- o **Checklist de publicação**: de 3 a 10 slides, texto alternativo em todas as imagens, hook, corpo e CTA preenchidos, e PDF já baixado.
+
+---
+
+## Imagem 13 — Imagem do post com texto alternativo obrigatório
+
+![Imagem 13 — Modal do post, imagens](../images/13-post-modal-imagem-texto-alternativo.png)
+
+No modal de revisão do post (Imagem 07), o bloco **Imagens do post** permite enviar uma imagem PNG ou JPEG de até 5 MB. O **texto alternativo é obrigatório**, de 10 a 300 caracteres, com contador e mensagem de ajuda. Sem ele o botão **Salvar imagem** continua desabilitado. É a regra de acessibilidade do PI 2: nenhuma imagem sem descrição para quem usa leitor de tela.
+
+As imagens 09 a 13 foram capturadas em 27/10/2026 em uma instância local de demonstração, com banco SQLite temporário e posts de exemplo. Nenhum dado real do Supabase aparece nelas. No SQLite o gráfico por dia da semana fica vazio; no PostgreSQL de produção ele é preenchido.
+
+---
+
 ## Fluxo completo de funcionamento
 
 O funcionamento ponta a ponta da plataforma segue a sequência abaixo:

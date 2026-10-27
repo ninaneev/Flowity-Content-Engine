@@ -1,6 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// Recarregar/abrir direto uma rota da SPA (ex.: /sources, /posts) pede HTML: nesse caso serve o
+// index.html em vez de mandar a navegação para a API.
+const htmlParaSpa = (req) =>
+  req.headers.accept && req.headers.accept.includes("text/html") ? "/index.html" : undefined;
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,19 +13,19 @@ export default defineConfig({
     host: "0.0.0.0", // Necessário para funcionar no Docker
     proxy: {
       // Redireciona chamadas diretas ao backend — evita CORS no dev e no browser externo
-      "/auth":       { target: "http://backend:8000", changeOrigin: true },
-      "/sources":    { target: "http://backend:8000", changeOrigin: true },
-      "/posts":      { target: "http://backend:8000", changeOrigin: true },
-      "/generation": { target: "http://backend:8000", changeOrigin: true },
-      "/automation": { target: "http://backend:8000", changeOrigin: true },
-      "/metrics":    { target: "http://backend:8000", changeOrigin: true },
-      "/reports":    { target: "http://backend:8000", changeOrigin: true },
-      "/alerts":     { target: "http://backend:8000", changeOrigin: true },
+      "/auth":       { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/sources":    { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/posts":      { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/generation": { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/automation": { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/metrics":    { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/reports":    { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/alerts":     { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
       // Só a API: "/settings" sozinho também é a rota da tela de Settings.
-      "^/settings/alerts": { target: "http://backend:8000", changeOrigin: true },
-      "/health":     { target: "http://backend:8000", changeOrigin: true },
-      "/assets":     { target: "http://backend:8000", changeOrigin: true },
-      "/media":      { target: "http://backend:8000", changeOrigin: true },
+      "^/settings/alerts": { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/health":     { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/assets":     { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
+      "/media":      { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
     },
   },
 });

@@ -196,10 +196,27 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
   }, [post]);
 
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  const elementoAnterior = document.activeElement;
+
+  const handleKey = (e) => {
+    if (e.key === "Escape") {
+      onClose();
+    }
+  };
+
+  window.addEventListener("keydown", handleKey);
+
+  return () => {
+    window.removeEventListener("keydown", handleKey);
+
+    if (
+      elementoAnterior &&
+      typeof elementoAnterior.focus === "function"
+    ) {
+      elementoAnterior.focus();
+    }
+  };
+}, [onClose]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -232,7 +249,12 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-bg-surface border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={mode === "create" ? "New post" : `Post #${post.id}`}
+        className="bg-bg-surface border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <StatusBadge status={form.status} />
