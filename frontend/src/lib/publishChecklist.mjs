@@ -1,12 +1,12 @@
 /**
- * Checklist de publicação do carrossel no LinkedIn (Tarefa 12).
- * Calculada a partir dos dados reais do post, das imagens e do carrossel gerado.
- * Sem React, para ser testada com `node --test`.
+ * LinkedIn carousel publish checklist (Task 12).
+ * Computed from the post's real data, its images and the generated carousel.
+ * No React, so it can be tested with `node --test`.
  */
 import { MAX_SLIDES, MIN_SLIDES } from "./carouselSlides.mjs";
 import { ALT_MIN, tamanhoAlt } from "./imageUpload.mjs";
 
-/** Texto que vai no campo de legenda do LinkedIn: hook, corpo e CTA separados por linha em branco. */
+/** Text for the LinkedIn caption field: hook, body and CTA separated by a blank line. */
 export function montarLegenda(post) {
   return [post?.hook, post?.body, post?.cta]
     .map((parte) => String(parte || "").trim())
@@ -15,10 +15,10 @@ export function montarLegenda(post) {
 }
 
 /**
- * Devolve os itens da checklist, cada um com `pronto` (boolean) e um `detalhe` em texto.
- * - `totalSlides`: slides do carrossel gerado
- * - `imagens`: todas as imagens do post (fotos e slides), cada uma com `alt_text`
- * - `pdfBaixado`: o PDF já foi salvo nesta sessão
+ * Returns the checklist items, each with `pronto` (boolean) and a text `detalhe`.
+ * - `totalSlides`: slides in the generated carousel
+ * - `imagens`: all the post's images (photos and slides), each with `alt_text`
+ * - `pdfBaixado`: the PDF has already been saved in this session
  */
 export function montarChecklist({ post, totalSlides = 0, imagens = [], pdfBaixado = false }) {
   const semAlt = imagens.filter((img) => tamanhoAlt(img?.alt_text) < ALT_MIN).length;
@@ -28,32 +28,32 @@ export function montarChecklist({ post, totalSlides = 0, imagens = [], pdfBaixad
   return [
     {
       id: "quantidade",
-      rotulo: `O carrossel tem entre ${MIN_SLIDES} e ${MAX_SLIDES} slides`,
+      rotulo: `The carousel has between ${MIN_SLIDES} and ${MAX_SLIDES} slides`,
       pronto: quantidadeOk,
-      detalhe: `${totalSlides} slides gerados.`,
+      detalhe: `${totalSlides} slides generated.`,
     },
     {
       id: "alt",
-      rotulo: `Todas as imagens têm texto alternativo com ${ALT_MIN} caracteres ou mais`,
+      rotulo: `All images have alt text of ${ALT_MIN} characters or more`,
       pronto: imagens.length > 0 && semAlt === 0,
       detalhe:
         imagens.length === 0
-          ? "Nenhuma imagem encontrada no post."
+          ? "No images found on the post."
           : semAlt === 0
-            ? `${imagens.length} de ${imagens.length} imagens com texto alternativo.`
-            : `${semAlt} de ${imagens.length} imagens sem texto alternativo suficiente.`,
+            ? `${imagens.length} of ${imagens.length} images have alt text.`
+            : `${semAlt} of ${imagens.length} images lack sufficient alt text.`,
     },
     {
       id: "texto",
-      rotulo: "O post tem hook, corpo e CTA preenchidos",
+      rotulo: "The post has a hook, body and CTA filled in",
       pronto: faltando.length === 0,
-      detalhe: faltando.length === 0 ? "Hook, corpo e CTA preenchidos." : `Falta preencher: ${faltando.join(", ")}.`,
+      detalhe: faltando.length === 0 ? "Hook, body and CTA are filled in." : `Still to fill in: ${faltando.join(", ")}.`,
     },
     {
       id: "pdf",
-      rotulo: "O PDF já foi baixado",
+      rotulo: "The PDF has been downloaded",
       pronto: Boolean(pdfBaixado),
-      detalhe: pdfBaixado ? "PDF salvo neste computador." : 'Use o botão "Baixar PDF".',
+      detalhe: pdfBaixado ? "PDF saved on this computer." : 'Use the "Download PDF" button.',
     },
   ];
 }

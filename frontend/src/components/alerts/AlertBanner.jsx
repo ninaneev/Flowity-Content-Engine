@@ -6,14 +6,14 @@ import { formatarPercentual } from "../analytics/format";
 const PLATAFORMA = { linkedin: "LinkedIn", x: "X" };
 
 function formatarLimite(taxa) {
-  // 0.02 -> "2%", 0.025 -> "2,5%"
+  // 0.02 -> "2%", 0.025 -> "2.5%"
   const valor = Math.round((Number(taxa) || 0) * 1000) / 10;
-  return `${valor.toLocaleString("pt-BR")}%`;
+  return `${valor.toLocaleString("en-US")}%`;
 }
 
 /**
- * Lista os posts abaixo do limite de engajamento.
- * Cada item tem ícone E texto; o alerta nunca depende só da cor.
+ * Lists the posts below the engagement threshold.
+ * Each item has an icon AND text; the alert never relies on color alone.
  */
 export default function AlertBanner() {
   const [alertas, setAlertas] = useState([]);
@@ -40,8 +40,8 @@ export default function AlertBanner() {
           <h2 id="titulo-alertas" className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <AlertTriangle size={16} className="text-amber-300" aria-hidden="true" />
             {alertas.length === 1
-              ? "1 post abaixo do limite de engajamento"
-              : `${alertas.length} posts abaixo do limite de engajamento`}
+              ? "1 post below the engagement threshold"
+              : `${alertas.length} posts below the engagement threshold`}
           </h2>
           <ul className="mt-3 space-y-2">
             {alertas.map((a) => (
@@ -53,7 +53,7 @@ export default function AlertBanner() {
                 />
                 <span className="text-text-primary">
                   <span className="font-semibold">
-                    Abaixo do limite — {formatarPercentual(a.engagement_rate)} (limite:{" "}
+                    Below threshold — {formatarPercentual(a.engagement_rate)} (threshold:{" "}
                     {formatarLimite(limite)})
                   </span>
                   <span className="text-text-secondary">

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { alertsApi } from "../../lib/api";
 
-/** Card "Alertas" da SettingsPage: um único limite de engajamento, em %. */
+/** "Alerts" card on the SettingsPage: a single engagement threshold, in %. */
 export default function AlertSettingsCard() {
   const [valor, setValor] = useState("2");
   const [salvando, setSalvando] = useState(false);
@@ -21,21 +21,21 @@ export default function AlertSettingsCard() {
 
   async function salvar(e) {
     e.preventDefault();
-    // O botão não usa "disabled" para não tirar o foco de quem usa teclado.
+    // The button does not use "disabled" so keyboard users do not lose focus.
     if (salvando) return;
     setMensagem("");
     setErro("");
     const numero = Number(String(valor).replace(",", "."));
     if (!Number.isFinite(numero) || numero < 0 || numero > 100) {
-      setErro("Informe um número entre 0 e 100.");
+      setErro("Enter a number between 0 and 100.");
       return;
     }
     setSalvando(true);
     try {
       await alertsApi.updateSettings({ min_engagement_rate: numero / 100 });
-      setMensagem(`Limite salvo: ${numero.toLocaleString("pt-BR")}%.`);
+      setMensagem(`Threshold saved: ${numero.toLocaleString("en-US")}%.`);
     } catch {
-      setErro("Não foi possível salvar o limite. Tente novamente.");
+      setErro("Could not save the threshold. Try again.");
     } finally {
       setSalvando(false);
     }
@@ -45,15 +45,15 @@ export default function AlertSettingsCard() {
     <div className="card">
       <div className="flex items-center gap-3 mb-3">
         <Bell size={18} className="text-flowity-purple" aria-hidden="true" />
-        <h2 className="font-medium text-text-primary text-sm">Alertas</h2>
+        <h2 className="font-medium text-text-primary text-sm">Alerts</h2>
       </div>
       <p className="text-text-secondary text-xs mb-4">
-        Avisa no painel de análise quando um post publicado fica abaixo desta taxa de engajamento.
+        Warns on the analytics dashboard when a published post falls below this engagement rate.
       </p>
       <form onSubmit={salvar} className="flex flex-wrap items-end gap-3" noValidate>
         <div>
           <label className="label" htmlFor="limite-engajamento">
-            Taxa mínima de engajamento (%)
+            Minimum engagement rate (%)
           </label>
           <input
             id="limite-engajamento"
@@ -74,7 +74,7 @@ export default function AlertSettingsCard() {
           className="btn-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan"
           aria-disabled={salvando ? "true" : undefined}
         >
-          {salvando ? "Salvando..." : "Salvar limite"}
+          {salvando ? "Saving..." : "Save threshold"}
         </button>
       </form>
       <div role="status" aria-live="polite" className="mt-3 text-sm">

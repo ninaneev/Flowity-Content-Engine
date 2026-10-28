@@ -30,7 +30,7 @@ function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = ""
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(new Date());
-  // Mesma lista do pipeline: o calendário mostra todo post com data, de qualquer status.
+  // Same list as the pipeline: the calendar shows every post with a date, whatever its status.
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -67,7 +67,7 @@ export default function DashboardPage() {
   }
 
   async function updatePost(post, data) {
-    // Otimista: a tela muda já; se a API falhar, volta.
+    // Optimistic: the screen updates at once; if the API fails, it rolls back.
     setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, ...data } : p)));
     try {
       const res = await postsApi.update(post.id, data);
@@ -83,6 +83,11 @@ export default function DashboardPage() {
   async function handleSaveExistingPost(data) {
     const res = await postsApi.update(selectedPost.id, data);
     applySaved(res.data);
+  }
+
+  async function handleDeletePost(post) {
+    await postsApi.remove(post.id);
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
   }
 
   async function handleCreatePost(data) {
@@ -217,6 +222,7 @@ export default function DashboardPage() {
           mode="edit"
           onClose={() => setSelectedPost(null)}
           onSave={handleSaveExistingPost}
+          onDelete={handleDeletePost}
         />
       )}
 

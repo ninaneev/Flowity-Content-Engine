@@ -4,13 +4,13 @@ import { DIAS_SEMANA, formatarPercentual, formatarPublicacoes } from "./format";
 const LARGURA_BARRA = 32;
 const ESPACO = 48;
 const ALTURA = 200;
-const TOPO = 24; // espaço para o número acima da barra
-const BASE = 24; // espaço para o nome do dia abaixo da barra
+const TOPO = 24; // space for the number above the bar
+const BASE = 24; // space for the day name below the bar
 
 /**
- * Gráfico de barras em SVG inline (sem biblioteca) com a taxa média de
- * engajamento por dia da semana. O valor de cada barra aparece escrito
- * acima dela, e a mesma informação é repetida numa tabela para leitor de tela.
+ * Inline SVG bar chart (no library) with the average engagement rate
+ * by weekday. Each bar's value is written above it, and the same
+ * information is repeated in a table for screen readers.
  *
  * dados: [{ dia: 0..6, media: 0.042, publicacoes: 3 }]
  */
@@ -32,8 +32,8 @@ export default function BarChart({ dados = [] }) {
         viewBox={`0 0 ${largura} ${ALTURA}`}
         className="w-full max-w-xl h-auto"
       >
-        <title id={tituloId}>Engajamento médio por dia da semana</title>
-        <desc id={descId}>Barras comparando a taxa média de engajamento de cada dia.</desc>
+        <title id={tituloId}>Average engagement by day of the week</title>
+        <desc id={descId}>Bars comparing the average engagement rate for each day.</desc>
         <line
           x1="0"
           y1={ALTURA - BASE}
@@ -77,12 +77,12 @@ export default function BarChart({ dados = [] }) {
       </svg>
 
       <table className="sr-only">
-        <caption>Engajamento médio por dia da semana</caption>
+        <caption>Average engagement by day of the week</caption>
         <thead>
           <tr>
-            <th scope="col">Dia</th>
-            <th scope="col">Taxa média de engajamento</th>
-            <th scope="col">Publicações</th>
+            <th scope="col">Day</th>
+            <th scope="col">Average engagement rate</th>
+            <th scope="col">Posts</th>
           </tr>
         </thead>
         <tbody>
@@ -91,7 +91,7 @@ export default function BarChart({ dados = [] }) {
             return (
               <tr key={dia}>
                 <th scope="row">{longo}</th>
-                <td>{d ? formatarPercentual(d.media) : "sem dados"}</td>
+                <td>{d ? formatarPercentual(d.media) : "no data"}</td>
                 <td>{formatarPublicacoes(d ? d.publicacoes : 0)}</td>
               </tr>
             );

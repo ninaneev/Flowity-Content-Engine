@@ -12,7 +12,7 @@ import { fromLocalInput, isMissed, toLocalInput } from "../../lib/postDates.js";
 const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
-/** Seção "Imagens do post": lista as imagens enviadas e abre o envio de uma nova. */
+/** "Post images" section: lists the uploaded images and opens the upload for a new one. */
 function PostImagesSection({ postId }) {
   const tituloRef = useRef(null);
   const [imagens, setImagens] = useState([]);
@@ -29,7 +29,7 @@ function PostImagesSection({ postId }) {
       const { data } = await assetsApi.list(postId);
       setImagens(Array.isArray(data) ? data : []);
     } catch (err) {
-      setErro(mensagemDeErro(err, "Não foi possível carregar as imagens do post."));
+      setErro(mensagemDeErro(err, "Could not load the post images."));
     } finally {
       setCarregando(false);
     }
@@ -46,10 +46,10 @@ function PostImagesSection({ postId }) {
     try {
       await assetsApi.remove(imagem.id);
       setImagens((lista) => lista.filter((i) => i.id !== imagem.id));
-      setAviso(`Imagem ${indice + 1} removida.`);
-      tituloRef.current?.focus(); // o botão clicado some; o foco volta ao título da seção
+      setAviso(`Image ${indice + 1} removed.`);
+      tituloRef.current?.focus(); // the clicked button disappears; focus returns to the section title
     } catch (err) {
-      setErro(mensagemDeErro(err, "Não foi possível remover a imagem."));
+      setErro(mensagemDeErro(err, "Could not remove the image."));
     } finally {
       setRemovendo(null);
     }
@@ -64,25 +64,25 @@ function PostImagesSection({ postId }) {
           tabIndex={-1}
           className="text-sm font-semibold text-text-primary focus:outline-none"
         >
-          Imagens do post
+          Post images
         </h3>
         <p className="text-xs text-text-secondary mt-1">
-          Toda imagem precisa de texto alternativo: sem ele, ela não existe para quem usa leitor de tela.
+          Every image needs alt text: without it, the image does not exist for people who use a screen reader.
         </p>
       </div>
 
       {!postId ? (
         <p className="text-sm text-text-secondary">
-          Crie o post primeiro. Depois de salvo, abra-o de novo para enviar imagens.
+          Create the post first. Once it is saved, open it again to upload images.
         </p>
       ) : (
         <>
-          {carregando && <p className="text-sm text-text-secondary">Carregando imagens...</p>}
+          {carregando && <p className="text-sm text-text-secondary">Loading images...</p>}
           {!carregando && imagens.length === 0 && !erro && (
-            <p className="text-sm text-text-secondary">Nenhuma imagem enviada ainda.</p>
+            <p className="text-sm text-text-secondary">No images uploaded yet.</p>
           )}
           {imagens.length > 0 && (
-            <ul className="space-y-2" aria-label="Imagens já enviadas">
+            <ul className="space-y-2" aria-label="Uploaded images">
               {imagens.map((imagem, indice) => (
                 <li
                   key={imagem.id}
@@ -95,7 +95,7 @@ function PostImagesSection({ postId }) {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-text-secondary">
-                      Imagem {indice + 1} · texto alternativo:
+                      Image {indice + 1} · alt text:
                     </p>
                     <p className="text-sm text-text-primary break-words">{imagem.alt_text}</p>
                   </div>
@@ -106,8 +106,8 @@ function PostImagesSection({ postId }) {
                     className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium border border-border
                       bg-bg-elevated text-red-300 hover:border-red-300 disabled:cursor-wait ${FOCO}`}
                   >
-                    {removendo === imagem.id ? "Removendo..." : "Remover"}
-                    <span className="sr-only"> imagem {indice + 1}</span>
+                    {removendo === imagem.id ? "Removing..." : "Remove"}
+                    <span className="sr-only"> image {indice + 1}</span>
                   </button>
                 </li>
               ))}
@@ -116,7 +116,7 @@ function PostImagesSection({ postId }) {
 
           {erro && (
             <p role="alert" className="text-sm text-red-300 font-medium">
-              Erro: {erro}
+              Error: {erro}
             </p>
           )}
           <p role="status" aria-live="polite" className="text-sm text-emerald-300">
@@ -124,7 +124,7 @@ function PostImagesSection({ postId }) {
           </p>
 
           <div className="border-t border-border pt-4">
-            <h4 className="text-xs font-semibold text-text-primary mb-3">Enviar nova imagem</h4>
+            <h4 className="text-xs font-semibold text-text-primary mb-3">Upload new image</h4>
             <PostImageUploader
               postId={postId}
               onUploaded={(nova) => {
@@ -160,7 +160,7 @@ const STATUS_HELP = {
 };
 
 const WORKFLOW_OPTIONS = [
-  { value: "", label: "Não informado" },
+  { value: "", label: "Not specified" },
   { value: "manual", label: "manual" },
   { value: "pi1", label: "pi1" },
   { value: "pi2", label: "pi2" },
@@ -177,7 +177,7 @@ const PILLAR_OPTIONS = [
   ...PILLAR_ROTATION.map((k) => ({ value: k, label: PILLARS[k].label })),
 ];
 
-/** O formulário trabalha com a data local do input; a API recebe ISO em UTC. */
+/** The form works with the input's local date; the API receives ISO in UTC. */
 function toForm(post) {
   return { ...(post || {}), scheduled_at: toLocalInput(post?.scheduled_at) };
 }
@@ -189,7 +189,7 @@ function normalizeForApi(form) {
     scheduled_at: fromLocalInput(form.scheduled_at),
     pillar: form.pillar || null,
     source_ids: form.source_ids || [],
-    // Medição de tempo (PI 2, T16): vazio vira null
+    // Time measurement (PI 2, T16): empty becomes null
     external_minutes:
       form.external_minutes === "" || form.external_minutes == null
         ? null
@@ -199,10 +199,18 @@ function normalizeForApi(form) {
   };
 }
 
-export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
+export default function PostModal({ post, onClose, onSave, onDelete, mode = "edit" }) {
   const [form, setForm] = useState(() => toForm(post));
   const [saving, setSaving] = useState(false);
   const [dateNotice, setDateNotice] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const confirmingRef = useRef(false);
+  const deleteButtonRef = useRef(null);
+  const keepButtonRef = useRef(null);
+
+  confirmingRef.current = confirmingDelete;
 
   useEffect(() => {
     setForm(toForm(post));
@@ -214,6 +222,12 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
   const handleKey = (e) => {
     if (e.key === "Escape") {
+      // While the delete confirmation is open, Escape only cancels the confirmation.
+      if (confirmingRef.current) {
+        setConfirmingDelete(false);
+        deleteButtonRef.current?.focus();
+        return;
+      }
       onClose();
     }
   };
@@ -232,12 +246,46 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
   };
 }, [onClose]);
 
+  useEffect(() => {
+    if (confirmingDelete) keepButtonRef.current?.focus();
+  }, [confirmingDelete]);
+
+  const canDelete = mode !== "create" && Boolean(post?.id) && typeof onDelete === "function";
+
+  function askDelete() {
+    setDeleteError("");
+    if (post.status === "publishing") {
+      setDeleteError("A post that is being published cannot be deleted. Wait until publishing finishes.");
+      return;
+    }
+    setConfirmingDelete(true);
+  }
+
+  function cancelDelete() {
+    setConfirmingDelete(false);
+    setDeleteError("");
+    deleteButtonRef.current?.focus();
+  }
+
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await onDelete(post);
+      onClose();
+    } catch (err) {
+      setDeleteError(mensagemDeErro(err, "Could not delete the post. Try again."));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  // Um clique: num post já salvo a data sai na hora (PATCH scheduled_at null), sem perder o resto do formulário.
+  // One click: on a saved post the date is removed immediately (PATCH scheduled_at null), keeping the rest of the form.
   async function handleRemoveDate() {
     setForm((prev) => ({ ...prev, scheduled_at: "" }));
     if (mode !== "create" && post.id && post.scheduled_at) {
@@ -285,7 +333,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               </p>
             </div>
           </div>
-          <button className="btn-ghost" onClick={onClose} aria-label="Fechar">
+          <button className="btn-ghost" onClick={onClose} aria-label="Close">
             <X size={16} aria-hidden="true" />
           </button>
         </div>
@@ -446,12 +494,12 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
           <fieldset className="card bg-bg-elevated/40 space-y-4">
             <legend className="px-1 text-sm font-semibold text-text-primary">
-              Medição de tempo (PI 2)
+              Time measurement (PI 2)
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="label" htmlFor="post-external-minutes">
-                  Tempo gasto fora da ferramenta (min)
+                  Time spent outside the tool (min)
                 </label>
                 <input
                   id="post-external-minutes"
@@ -466,7 +514,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 />
               </div>
               <div>
-                <label className="label" htmlFor="post-workflow">Fluxo</label>
+                <label className="label" htmlFor="post-workflow">Workflow</label>
                 <select
                   id="post-workflow"
                   className="select"
@@ -481,7 +529,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
               </div>
             </div>
             <div>
-              <label className="label" htmlFor="post-tools-used">Ferramentas usadas</label>
+              <label className="label" htmlFor="post-tools-used">Tools used</label>
               <input
                 id="post-tools-used"
                 className="input"
@@ -489,7 +537,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
                 maxLength={200}
                 value={form.tools_used || ""}
                 onChange={handleChange}
-                placeholder="Ex.: Canva, Google Docs"
+                placeholder="E.g. Canva, Google Docs"
               />
             </div>
           </fieldset>
@@ -508,15 +556,68 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
+        {confirmingDelete && (
+          <div
+            role="group"
+            aria-labelledby="delete-confirm-title"
+            aria-describedby="delete-confirm-text"
+            className="mx-6 mb-4 rounded-lg border border-red-300/60 bg-bg-elevated p-4 space-y-3"
+          >
+            <h3 id="delete-confirm-title" className="text-sm font-semibold text-text-primary">
+              Delete this post?
+            </h3>
+            <p id="delete-confirm-text" className="text-xs text-text-secondary">
+              This permanently deletes the post, its images and its metrics. It also disappears from the calendar and the pipeline. This cannot be undone.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                ref={keepButtonRef}
+                className={`btn-secondary ${FOCO}`}
+                onClick={cancelDelete}
+                disabled={deleting}
+              >
+                Keep post
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-lg text-sm font-semibold border border-red-300 bg-bg-surface text-red-300 hover:bg-red-300/10 disabled:cursor-wait ${FOCO}`}
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                aria-busy={deleting ? "true" : undefined}
+              >
+                {deleting ? "Deleting..." : "Yes, delete post"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {deleteError && (
+          <p role="alert" className="mx-6 mb-3 text-sm text-red-300 font-medium">
+            Error: {deleteError}
+          </p>
+        )}
+
+        <div className="flex flex-wrap justify-end gap-2 px-6 py-4 border-t border-border">
           {post.id && (
             <Link
               to={`/carousel/${post.id}`}
               className={`mr-auto inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border border-border
                 bg-bg-elevated text-text-primary hover:border-flowity-purple ${FOCO}`}
             >
-              Montar carrossel
+              Build carousel
             </Link>
+          )}
+          {canDelete && !confirmingDelete && (
+            <button
+              type="button"
+              ref={deleteButtonRef}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border border-border bg-bg-elevated text-red-300 hover:border-red-300 ${FOCO}`}
+              onClick={askDelete}
+              aria-disabled={post.status === "publishing" ? "true" : undefined}
+            >
+              Delete post
+            </button>
           )}
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSave} disabled={saving}>

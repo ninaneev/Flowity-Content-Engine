@@ -10,8 +10,8 @@ const FOCO =
 const PODE_USAR = new Set(["idea", "draft", "revised"]);
 
 /**
- * Clique num dia vazio do calendário: escolhe a hora e cria um post novo
- * ou coloca nesse dia um post que ainda não tem data.
+ * Click on an empty calendar day: pick the time and create a new post
+ * or put a post that has no date yet on that day.
  */
 export default function DayActionDialog({ day, suggestedPillar, posts = [], onClose, onNewPost, onUseExisting }) {
   const [time, setTime] = useState(DEFAULT_POST_TIME);

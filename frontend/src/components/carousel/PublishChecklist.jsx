@@ -3,8 +3,8 @@ import { CheckCircle2, CircleAlert } from "lucide-react";
 import { montarChecklist } from "../../lib/publishChecklist.mjs";
 
 /**
- * Checklist de publicação no LinkedIn. Cada item mostra ícone e texto ("Pronto" / "Falta"),
- * nunca só a cor, e vem calculado a partir dos dados reais.
+ * LinkedIn publish checklist. Each item shows an icon and text ("Ready" / "Missing"),
+ * never color alone, and is computed from the real data.
  */
 export default function PublishChecklist({ post, totalSlides, imagens, pdfBaixado }) {
   const itens = montarChecklist({ post, totalSlides, imagens, pdfBaixado });
@@ -14,10 +14,10 @@ export default function PublishChecklist({ post, totalSlides, imagens, pdfBaixad
     <section aria-labelledby="checklist-titulo" className="card space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="checklist-titulo" className="text-base font-semibold text-text-primary">
-          Checklist de publicação no LinkedIn
+          LinkedIn publish checklist
         </h2>
         <p className="text-sm text-text-secondary">
-          {prontos} de {itens.length} itens prontos
+          {prontos} of {itens.length} items ready
         </p>
       </div>
       <ul className="space-y-2">
@@ -36,7 +36,7 @@ export default function PublishChecklist({ post, totalSlides, imagens, pdfBaixad
             <div className="min-w-0">
               <p className="text-sm text-text-primary">
                 <strong className={item.pronto ? "text-emerald-300" : "text-amber-300"}>
-                  {item.pronto ? "Pronto" : "Falta"}:
+                  {item.pronto ? "Ready" : "Missing"}:
                 </strong>{" "}
                 {item.rotulo}
               </p>

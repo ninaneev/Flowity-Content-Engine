@@ -6,16 +6,16 @@ const PLATAFORMAS = [
   { chave: "x", nome: "X" },
 ];
 
-/** Taxa normalizada: interações divididas por impressões, somadas na plataforma. */
+/** Normalized rate: interactions divided by impressions, summed per platform. */
 export function taxaNormalizada(p) {
   if (!p || !p.impressions) return 0;
   return (p.interacoes || 0) / p.impressions;
 }
 
 /**
- * Compara LinkedIn e X lado a lado pela taxa normalizada, mostrando também
- * quantas publicações entraram na conta, para o leitor entender o peso do número.
- * A barra é só apoio visual: o valor está sempre escrito em texto.
+ * Compares LinkedIn and X side by side by normalized rate, also showing
+ * how many posts went into the count, so the reader can judge the number's weight.
+ * The bar is only a visual aid: the value is always written in text.
  */
 export default function PlatformCompare({ porPlataforma = [] }) {
   const porChave = new Map(porPlataforma.map((p) => [p.platform, p]));
@@ -32,8 +32,8 @@ export default function PlatformCompare({ porPlataforma = [] }) {
           <p className="text-sm text-text-primary">
             <span className="font-semibold">{nome}:</span>{" "}
             {posts > 0
-              ? `${formatarPercentual(taxa)} em ${formatarPublicacoes(posts)}`
-              : "sem publicações com métricas"}
+              ? `${formatarPercentual(taxa)} across ${formatarPublicacoes(posts)}`
+              : "no posts with metrics"}
           </p>
           <div className="mt-1.5 h-2 rounded-full bg-bg-elevated" aria-hidden="true">
             <div

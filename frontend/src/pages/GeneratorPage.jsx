@@ -165,7 +165,7 @@ export default function GeneratorPage() {
       const r = await generationApi.createPost({ source_ids: selected, channel, tone, format, objective, mode });
       const postId = r.data.run_id; // backend returns new_post.id in run_id field
       await postsApi.update(postId, {
-        // hora local do navegador -> UTC (11:00 BRT vira 14:00Z), igual ao calendário
+        // browser local time -> UTC (11:00 BRT becomes 14:00Z), same as the calendar
         scheduled_at: fromLocalInput(`${scheduleDate}T${scheduleTime}`),
         status: "scheduled",
       });

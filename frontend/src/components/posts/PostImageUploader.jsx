@@ -15,8 +15,8 @@ const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
 /**
- * Seletor de imagem do post com texto alternativo obrigatório.
- * Sem drag-and-drop: o <input type="file"> já é operável por teclado e leitor de tela.
+ * Post image picker with required alt text.
+ * No drag-and-drop: the <input type="file"> is already operable by keyboard and screen reader.
  */
 export default function PostImageUploader({ postId, onUploaded }) {
   const uid = useId();
@@ -38,13 +38,13 @@ export default function PostImageUploader({ postId, onUploaded }) {
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
   const [aviso, setAviso] = useState("");
-  // "novo" = enviar arquivo do computador; "bucket" = escolher imagem que já está no Supabase Storage
+  // "novo" = upload a file from the computer; "bucket" = pick an image already in Supabase Storage
   const [origem, setOrigem] = useState("novo");
   const [bucket, setBucket] = useState(null);
   const [erroBucket, setErroBucket] = useState("");
   const [escolhida, setEscolhida] = useState(null);
 
-  // Libera a URL temporária da pré-visualização quando ela muda ou o componente sai da tela.
+  // Releases the temporary preview URL when it changes or the component unmounts.
   useEffect(() => () => previa && URL.revokeObjectURL(previa), [previa]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
       .then(({ data }) => setBucket(data))
       .catch((err) => {
         setBucket([]);
-        setErroBucket(mensagemDeErro(err, "Não foi possível abrir o bucket."));
+        setErroBucket(mensagemDeErro(err, "Could not open the bucket."));
       });
   }, [origem, bucket]);
 
@@ -108,15 +108,15 @@ export default function PostImageUploader({ postId, onUploaded }) {
           ? await assetsApi.fromStorage(postId, escolhida.path, altText.trim())
           : await assetsApi.upload(postId, arquivo, altText.trim());
       limparSelecao();
-      setBucket(null); // recarrega a lista: um upload novo também entra no bucket
+      setBucket(null); // reload the list: a new upload also lands in the bucket
       setAviso(
         data.public_url
-          ? "Imagem salva e publicada no bucket."
-          : "Imagem salva só neste computador (bucket não configurado)."
+          ? "Image saved and published to the bucket."
+          : "Image saved on this computer only (bucket not configured)."
       );
       onUploaded?.(data);
     } catch (err) {
-      setErroEnvio(mensagemDeErro(err, "Não foi possível enviar a imagem. Tente de novo."));
+      setErroEnvio(mensagemDeErro(err, "Could not upload the image. Try again."));
     } finally {
       setEnviando(false);
     }
@@ -134,28 +134,28 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
   return (
     <form className="space-y-3" onSubmit={handleSalvar} noValidate>
-      <div role="group" aria-label="Origem da imagem" className="inline-flex gap-1 rounded-lg border border-border p-1">
+      <div role="group" aria-label="Image source" className="inline-flex gap-1 rounded-lg border border-border p-1">
         <button type="button" aria-pressed={origem === "novo"} className={abaClasse(origem === "novo")}
           onClick={() => trocarOrigem("novo")}>
-          Enviar nova
+          Upload new
         </button>
         <button type="button" aria-pressed={origem === "bucket"} className={abaClasse(origem === "bucket")}
           onClick={() => trocarOrigem("bucket")}>
-          Escolher do bucket
+          Choose from bucket
         </button>
       </div>
 
       {origem === "bucket" && (
         <div>
           <label htmlFor={ids.bucket} className="label">
-            Imagem do bucket post-images
+            Image from the post-images bucket
           </label>
-          {bucket === null && <p className="text-sm text-text-secondary">Carregando...</p>}
+          {bucket === null && <p className="text-sm text-text-secondary">Loading...</p>}
           {erroBucket && (
-            <p role="alert" className="text-sm text-red-300 font-medium">Erro: {erroBucket}</p>
+            <p role="alert" className="text-sm text-red-300 font-medium">Error: {erroBucket}</p>
           )}
           {bucket?.length === 0 && !erroBucket && (
-            <p className="text-sm text-text-secondary">O bucket ainda não tem imagens.</p>
+            <p className="text-sm text-text-secondary">The bucket has no images yet.</p>
           )}
           {bucket?.length > 0 && (
             <>
@@ -165,7 +165,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
                 value={escolhida?.path || ""}
                 onChange={(e) => setEscolhida(bucket.find((img) => img.path === e.target.value) || null)}
               >
-                <option value="">Escolha uma imagem…</option>
+                <option value="">Choose an image…</option>
                 {bucket.map((img) => (
                   <option key={img.path} value={img.path}>
                     {img.path}
@@ -174,7 +174,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
               </select>
               {escolhida && (
                 <figure className="mt-2 rounded-lg border border-border bg-bg-base p-2 inline-block">
-                  <img src={escolhida.url} alt={`Imagem do bucket: ${escolhida.path}`}
+                  <img src={escolhida.url} alt={`Bucket image: ${escolhida.path}`}
                     className="max-h-48 max-w-full rounded" />
                   <figcaption className="text-xs text-text-secondary mt-1">{escolhida.path}</figcaption>
                 </figure>
@@ -187,7 +187,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
       {origem === "novo" && (
       <div>
         <label htmlFor={ids.arquivo} className="label">
-          Escolher imagem
+          Choose image
         </label>
         <input
           ref={inputRef}
@@ -203,11 +203,11 @@ export default function PostImageUploader({ postId, onUploaded }) {
             ${FOCO}`}
         />
         <p id={ids.arquivoAjuda} className="text-xs text-text-secondary mt-1">
-          PNG, JPEG ou GIF, até 5 MB.
+          PNG, JPEG or GIF, up to 5 MB.
         </p>
         {erroArquivo && (
           <p id={ids.arquivoErro} role="alert" className="text-sm text-red-300 mt-1 font-medium">
-            Erro: {erroArquivo}
+            Error: {erroArquivo}
           </p>
         )}
       </div>
@@ -217,18 +217,18 @@ export default function PostImageUploader({ postId, onUploaded }) {
         <figure className="rounded-lg border border-border bg-bg-base p-2 inline-block">
           <img
             src={previa}
-            alt={tamanhoAlt(altText) ? altText.trim() : `Pré-visualização do arquivo ${arquivo?.name}`}
+            alt={tamanhoAlt(altText) ? altText.trim() : `Preview of file ${arquivo?.name}`}
             className="max-h-48 max-w-full rounded"
           />
           <figcaption className="text-xs text-text-secondary mt-1">
-            Pré-visualização: {arquivo?.name}
+            Preview: {arquivo?.name}
           </figcaption>
         </figure>
       )}
 
       <div>
         <label htmlFor={ids.alt} className="label">
-          Texto alternativo (obrigatório)
+          Alt text (required)
         </label>
         <textarea
           id={ids.alt}
@@ -241,10 +241,10 @@ export default function PostImageUploader({ postId, onUploaded }) {
           aria-invalid={faltaAlt ? "true" : undefined}
           aria-describedby={`${ids.altAjuda} ${ids.altContador}`}
           onChange={(e) => setAltText(e.target.value)}
-          placeholder="Descreva o que a imagem mostra para quem não consegue vê-la."
+          placeholder="Describe what the image shows for people who cannot see it."
         />
         <p id={ids.altAjuda} className="text-xs text-text-secondary mt-1">
-          Descreva o conteúdo e a função da imagem, de {ALT_MIN} a {ALT_MAX} caracteres.
+          Describe the content and purpose of the image, {ALT_MIN} to {ALT_MAX} characters.
         </p>
         <p
           id={ids.altContador}
@@ -265,21 +265,21 @@ export default function PostImageUploader({ postId, onUploaded }) {
             disabled:cursor-not-allowed ${FOCO}`}
         >
           <Upload size={14} aria-hidden="true" />
-          {enviando ? "Enviando..." : "Salvar imagem"}
+          {enviando ? "Uploading..." : "Save image"}
         </button>
         {!selecionou && !erroArquivo && (
-          <span className="text-xs text-text-secondary">Escolha uma imagem para habilitar o envio.</span>
+          <span className="text-xs text-text-secondary">Choose an image to enable uploading.</span>
         )}
         {faltaAlt && (
           <span className="text-xs text-amber-300">
-            Preencha o texto alternativo com pelo menos {ALT_MIN} caracteres para salvar.
+            Fill in the alt text with at least {ALT_MIN} characters to save.
           </span>
         )}
       </div>
 
       {erroEnvio && (
         <p role="alert" className="text-sm text-red-300 font-medium">
-          Erro: {erroEnvio}
+          Error: {erroEnvio}
         </p>
       )}
       <p role="status" aria-live="polite" className="text-sm text-emerald-300">

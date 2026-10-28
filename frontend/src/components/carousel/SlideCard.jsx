@@ -11,9 +11,9 @@ const BOTAO =
    disabled:text-text-secondary disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-border ${FOCO}`;
 
 function papel(indice, total) {
-  if (indice === 0) return "capa";
-  if (indice === total - 1) return "fechamento";
-  return "conteúdo";
+  if (indice === 0) return "cover";
+  if (indice === total - 1) return "closing";
+  return "content";
 }
 
 export default function SlideCard({
@@ -38,8 +38,8 @@ export default function SlideCard({
   const textareaRef = useRef(null);
 
   function handleKeyDown(e) {
-    // Só trata atalhos quando o próprio cartão está focado.
-    // Assim, não interfere nos botões nem na digitação do textarea.
+    // Only handles shortcuts when the card itself is focused.
+    // This way it does not interfere with the buttons or typing in the textarea.
     if (e.target !== e.currentTarget || e.defaultPrevented) return;
 
     if (e.key === "Enter" || e.key === " ") {
@@ -65,7 +65,7 @@ export default function SlideCard({
       data-slide-id={id}
       role="group"
       aria-roledescription="slide"
-      aria-label={`Slide ${numero} de ${total}`}
+      aria-label={`Slide ${numero} of ${total}`}
       aria-current={atual ? "true" : undefined}
       aria-describedby={instrucaoId}
       tabIndex={0}
@@ -76,17 +76,17 @@ export default function SlideCard({
       onKeyDown={handleKeyDown}
     >
       <p id={instrucaoId} className="sr-only">
-        Pressione Enter ou Espaço para editar o texto deste slide.
-        Use as setas esquerda e direita para navegar entre os slides.
+        Press Enter or Space to edit this slide's text.
+        Use the left and right arrow keys to move between slides.
       </p>
 
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="min-w-0">
           <h3 className="font-medium text-text-primary">
-            Slide {numero} de {total}
+            Slide {numero} of {total}
             {atual && (
               <span className="ml-2 text-xs font-medium text-flowity-purple">
-                em pré-visualização
+                previewing
               </span>
             )}
           </h3>
@@ -103,10 +103,10 @@ export default function SlideCard({
             className={BOTAO}
             onClick={() => onMover(-1)}
             disabled={indice === 0}
-            aria-label={`Mover slide ${numero} para cima`}
+            aria-label={`Move slide ${numero} up`}
           >
             <ArrowUp size={14} aria-hidden="true" />
-            Subir
+            Up
           </button>
 
           <button
@@ -115,10 +115,10 @@ export default function SlideCard({
             className={BOTAO}
             onClick={() => onMover(1)}
             disabled={indice === total - 1}
-            aria-label={`Mover slide ${numero} para baixo`}
+            aria-label={`Move slide ${numero} down`}
           >
             <ArrowDown size={14} aria-hidden="true" />
-            Descer
+            Down
           </button>
 
           <button
@@ -126,16 +126,16 @@ export default function SlideCard({
             className={BOTAO}
             onClick={onRemover}
             disabled={!podeRemover}
-            aria-label={`Remover slide ${numero}`}
+            aria-label={`Remove slide ${numero}`}
           >
             <Trash2 size={14} aria-hidden="true" />
-            Remover
+            Remove
           </button>
         </div>
       </div>
 
       <label htmlFor={campoId} className="sr-only">
-        Texto do slide {numero} de {total}
+        Text of slide {numero} of {total}
       </label>
 
       <textarea
@@ -164,7 +164,7 @@ export default function SlideCard({
 
         {vazio && (
           <span className="text-xs text-amber-300">
-            Preencha este slide.
+            Fill in this slide.
           </span>
         )}
       </div>

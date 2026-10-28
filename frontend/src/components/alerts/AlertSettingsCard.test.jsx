@@ -12,15 +12,15 @@ vi.mock("../../lib/api", () => ({
 }));
 
 describe("AlertSettingsCard", () => {
-  it("mostra 2 por padrão, salva em fração e confirma em texto", async () => {
+  it("shows 2 by default, saves as a fraction and confirms in text", async () => {
     render(<AlertSettingsCard />);
-    const campo = screen.getByLabelText("Taxa mínima de engajamento (%)");
+    const campo = screen.getByLabelText("Minimum engagement rate (%)");
     expect(campo).toHaveValue(2);
 
     fireEvent.change(campo, { target: { value: "3.5" } });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar limite" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save threshold" }));
 
-    expect(await screen.findByText(/Limite salvo: 3,5%/)).toBeInTheDocument();
+    expect(await screen.findByText(/Threshold saved: 3\.5%/)).toBeInTheDocument();
     expect(alertsApi.updateSettings).toHaveBeenCalledWith({ min_engagement_rate: 0.035 });
   });
 });

@@ -1,23 +1,23 @@
 /**
- * Regras do carrossel do LinkedIn no front-end (Tarefa 10).
- * Sem React, para ficar fácil de testar com `node --test`.
- * Os limites são os mesmos do backend (carousel_renderer.py, Tarefa 8).
+ * LinkedIn carousel rules on the front end (Task 10).
+ * No React, so they are easy to test with `node --test`.
+ * The limits match the backend (carousel_renderer.py, Task 8).
  */
 
 export const MIN_SLIDES = 3;
 export const MAX_SLIDES = 10;
 export const MAX_CARACTERES = 220;
 
-/** Divide o corpo do post em blocos de texto, um por slide. */
+/** Splits the post body into text blocks, one per slide. */
 export function dividirEmSlides(body, maxCaracteres = MAX_CARACTERES) {
   const paragrafos = String(body || "").split(/\n{2,}/).map((p) => p.trim());
   return paragrafos.filter(Boolean).map((p) => p.slice(0, maxCaracteres));
 }
 
 /**
- * Monta os slides iniciais do post: capa (hook), blocos do corpo e CTA.
- * Se o corpo tiver blocos demais, junta vizinhos até caber no máximo de 10 slides,
- * como faz o `dividir_em_slides` do backend.
+ * Builds the post's initial slides: cover (hook), body blocks and CTA.
+ * If the body has too many blocks, it merges neighbours until it fits in 10 slides,
+ * like the backend's `dividir_em_slides`.
  */
 export function slidesDoPost(post, maxCaracteres = MAX_CARACTERES) {
   const hook = String(post?.hook || "").trim();
@@ -40,7 +40,7 @@ export function slidesDoPost(post, maxCaracteres = MAX_CARACTERES) {
   return slides.map((s) => s.slice(0, maxCaracteres));
 }
 
-/** Troca o slide de posição com o vizinho. `direcao` é -1 (subir) ou +1 (descer). */
+/** Swaps the slide with its neighbour. `direcao` is -1 (up) or +1 (down). */
 export function mover(slides, indice, direcao) {
   const destino = indice + direcao;
   if (destino < 0 || destino >= slides.length) return slides;
@@ -49,20 +49,20 @@ export function mover(slides, indice, direcao) {
   return copia;
 }
 
-/** Quantidade está entre 3 e 10? */
+/** Is the count between 3 and 10? */
 export function quantidadeValida(total) {
   return total >= MIN_SLIDES && total <= MAX_SLIDES;
 }
 
 /**
- * Devolve o motivo que impede gerar o carrossel, ou "" se pode gerar.
- * `textos` é a lista de textos dos slides, na ordem.
+ * Returns the reason the carousel cannot be generated, or "" if it can.
+ * `textos` is the list of slide texts, in order.
  */
 export function motivoParaNaoGerar(textos) {
   const total = textos?.length;
-  if (total < MIN_SLIDES) return `O carrossel precisa de pelo menos ${MIN_SLIDES} slides. Agora tem ${total}.`;
-  if (total > MAX_SLIDES) return `O carrossel pode ter no máximo ${MAX_SLIDES} slides. Agora tem ${total}.`;
+  if (total < MIN_SLIDES) return `The carousel needs at least ${MIN_SLIDES} slides. It has ${total} now.`;
+  if (total > MAX_SLIDES) return `The carousel can have at most ${MAX_SLIDES} slides. It has ${total} now.`;
   const vazio = textos?.findIndex((t) => !String(t || "").trim());
-  if (vazio !== -1) return `O slide ${vazio + 1} está sem texto.`;
+  if (vazio !== -1) return `Slide ${vazio + 1} has no text.`;
   return "";
 }

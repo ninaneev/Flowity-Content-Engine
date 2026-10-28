@@ -36,15 +36,15 @@ function normalizarSlides(slides) {
 }
 
 /**
- * Monta e gerencia o carrossel.
+ * Builds and manages the carousel.
  *
- * - Edita o texto dos slides.
- * - Reordena e remove slides.
- * - Adiciona novos slides.
- * - Permite navegar pelo teclado.
- * - Anuncia alterações para leitores de tela.
- * - Preserva o foco após alterações na lista.
- * - Solicita ao backend a geração do carrossel.
+ * - Edits slide text.
+ * - Reorders and removes slides.
+ * - Adds new slides.
+ * - Supports keyboard navigation.
+ * - Announces changes to screen readers.
+ * - Preserves focus after list changes.
+ * - Asks the backend to generate the carousel.
  */
 export default function CarouselBuilder({
   postId,
@@ -65,10 +65,10 @@ export default function CarouselBuilder({
   const inicializacaoAplicada = useRef(false);
 
   /*
-   * Se os slides forem carregados de forma assíncrona,
-   * inicializa a lista quando os dados chegarem.
+   * If the slides are loaded asynchronously,
+   * initializes the list when the data arrives.
    *
-   * Não substitui slides que o usuário já começou a editar.
+   * Does not replace slides the user has already started editing.
    */
   useEffect(() => {
     if (
@@ -95,7 +95,7 @@ export default function CarouselBuilder({
   const postIdValido = Number.isInteger(Number(postId)) && Number(postId) > 0;
 
   /*
-   * Informa ao componente pai o conteúdo e o slide atual.
+   * Tells the parent component the content and the current slide.
    */
   useEffect(() => {
     onChange?.({
@@ -103,12 +103,12 @@ export default function CarouselBuilder({
       atual,
     });
 
-    // onChange é uma prop externa.
+    // onChange is an external prop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itens, atual]);
 
   /*
-   * Restaura o foco depois que a lista é atualizada.
+   * Restores focus after the list is updated.
    */
   useEffect(() => {
     const alvos = focoPendente.current;
@@ -136,7 +136,7 @@ export default function CarouselBuilder({
   }, [itens]);
 
   /*
-   * Mantém o índice selecionado dentro dos limites da lista.
+   * Keeps the selected index within the list bounds.
    */
   useEffect(() => {
     setAtual((indice) => {
@@ -162,8 +162,8 @@ export default function CarouselBuilder({
   }
 
   /*
-   * Navega entre os slides com as setas.
-   * O foco acompanha o slide selecionado.
+   * Navigates between slides with the arrow keys.
+   * Focus follows the selected slide.
    */
   function navegarSlide(indice, direcao) {
     if (itens.length === 0) {
@@ -177,7 +177,7 @@ export default function CarouselBuilder({
 
     setAtual(novoIndice);
 
-    // Leva o foco para o cartão do slide selecionado.
+    // Moves focus to the selected slide's card.
     const item = itens[novoIndice];
     const cartao = document.querySelector(
       `[data-slide-id="${item.id}"]`
@@ -187,11 +187,11 @@ export default function CarouselBuilder({
   }
 
   /*
-   * Permite navegar pelos slides com as setas esquerda/direita.
-   * Não intercepta as setas enquanto a pessoa está digitando.
+   * Allows navigating slides with the left/right arrow keys.
+   * Does not intercept the arrows while the person is typing.
    */
   function handleListaKeyDown(event) {
-    // Evita processar novamente uma tecla já tratada por um slide.
+    // Avoids handling again a key already handled by a slide.
     if (event.defaultPrevented) {
       return;
     }
@@ -220,8 +220,8 @@ export default function CarouselBuilder({
     }
   }
   /*
-   * Reordena os slides e devolve o foco a um controle
-   * pertencente ao slide movido.
+   * Reorders the slides and returns focus to a control
+   * belonging to the moved slide.
    */
   function moverSlide(indice, direcao) {
     const item = itens[indice];
@@ -256,19 +256,19 @@ export default function CarouselBuilder({
     setAtual(destino);
 
     setAviso(
-      `Slide movido da posição ${indice + 1} para a posição ${
+      `Slide moved from position ${indice + 1} to position ${
         destino + 1
       }.`
     );
   }
 
   /*
-   * Adiciona um slide antes do último slide,
-   * preservando o fechamento/CTA no final.
+   * Adds a slide before the last slide,
+   * keeping the closing/CTA at the end.
    */
   function adicionarSlide() {
     if (itens.length >= MAX_SLIDES) {
-      setAviso(`Limite de ${MAX_SLIDES} slides atingido.`);
+      setAviso(`Limit of ${MAX_SLIDES} slides reached.`);
       return;
     }
 
@@ -289,17 +289,17 @@ export default function CarouselBuilder({
     setAtual(posicao);
 
     setAviso(
-      `Slide ${posicao + 1} adicionado. Escreva o texto dele.`
+      `Slide ${posicao + 1} added. Write its text.`
     );
   }
 
   /*
-   * Remove um slide e transfere o foco para um vizinho.
+   * Removes a slide and moves focus to a neighbour.
    */
   function removerSlide(indice) {
     if (itens.length <= MIN_SLIDES) {
       setAviso(
-        `O carrossel precisa ter pelo menos ${MIN_SLIDES} slides.`
+        `The carousel needs at least ${MIN_SLIDES} slides.`
       );
       return;
     }
@@ -332,16 +332,16 @@ export default function CarouselBuilder({
     );
 
     setAviso(
-      `Slide ${indice + 1} removido. O carrossel agora tem ${novoTotal} slides.`
+      `Slide ${indice + 1} removed. The carousel now has ${novoTotal} slides.`
     );
   }
 
   /*
-   * Envia os textos para o backend gerar o carrossel.
+   * Sends the texts to the backend to generate the carousel.
    */
   async function gerar() {
     if (!postIdValido) {
-      setErro("Não foi possível identificar a publicação. Volte ao Pipeline e abra o carrossel a partir de um post.");
+      setErro("Could not identify the post. Go back to the Pipeline and open the carousel from a post.");
       return;
     }
 
@@ -351,7 +351,7 @@ export default function CarouselBuilder({
 
     setGerando(true);
     setErro("");
-    setAviso("Gerando carrossel. Aguarde.");
+    setAviso("Generating carousel. Please wait.");
 
     try {
       const { data } = await postsApi.render.carousel(
@@ -360,7 +360,7 @@ export default function CarouselBuilder({
       );
 
       setAviso(
-        `Carrossel gerado com ${
+        `Carousel generated with ${
           data?.total_slides ?? textos.length
         } slides.`
       );
@@ -370,7 +370,7 @@ export default function CarouselBuilder({
       setErro(
         mensagemDeErro(
           err,
-          "Não foi possível gerar o carrossel. Tente de novo."
+          "Could not generate the carousel. Try again."
         )
       );
 
@@ -390,17 +390,17 @@ export default function CarouselBuilder({
           id="montagem-titulo"
           className="text-base font-semibold text-text-primary"
         >
-          Slides ({itens.length} de no máximo {MAX_SLIDES})
+          Slides ({itens.length} of at most {MAX_SLIDES})
         </h2>
 
         <p className="text-xs text-text-secondary">
-          Mínimo {MIN_SLIDES}, máximo {MAX_SLIDES}.
-          Use os botões para mudar a ordem.
+          Minimum {MIN_SLIDES}, maximum {MAX_SLIDES}.
+          Use the buttons to change the order.
         </p>
       </div>
 
       <ol
-        aria-label="Slides do carrossel. Use as setas esquerda e direita para navegar."
+        aria-label="Carousel slides. Use the left and right arrow keys to navigate."
         className="space-y-3"
         onKeyDown={handleListaKeyDown}
         tabIndex={0}
@@ -435,7 +435,7 @@ export default function CarouselBuilder({
 
       {itens.length === 0 && (
         <p className="text-sm text-text-secondary">
-          Nenhum slide foi carregado. Adicione um slide para começar.
+          No slides loaded. Add a slide to get started.
         </p>
       )}
 
@@ -449,7 +449,7 @@ export default function CarouselBuilder({
             disabled:text-text-secondary disabled:opacity-60 disabled:cursor-not-allowed ${FOCO}`}
         >
           <Plus size={14} aria-hidden="true" />
-          Adicionar slide
+          Add slide
         </button>
 
         <button
@@ -468,20 +468,20 @@ export default function CarouselBuilder({
           <Layers size={14} aria-hidden="true" />
 
           {gerando
-            ? "Gerando carrossel..."
-            : "Gerar carrossel"}
+            ? "Generating carousel..."
+            : "Generate carousel"}
         </button>
 
         {itens.length >= MAX_SLIDES && (
           <span className="text-xs text-text-secondary">
-            Limite de {MAX_SLIDES} slides atingido.
+            Limit of {MAX_SLIDES} slides reached.
           </span>
         )}
       </div>
 
       {!postIdValido && !erro && (
         <p role="alert" className="text-sm text-amber-300">
-          Selecione uma publicação no Pipeline antes de gerar o carrossel.
+          Select a post in the Pipeline before generating the carousel.
         </p>
       )}
 
@@ -490,7 +490,7 @@ export default function CarouselBuilder({
           id="gerar-bloqueio"
           className="text-sm text-amber-300"
         >
-          Para gerar: {bloqueio}
+          To generate: {bloqueio}
         </p>
       )}
 
@@ -499,11 +499,11 @@ export default function CarouselBuilder({
           role="alert"
           className="text-sm text-red-300 font-medium"
         >
-          Erro: {erro}
+          Error: {erro}
         </p>
       )}
 
-      {/* Anúncio para leitores de tela */}
+      {/* Announcement for screen readers */}
       <p
         role="status"
         aria-live="polite"
@@ -511,11 +511,11 @@ export default function CarouselBuilder({
         className="sr-only"
       >
         {itens.length > 0
-          ? `Slide ${atual + 1} de ${itens.length}. ${aviso}`
-          : aviso || "Nenhum slide carregado."}
+          ? `Slide ${atual + 1} of ${itens.length}. ${aviso}`
+          : aviso || "No slides loaded."}
       </p>
 
-      {/* Mensagens visíveis para o usuário */}
+      {/* Messages visible to the user */}
       {aviso && (
         <p
           aria-hidden="true"
