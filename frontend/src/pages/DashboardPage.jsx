@@ -39,17 +39,27 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchPosts();
+    // Posts can change outside this tab (Make, imports, another window): refetch quietly on focus and every minute.
+    const refresh = () => document.visibilityState === "visible" && fetchPosts({ silent: true });
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      clearInterval(timer);
+    };
   }, []);
 
-  async function fetchPosts() {
-    setLoading(true);
+  async function fetchPosts({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     try {
       const res = await postsApi.list();
       setPosts(res.data);
     } catch (err) {
       console.error("Error loading calendar posts:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 

@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { to: "/generator", icon: Sparkles, label: "Generator" },
   { to: "/pipeline", icon: LayoutList, label: "Pipeline" },
   // Sem post escolhido, /carousel leva ao Pipeline (ver App.jsx)
-  { to: "/carousel", icon: Layers, label: "Carrossel" },
+  { to: "/carousel", icon: Layers, label: "Carousel" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

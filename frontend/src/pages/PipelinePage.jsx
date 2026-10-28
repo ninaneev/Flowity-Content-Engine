@@ -29,17 +29,29 @@ export default function PipelinePage() {
   const [dragOverCol, setDragOverCol] = useState(null);
   const draggingId = useRef(null);
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => {
+    fetchPosts();
+    // Posts can change outside this tab (Make, imports, another window): refetch quietly on focus and every minute.
+    const refresh = () => document.visibilityState === "visible" && fetchPosts({ silent: true });
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      clearInterval(timer);
+    };
+  }, []);
 
-  async function fetchPosts() {
-    setLoading(true);
+  async function fetchPosts({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     try {
       const r = await postsApi.list();
       setPosts(r.data);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
