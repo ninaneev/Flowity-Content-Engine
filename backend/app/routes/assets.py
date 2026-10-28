@@ -3,6 +3,7 @@
 import uuid
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -14,12 +15,14 @@ from app.repositories import post_assets as asset_repo
 from app.repositories import posts as post_repo
 from app.schemas.post_asset import (
     AltTextIn,
+    AssetFromStorage,
     AssetOrderUpdate,
     CarouselResponse,
     PostAssetResponse,
     PostAssetUpdate,
     RenderCarouselRequest,
     RenderImageRequest,
+    StorageImage,
 )
 from app.services import carousel_renderer, image_renderer, storage
 from app.services.accessibility import ALT_MAX, ALT_MIN, AltTextInvalido, validar_alt_text
@@ -130,6 +133,72 @@ async def upload_asset(
     # Cópia pública no Supabase Storage para o autopost; sem configuração ou com erro, segue sem ela.
     storage.publicar_asset(db, asset, content)
 
+    return _com_url(asset)
+
+
+@router.get(
+    "/storage/images",
+    response_model=list[StorageImage],
+    summary="Lista as imagens que já estão no bucket público",
+)
+def list_storage_images(_admin=Depends(get_current_admin)):
+    if not storage.configurado():
+        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage não configurado no .env")
+    try:
+        return storage.listar_imagens()
+    except httpx.HTTPError as erro:
+        raise _error(502, "STORAGE_ERROR", f"Não foi possível listar o bucket: {erro}") from erro
+
+
+@router.post(
+    "/posts/{post_id}/assets/from-storage",
+    response_model=PostAssetResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Anexa ao post uma imagem que já está no bucket",
+)
+def attach_from_storage(
+    post_id: int,
+    data: AssetFromStorage,
+    db: Session = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    if not post_repo.get_by_id(db, post_id):
+        raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+    if not storage.configurado():
+        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage não configurado no .env")
+    try:
+        content, mime = storage.baixar(data.path)
+    except httpx.HTTPError as erro:
+        raise _error(404, "STORAGE_OBJECT_NOT_FOUND", f"Imagem não encontrada no bucket: {data.path}") from erro
+    if mime not in ALLOWED_MIME:
+        raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Formato não suportado: {mime}")
+    if len(content) > settings.MAX_UPLOAD_BYTES:
+        raise _error(413, "FILE_TOO_LARGE", "Arquivo maior que o limite de 5 MB")
+
+    # Cópia local para a pré-visualização e a remoção funcionarem como num upload normal;
+    # a URL pública continua a do objeto que já está no bucket (sem novo envio).
+    relative_path = Path("posts") / str(post_id) / f"{uuid.uuid4().hex}{EXTENSIONS_BY_MIME[mime]}"
+    destination = _media_root() / relative_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(content)
+    try:
+        asset = asset_repo.create(
+            db,
+            post_id=post_id,
+            file_path=relative_path.as_posix(),
+            mime_type=mime,
+            alt_text=data.alt_text,
+            caption=None,
+            kind="image",
+            size_bytes=len(content),
+            position=asset_repo.next_position(db, post_id),
+        )
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+    asset.public_url = storage.url_publica(data.path)
+    db.commit()
+    db.refresh(asset)
     return _com_url(asset)
 
 

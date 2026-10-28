@@ -97,6 +97,54 @@ def enviar(asset, conteudo: bytes) -> str | None:
     return url_publica(caminho)
 
 
+def listar_imagens() -> list[dict]:
+    """Lista as imagens do bucket (todas as pastas), mais recentes primeiro.
+
+    A API de listagem do Storage devolve um nível por vez: item sem id é pasta e é aberto também.
+    """
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    imagens: list[dict] = []
+    with client_factory() as client:
+        pastas = [""]
+        while pastas:
+            prefixo = pastas.pop()
+            r = client.post(
+                f"{_base()}/storage/v1/object/list/{bucket}",
+                headers=_headers({"Content-Type": "application/json"}),
+                json={"prefix": prefixo, "limit": 1000, "sortBy": {"column": "name", "order": "asc"}},
+            )
+            r.raise_for_status()
+            for item in r.json():
+                caminho = f"{prefixo}/{item['name']}" if prefixo else item["name"]
+                if item.get("id") is None:
+                    pastas.append(caminho)
+                    continue
+                meta = item.get("metadata") or {}
+                mime = meta.get("mimetype") or ""
+                if not mime.startswith("image/"):
+                    continue
+                imagens.append({
+                    "path": caminho,
+                    "url": url_publica(caminho),
+                    "mime_type": mime,
+                    "size_bytes": meta.get("size"),
+                    "updated_at": item.get("updated_at") or item.get("created_at"),
+                })
+    imagens.sort(key=lambda i: i["updated_at"] or "", reverse=True)
+    return imagens
+
+
+def baixar(caminho: str) -> tuple[bytes, str]:
+    """Baixa um objeto do bucket e devolve (conteúdo, mime)."""
+    with client_factory() as client:
+        r = client.get(
+            f"{_base()}/storage/v1/object/{settings.SUPABASE_STORAGE_BUCKET}/{quote(caminho)}",
+            headers=_headers(),
+        )
+        r.raise_for_status()
+    return r.content, r.headers.get("content-type", "").split(";")[0].strip()
+
+
 def publicar_asset(db: Session, asset, conteudo: bytes | None = None) -> str | None:
     """Envia a imagem e grava post_assets.public_url. Erro de rede só vai para o log."""
     if not configurado():

@@ -118,3 +118,60 @@ def test_cli_sem_configuracao_avisa_e_sai(capsys):
     assert storage.main(["backfill"]) == 1
     assert "SUPABASE_URL" in capsys.readouterr().err
     assert storage.main([]) == 2
+
+
+@pytest.fixture
+def bucket_falso(monkeypatch):
+    """Bucket com uma pasta, um GIF solto e um arquivo que não é imagem."""
+    monkeypatch.setattr(settings, "SUPABASE_URL", URL)
+    monkeypatch.setattr(settings, "SUPABASE_SERVICE_ROLE_KEY", "chave-de-teste")
+    niveis = {
+        "": [
+            {"name": "posts", "id": None},
+            {"name": "signal-workflow.gif", "id": "a", "updated_at": "2026-10-28T02:00:00Z",
+             "metadata": {"mimetype": "image/gif", "size": len(GIF_1X1)}},
+            {"name": "notas.txt", "id": "b", "metadata": {"mimetype": "text/plain", "size": 3}},
+        ],
+        "posts": [{"name": "7", "id": None}],
+        "posts/7": [{"name": "foto.gif", "id": "c", "updated_at": "2026-10-27T10:00:00Z",
+                     "metadata": {"mimetype": "image/gif", "size": len(GIF_1X1)}}],
+    }
+
+    def responder(req: httpx.Request) -> httpx.Response:
+        if req.method == "POST" and req.url.path == "/storage/v1/object/list/post-images":
+            import json
+            return httpx.Response(200, json=niveis.get(json.loads(req.content)["prefix"], []))
+        if req.method == "GET" and req.url.path == "/storage/v1/object/post-images/signal-workflow.gif":
+            return httpx.Response(200, content=GIF_1X1, headers={"content-type": "image/gif"})
+        return httpx.Response(404, json={"message": "not found"})
+
+    monkeypatch.setattr(storage, "client_factory", lambda: httpx.Client(transport=httpx.MockTransport(responder)))
+
+
+def test_lista_imagens_do_bucket_com_pastas(client, bucket_falso):
+    r = client.get("/storage/images")
+    assert r.status_code == 200, r.text
+    assert [i["path"] for i in r.json()] == ["signal-workflow.gif", "posts/7/foto.gif"]
+    assert r.json()[0]["url"] == f"{URL}/storage/v1/object/public/post-images/signal-workflow.gif"
+
+
+def test_lista_sem_configuracao_avisa(client):
+    r = client.get("/storage/images")
+    assert r.status_code == 503
+    assert r.json()["detail"]["code"] == "STORAGE_NOT_CONFIGURED"
+
+
+def test_anexa_imagem_do_bucket_sem_novo_upload(client, post_criado, bucket_falso):
+    r = client.post(f"/posts/{post_criado['id']}/assets/from-storage",
+                    json={"path": "signal-workflow.gif", "alt_text": ALT})
+    assert r.status_code == 201, r.text
+    corpo = r.json()
+    assert corpo["public_url"] == f"{URL}/storage/v1/object/public/post-images/signal-workflow.gif"
+    assert corpo["mime_type"] == "image/gif"
+    assert corpo["size_bytes"] == len(GIF_1X1)
+
+
+def test_anexa_imagem_inexistente_do_bucket(client, post_criado, bucket_falso):
+    r = client.post(f"/posts/{post_criado['id']}/assets/from-storage",
+                    json={"path": "nao-existe.png", "alt_text": ALT})
+    assert r.status_code == 404

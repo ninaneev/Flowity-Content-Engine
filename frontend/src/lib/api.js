@@ -103,6 +103,10 @@ export const assetsApi = {
   },
   update: (id, data) => api.patch(`/assets/${id}`, data),
   remove: (id) => api.delete(`/assets/${id}`),
+  // Imagens que já estão no bucket público do Supabase Storage
+  storageList: () => api.get("/storage/images"),
+  fromStorage: (postId, path, altText) =>
+    api.post(`/posts/${postId}/assets/from-storage`, { path, alt_text: altText }),
 };
 
 /** Baixa um arquivo autenticado (ex.: o PDF do carrossel) e salva com o nome indicado. */

@@ -50,6 +50,28 @@ class AltTextIn(BaseModel):
         return validar_alt_text(v)
 
 
+class StorageImage(BaseModel):
+    """Imagem que já está no bucket público do Supabase Storage."""
+
+    path: str
+    url: str
+    mime_type: str
+    size_bytes: int | None = None
+    updated_at: str | None = None
+
+
+class AssetFromStorage(BaseModel):
+    """Anexa ao post uma imagem que já está no bucket, sem novo upload."""
+
+    path: str = Field(..., min_length=1, max_length=500)
+    alt_text: str = Field(..., min_length=ALT_MIN, max_length=ALT_MAX)
+
+    @field_validator("alt_text")
+    @classmethod
+    def validate_alt_text(cls, v: str) -> str:
+        return validar_alt_text(v)
+
+
 class AssetOrderUpdate(BaseModel):
     asset_ids: list[int] = Field(..., min_length=1, description="IDs dos assets na ordem desejada")
 
