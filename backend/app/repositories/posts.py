@@ -1,5 +1,5 @@
 """Operações CRUD para posts e post_sources. Usado pelos integrantes 6 e 7."""
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, noload
 from app.models.post import Post
 from app.models.generation import PostSource
@@ -24,8 +24,36 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
     return db.query(Post).filter(Post.id == post_id).first()
 
 
+# Status que aparecem no calendário: o que está agendado e o que já saiu
+NO_CALENDARIO = ("scheduled", "publishing", "published", "failed")
+# Status que viram "scheduled" quando ganham data (data no calendário = agendado)
+ANTES_DE_AGENDAR = ("idea", "draft", "revised")
+
+
+def _futura(quando: datetime) -> bool:
+    agora = datetime.now(timezone.utc)
+    if quando.tzinfo is None:  # SQLite devolve sem fuso; o app grava em UTC
+        quando = quando.replace(tzinfo=timezone.utc)
+    return quando > agora
+
+
+def _data_define_status(post: Post, data_antes, status_mudou: bool) -> None:
+    """Calendário e pipeline são a mesma coisa: pôr data agenda, tirar a data desagenda.
+
+    Só reage quando a data mudou nesta requisição. Data no passado não agenda sozinha,
+    senão o Make publicaria na hora um rascunho antigo. Mover o card de coluna no pipeline
+    (status trocado sem mexer na data) continua valendo como o usuário escolheu.
+    """
+    if post.scheduled_at == data_antes:
+        return
+    if post.scheduled_at is not None and post.status in ANTES_DE_AGENDAR and _futura(post.scheduled_at):
+        post.status = "scheduled"
+    elif post.scheduled_at is None and post.status == "scheduled" and not status_mudou:
+        post.status = "revised"
+
+
 def get_for_calendar(db: Session, year: int, month: int) -> list[Post]:
-    """Retorna todos os posts com data no mês do calendário, de qualquer status.
+    """Retorna os posts agendados ou já publicados com data no mês do calendário.
 
     A janela vai um dia além de cada ponta porque scheduled_at é guardado em UTC e a tela
     mostra no fuso do navegador; a tela descarta o que cair fora do mês.
@@ -39,6 +67,7 @@ def get_for_calendar(db: Session, year: int, month: int) -> list[Post]:
         .options(noload(Post.assets), noload(Post.metrics))
         .filter(
             Post.scheduled_at.isnot(None),
+            Post.status.in_(NO_CALENDARIO),
             Post.scheduled_at >= inicio,
             Post.scheduled_at < fim,
         )
@@ -73,6 +102,7 @@ def create(db: Session, data: PostCreate) -> Post:
     """Cria post e liga às sources fornecidas."""
     post_data = data.model_dump(exclude={"source_ids"})
     post = Post(**post_data)
+    _data_define_status(post, None, status_mudou=True)
     db.add(post)
     db.flush()  # Garante que post.id existe antes de criar post_sources
 
@@ -88,8 +118,10 @@ def update(db: Session, post_id: int, data: PostUpdate) -> Post | None:
     post = get_by_id(db, post_id)
     if not post:
         return None
+    data_antes, status_antes = post.scheduled_at, post.status
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(post, key, value)
+    _data_define_status(post, data_antes, status_mudou=post.status != status_antes)
     db.commit()
     db.refresh(post)
     return post

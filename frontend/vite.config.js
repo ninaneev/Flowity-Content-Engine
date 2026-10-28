@@ -11,7 +11,10 @@ export default defineConfig({
   server: {
     port: 5173,
     host: "0.0.0.0", // Necessário para funcionar no Docker
+    // No Docker Desktop do Windows o volume não avisa mudanças de arquivo: sem polling a tela fica velha
+    watch: { usePolling: true, interval: 500 },
     proxy: {
+      "/storage":    { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
       // Redireciona chamadas diretas ao backend — evita CORS no dev e no browser externo
       "/auth":       { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
       "/sources":    { target: "http://backend:8000", changeOrigin: true, bypass: htmlParaSpa },
