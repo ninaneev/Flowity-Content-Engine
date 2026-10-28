@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { MemoryRouter } from "react-router-dom";
@@ -37,6 +37,24 @@ describe("PostModal", () => {
     fireEvent.change(campoAlt, { target: { value: "" } });
     const salvar = screen.getByRole("button", { name: /salvar imagem/i });
     expect(salvar).toBeDisabled();
+  });
+
+  it("Remove date limpa a data num clique e mostra o pilar", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(
+      <MemoryRouter>
+        <PostModal
+          post={{ ...postFake, pillar: "proof", scheduled_at: "2026-11-02T14:00:00Z" }}
+          onClose={() => {}}
+          onSave={onSave}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByLabelText("Pillar")).toHaveValue("proof");
+    fireEvent.click(screen.getByRole("button", { name: "Remove date" }));
+    expect(onSave).toHaveBeenCalledWith({ scheduled_at: null });
+    await screen.findByText(/Date removed/);
+    expect(screen.getByLabelText("Schedule")).toHaveValue("");
   });
 
   it("não tem violações de acessibilidade no axe", async () => {

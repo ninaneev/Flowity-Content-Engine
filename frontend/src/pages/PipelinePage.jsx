@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
+import { PillarTag, PostDateChip, OffStructureFlag } from "../components/posts/PostMeta";
 import { postsApi } from "../lib/api";
-import { format } from "date-fns";
+import { parseApiDate, sortByScheduled } from "../lib/postDates.js";
+import { planPillars } from "../lib/pillars.js";
 import { Link } from "react-router-dom";
 import { Layers } from "lucide-react";
 
@@ -41,13 +43,35 @@ export default function PipelinePage() {
     }
   }
 
-  async function handleSave(data) {
-    await postsApi.update(selectedPost.id, data);
-    await fetchPosts();
+  // Troca o post na lista pela versão salva: a coluna reordena na hora, sem recarregar tudo.
+  function applySaved(saved) {
+    setPosts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
   }
 
+  async function handleSave(data) {
+    const r = await postsApi.update(selectedPost.id, data);
+    applySaved(r.data);
+  }
+
+  async function handleRemoveDate(post) {
+    setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, scheduled_at: null } : p)));
+    try {
+      const r = await postsApi.update(post.id, { scheduled_at: null });
+      applySaved(r.data);
+    } catch (e) {
+      console.error(e);
+      applySaved(post);
+    }
+  }
+
+  const pillarPlan = useMemo(() => {
+    const datas = posts.map((p) => parseApiDate(p.scheduled_at)).filter(Boolean);
+    const until = datas.length ? new Date(Math.max(...datas)) : new Date();
+    return planPillars({ posts, today: new Date(), until });
+  }, [posts]);
+
   function postsByStatus(status) {
-    return posts.filter((p) => p.status === status);
+    return sortByScheduled(posts.filter((p) => p.status === status));
   }
 
   function handleDragStart(e, post) {
@@ -78,23 +102,20 @@ export default function PipelinePage() {
     const post = posts.find((p) => p.id === id);
     if (!post || post.status === targetStatus) return;
 
-    if (targetStatus === "scheduled") {
-      setSelectedPost({
-        ...post,
-        status: "scheduled",
-        scheduled_at: post.scheduled_at ? post.scheduled_at.slice(0, 16) : "",
-      });
+    if (targetStatus === "scheduled" && !post.scheduled_at) {
+      setSelectedPost({ ...post, status: "scheduled" });
       return;
     }
 
-    const updatePayload = { status: targetStatus, scheduled_at: null };
+    // A data não muda com o status: o post continua no calendário até alguém remover a data.
+    const updatePayload = { status: targetStatus };
 
-    // Optimistic update so the card moves instantly and leaves the calendar when unscheduled
+    // Optimistic update so the card moves instantly
     setPosts((prev) => prev.map((p) => p.id === id ? { ...p, ...updatePayload } : p));
 
     try {
-      await postsApi.update(id, updatePayload);
-      await fetchPosts();
+      const r = await postsApi.update(id, updatePayload);
+      applySaved(r.data);
     } catch (e) {
       console.error(e);
       // Revert on failure
@@ -165,12 +186,16 @@ export default function PipelinePage() {
                       <p className="text-text-primary text-sm font-medium line-clamp-2 mb-2">{post.hook}</p>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
-                        {post.scheduled_at && (
-                          <span className="text-xs text-text-muted">
-                            {format(new Date(post.scheduled_at), "MMM d")}
-                          </span>
-                        )}
+                        <PillarTag pillar={post.pillar} />
                       </div>
+                      {(post.scheduled_at || pillarPlan.posts[post.id]?.offStructure) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1">
+                          <PostDateChip post={post} onRemoveDate={handleRemoveDate} />
+                          {pillarPlan.posts[post.id]?.offStructure && (
+                            <OffStructureFlag expected={pillarPlan.posts[post.id].expected} />
+                          )}
+                        </div>
+                      )}
                       <Link
                         to={`/carousel/${post.id}`}
                         onClick={(event) => event.stopPropagation()}

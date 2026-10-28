@@ -1,23 +1,36 @@
 import React from "react";
 import {
   startOfMonth, endOfMonth, eachDayOfInterval,
-  getDay, isSameDay, isToday
+  getDay, isSameDay, isToday, startOfDay
 } from "date-fns";
 import CalendarDayCell from "./CalendarDayCell";
+import { dayKey } from "../../lib/pillars.js";
+import { parseApiDate } from "../../lib/postDates.js";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function ContentCalendar({ posts = [], month, onAddPost, onEditPost }) {
+export default function ContentCalendar({
+  posts = [],
+  month,
+  plan = { days: {}, posts: {} },
+  onDayClick,
+  onEditPost,
+  onRemoveDate,
+  onDropPost,
+}) {
   const firstDay = startOfMonth(month);
   const lastDay = endOfMonth(month);
   const days = eachDayOfInterval({ start: firstDay, end: lastDay });
   const paddingCells = Array(getDay(firstDay)).fill(null);
+  const today = startOfDay(new Date());
 
   function getPostsForDay(day) {
-    return posts.filter((post) => {
-      if (!post.scheduled_at) return false;
-      return isSameDay(new Date(post.scheduled_at), day);
-    });
+    return posts
+      .filter((post) => {
+        const d = parseApiDate(post.scheduled_at);
+        return d && isSameDay(d, day);
+      })
+      .sort((a, b) => parseApiDate(a.scheduled_at) - parseApiDate(b.scheduled_at));
   }
 
   return (
@@ -41,8 +54,12 @@ export default function ContentCalendar({ posts = [], month, onAddPost, onEditPo
             day={day}
             posts={getPostsForDay(day)}
             isToday={isToday(day)}
-            onAddPost={onAddPost}
+            dayPlan={day >= today ? plan.days[dayKey(day)] : undefined}
+            postPlans={plan.posts}
+            onDayClick={onDayClick}
             onEditPost={onEditPost}
+            onRemoveDate={onRemoveDate}
+            onDropPost={onDropPost}
           />
         ))}
       </div>

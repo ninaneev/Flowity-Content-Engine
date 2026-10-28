@@ -1,6 +1,9 @@
 import React from "react";
 import { format } from "date-fns";
 import { Linkedin, Mail, Twitter } from "lucide-react";
+import { PILLARS } from "../../lib/pillars.js";
+import { isMissed, parseApiDate } from "../../lib/postDates.js";
+import { MissedFlag, OffStructureFlag, PillarTag, RemoveDateButton } from "../posts/PostMeta";
 
 const STATUS_BG = {
   idea: "bg-bg-elevated border-border",
@@ -12,28 +15,45 @@ const STATUS_BG = {
   failed: "bg-status-failed/30 border-status-failed/70",
 };
 
-export default function PostEventCard({ post, onClick }) {
+export default function PostEventCard({ post, onClick, onRemoveDate, plan, now = new Date() }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
   const Icon = post.channel === "linkedin" ? Linkedin : post.channel === "newsletter" ? Mail : Twitter;
+  const date = parseApiDate(post.scheduled_at);
+  const missed = isMissed(post, now);
+  const offStructure = plan?.offStructure;
+  const pillar = PILLARS[post.pillar];
 
   return (
     <div
-      className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded border text-[10px] leading-tight cursor-pointer truncate transition-all hover:scale-[1.02] active:scale-95 ${bgClass}`}
+      draggable
+      onDragStart={(e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData("text/plain", String(post.id));
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      className={`rounded border text-[10px] leading-tight cursor-pointer transition-all hover:scale-[1.02] active:scale-95 ${bgClass} ${
+        missed ? "ring-1 ring-red-500/60" : ""
+      }`}
+      style={pillar ? { borderLeft: `3px solid ${pillar.color}` } : undefined}
       onClick={(e) => {
         e.stopPropagation();
         onClick(post);
       }}
-      title={`${post.status.toUpperCase()} · ${post.channel.toUpperCase()}: ${post.hook}`}
+      title={`${post.status.toUpperCase()} · ${post.channel.toUpperCase()}${pillar ? ` · ${pillar.label}` : ""}: ${post.hook}`}
     >
-      <Icon size={10} className="shrink-0 opacity-80" />
-      {post.scheduled_at && (
-        <span className="shrink-0 font-mono opacity-80">
-          {format(new Date(post.scheduled_at), "HH:mm")}
-        </span>
+      <div className="flex items-center gap-1.5 px-1.5 py-0.5 min-w-0">
+        <Icon size={10} className="shrink-0 opacity-80" />
+        {date && <span className="shrink-0 font-mono opacity-80">{format(date, "HH:mm")}</span>}
+        <span className="font-medium truncate flex-1 min-w-0">{post.hook}</span>
+        <RemoveDateButton post={post} onRemoveDate={onRemoveDate} />
+      </div>
+      {(pillar || missed || offStructure) && (
+        <div className="flex flex-wrap items-center gap-1 px-1.5 pb-0.5">
+          <PillarTag pillar={post.pillar} />
+          {missed && <MissedFlag />}
+          {offStructure && <OffStructureFlag expected={plan.expected} />}
+        </div>
       )}
-      <span className="font-medium truncate">
-        {post.hook}
-      </span>
     </div>
   );
 }

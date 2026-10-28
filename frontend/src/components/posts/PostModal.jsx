@@ -6,6 +6,8 @@ import SelectField from "../shared/SelectField";
 import PostImageUploader from "./PostImageUploader";
 import { assetsApi, mediaUrl } from "../../lib/api";
 import { mensagemDeErro } from "../../lib/imageUpload.mjs";
+import { PILLARS, PILLAR_ROTATION } from "../../lib/pillars.js";
+import { fromLocalInput, isMissed, toLocalInput } from "../../lib/postDates.js";
 
 const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
@@ -170,12 +172,22 @@ const CHANNEL_LABELS = {
   newsletter: "Newsletter",
 };
 
-function normalizeForApi(form, original = {}) {
-  const movedOutOfScheduled = original.status === "scheduled" && form.status !== "scheduled";
+const PILLAR_OPTIONS = [
+  { value: "", label: "No pillar" },
+  ...PILLAR_ROTATION.map((k) => ({ value: k, label: PILLARS[k].label })),
+];
+
+/** O formulário trabalha com a data local do input; a API recebe ISO em UTC. */
+function toForm(post) {
+  return { ...(post || {}), scheduled_at: toLocalInput(post?.scheduled_at) };
+}
+
+function normalizeForApi(form) {
   return {
     ...form,
     hook: form.hook?.trim() || "New post",
-    scheduled_at: movedOutOfScheduled ? null : (form.scheduled_at || null),
+    scheduled_at: fromLocalInput(form.scheduled_at),
+    pillar: form.pillar || null,
     source_ids: form.source_ids || [],
     // Medição de tempo (PI 2, T16): vazio vira null
     external_minutes:
@@ -188,11 +200,13 @@ function normalizeForApi(form, original = {}) {
 }
 
 export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
-  const [form, setForm] = useState(post || {});
+  const [form, setForm] = useState(() => toForm(post));
   const [saving, setSaving] = useState(false);
+  const [dateNotice, setDateNotice] = useState("");
 
   useEffect(() => {
-    setForm(post || {});
+    setForm(toForm(post));
+    setDateNotice("");
   }, [post]);
 
   useEffect(() => {
@@ -220,12 +234,16 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((prev) => {
-      if (name === "status" && value !== "scheduled") {
-        return { ...prev, status: value, scheduled_at: "" };
-      }
-      return { ...prev, [name]: value };
-    });
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  // Um clique: num post já salvo a data sai na hora (PATCH scheduled_at null), sem perder o resto do formulário.
+  async function handleRemoveDate() {
+    setForm((prev) => ({ ...prev, scheduled_at: "" }));
+    if (mode !== "create" && post.id && post.scheduled_at) {
+      await onSave({ scheduled_at: null });
+      setDateNotice("Date removed. The post left the calendar.");
+    }
   }
 
   async function handleSave() {
@@ -235,7 +253,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
     }
     setSaving(true);
     try {
-      await onSave(normalizeForApi(form, post));
+      await onSave(normalizeForApi(form));
       onClose();
     } finally {
       setSaving(false);
@@ -276,7 +294,7 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           <div className="card bg-bg-elevated/40">
             <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
-              Calendar sync rule: only <strong className="text-text-secondary">Scheduled</strong> posts with a date appear on the calendar. Moving a post out of Scheduled clears its calendar date.
+              Calendar sync rule: every post with a date appears on the calendar, whatever its status. Remove the date to take it off the calendar. Only <strong className="text-text-secondary">Scheduled</strong> posts are published automatically.
             </p>
           </div>
 
@@ -371,15 +389,48 @@ export default function PostModal({ post, onClose, onSave, mode = "edit" }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="post-scheduled-at">Schedule</label>
-              <input
-                className="input"
-                type="datetime-local"
-                id="post-scheduled-at"
-                name="scheduled_at"
-                value={form.scheduled_at ? form.scheduled_at.slice(0, 16) : ""}
-                onChange={handleChange}
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  className="input"
+                  type="datetime-local"
+                  id="post-scheduled-at"
+                  name="scheduled_at"
+                  value={form.scheduled_at || ""}
+                  onChange={handleChange}
+                />
+                {form.scheduled_at && (
+                  <button
+                    type="button"
+                    className={`shrink-0 px-3 py-2 rounded-lg text-xs font-medium border border-border bg-bg-elevated text-red-300 hover:border-red-300 ${FOCO}`}
+                    onClick={handleRemoveDate}
+                  >
+                    Remove date
+                  </button>
+                )}
+              </div>
+              {form.scheduled_at && isMissed({ ...form, scheduled_at: fromLocalInput(form.scheduled_at) }) && (
+                <p className="text-[11px] text-red-300 mt-1 font-medium">Missed date: this date passed and the post did not go out.</p>
+              )}
+              <p role="status" aria-live="polite" className="text-[11px] text-emerald-300 mt-1">{dateNotice}</p>
             </div>
+            <div>
+              <label className="label" htmlFor="post-pillar">Pillar</label>
+              <SelectField
+                id="post-pillar"
+                name="pillar"
+                value={form.pillar || ""}
+                onChange={handleChange}
+                options={PILLAR_OPTIONS}
+              />
+              {PILLARS[form.pillar] && (
+                <p className="text-[11px] mt-1" style={{ color: PILLARS[form.pillar].color }}>
+                  {PILLARS[form.pillar].description} Goal: {PILLARS[form.pillar].goal}.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="post-generation-mode">Creation mode</label>
               <input

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { format, addMonths, subMonths, setHours, setMinutes } from "date-fns";
+import React, { useState, useEffect, useMemo } from "react";
+import { format, addMonths, subMonths, endOfMonth } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import ContentCalendar from "../components/calendar/ContentCalendar";
+import DayActionDialog from "../components/calendar/DayActionDialog";
 import PostModal from "../components/posts/PostModal";
 import { postsApi } from "../lib/api";
+import { PILLARS, PILLAR_ROTATION, dayKey, planPillars } from "../lib/pillars.js";
+import { DEFAULT_POST_TIME, atTimeOnDay, moveToDay } from "../lib/postDates.js";
 
-function newPostForDate(date = new Date()) {
-  const scheduled = setMinutes(setHours(date, 9), 0);
+function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = "") {
   return {
     hook: "New post",
     body: "",
@@ -17,8 +19,9 @@ function newPostForDate(date = new Date()) {
     tone: "strategic",
     objective: "",
     format: "list",
-    status: "scheduled",
-    scheduled_at: format(scheduled, "yyyy-MM-dd'T'HH:mm"),
+    pillar: pillar || "",
+    status: "draft",
+    scheduled_at: atTimeOnDay(date, time),
     generation_mode: "manual",
     notes: "",
     source_ids: [],
@@ -27,21 +30,21 @@ function newPostForDate(date = new Date()) {
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(new Date());
+  // Mesma lista do pipeline: o calendário mostra todo post com data, de qualquer status.
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
   const [creatingPost, setCreatingPost] = useState(null);
-
-  const monthKey = format(month, "yyyy-MM");
+  const [dayAction, setDayAction] = useState(null);
 
   useEffect(() => {
     fetchPosts();
-  }, [monthKey]);
+  }, []);
 
   async function fetchPosts() {
     setLoading(true);
     try {
-      const res = await postsApi.calendar(monthKey);
+      const res = await postsApi.list();
       setPosts(res.data);
     } catch (err) {
       console.error("Error loading calendar posts:", err);
@@ -50,29 +53,73 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleSaveExistingPost(data) {
-    await postsApi.update(selectedPost.id, data);
-    await fetchPosts();
+  const plan = useMemo(
+    () => planPillars({ posts, today: new Date(), until: endOfMonth(month) }),
+    [posts, month],
+  );
+
+  function applySaved(saved) {
+    setPosts((prev) =>
+      prev.some((p) => p.id === saved.id)
+        ? prev.map((p) => (p.id === saved.id ? saved : p))
+        : [saved, ...prev],
+    );
   }
 
-  async function handleCreatePost(data) {
-    await postsApi.create(data);
-    setCreatingPost(null);
-    await fetchPosts();
-  }
-
-  async function handleEditPost(calendarPost) {
+  async function updatePost(post, data) {
+    // Otimista: a tela muda já; se a API falhar, volta.
+    setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, ...data } : p)));
     try {
-      const res = await postsApi.get(calendarPost.id);
-      setSelectedPost(res.data);
+      const res = await postsApi.update(post.id, data);
+      applySaved(res.data);
+      return res.data;
     } catch (err) {
-      console.error("Error loading full post:", err);
-      setSelectedPost(calendarPost);
+      console.error("Error updating post:", err);
+      applySaved(post);
+      throw err;
     }
   }
 
-  function handleAddPost(date = new Date()) {
-    setCreatingPost(newPostForDate(date));
+  async function handleSaveExistingPost(data) {
+    const res = await postsApi.update(selectedPost.id, data);
+    applySaved(res.data);
+  }
+
+  async function handleCreatePost(data) {
+    const res = await postsApi.create(data);
+    setCreatingPost(null);
+    applySaved(res.data);
+  }
+
+  function handleEditPost(post) {
+    setSelectedPost(posts.find((p) => p.id === post.id) || post);
+  }
+
+  function handleRemoveDate(post) {
+    updatePost(post, { scheduled_at: null }).catch(() => {});
+  }
+
+  function handleDropPost(id, day) {
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    const scheduled_at = moveToDay(post.scheduled_at, day);
+    if (scheduled_at === post.scheduled_at) return;
+    updatePost(post, { scheduled_at }).catch(() => {});
+  }
+
+  function suggestedPillarFor(day) {
+    return plan.days[dayKey(day)]?.pillar || "";
+  }
+
+  function handleNewPostOnDay(time) {
+    const day = dayAction;
+    setDayAction(null);
+    setCreatingPost(newPostForDate(day, time, suggestedPillarFor(day)));
+  }
+
+  async function handleUseExisting(post, time) {
+    await updatePost(post, { scheduled_at: atTimeOnDay(dayAction, time) });
+    setDayAction(null);
   }
 
   return (
@@ -86,7 +133,10 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="btn-primary" onClick={() => handleAddPost(new Date())}>
+          <button
+            className="btn-primary"
+            onClick={() => setCreatingPost(newPostForDate(new Date(), DEFAULT_POST_TIME, suggestedPillarFor(new Date())))}
+          >
             <Plus size={16} /> New post
           </button>
           <div className="flex items-center gap-1 bg-bg-surface border border-border rounded-lg p-1">
@@ -132,6 +182,17 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 mb-4" aria-label="Content pillars">
+        <span className="text-xs font-semibold text-text-secondary">Pillars (Mon to Fri, in this order)</span>
+        {PILLAR_ROTATION.map((key) => (
+          <div key={key} className="flex items-center gap-1.5" title={`${PILLARS[key].description} Goal: ${PILLARS[key].goal}.`}>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PILLARS[key].color }} />
+            <span className="text-xs" style={{ color: PILLARS[key].color }}>{PILLARS[key].label}</span>
+            <span className="text-[10px] text-text-muted">{PILLARS[key].goal}</span>
+          </div>
+        ))}
+      </div>
+
       {loading ? (
         <div className="grid grid-cols-7 gap-1.5">
           {Array(35).fill(0).map((_, i) => (
@@ -142,8 +203,11 @@ export default function DashboardPage() {
         <ContentCalendar
           posts={posts}
           month={month}
-          onAddPost={handleAddPost}
+          plan={plan}
+          onDayClick={(day) => setDayAction(day)}
           onEditPost={handleEditPost}
+          onRemoveDate={handleRemoveDate}
+          onDropPost={handleDropPost}
         />
       )}
 
@@ -153,6 +217,17 @@ export default function DashboardPage() {
           mode="edit"
           onClose={() => setSelectedPost(null)}
           onSave={handleSaveExistingPost}
+        />
+      )}
+
+      {dayAction && (
+        <DayActionDialog
+          day={dayAction}
+          suggestedPillar={suggestedPillarFor(dayAction)}
+          posts={posts}
+          onClose={() => setDayAction(null)}
+          onNewPost={handleNewPostOnDay}
+          onUseExisting={handleUseExisting}
         />
       )}
 
