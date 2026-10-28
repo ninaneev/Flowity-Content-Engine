@@ -24,6 +24,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
     arquivo: `${uid}-arquivo`,
     arquivoAjuda: `${uid}-arquivo-ajuda`,
     arquivoErro: `${uid}-arquivo-erro`,
+    bucket: `${uid}-bucket`,
     alt: `${uid}-alt`,
     altAjuda: `${uid}-alt-ajuda`,
     altContador: `${uid}-alt-contador`,
@@ -146,7 +147,9 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
       {origem === "bucket" && (
         <div>
-          <p className="label">Imagens no bucket post-images</p>
+          <label htmlFor={ids.bucket} className="label">
+            Imagem do bucket post-images
+          </label>
           {bucket === null && <p className="text-sm text-text-secondary">Carregando...</p>}
           {erroBucket && (
             <p role="alert" className="text-sm text-red-300 font-medium">Erro: {erroBucket}</p>
@@ -155,27 +158,28 @@ export default function PostImageUploader({ postId, onUploaded }) {
             <p className="text-sm text-text-secondary">O bucket ainda não tem imagens.</p>
           )}
           {bucket?.length > 0 && (
-            <ul className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
-              {bucket.map((img) => {
-                const ativa = escolhida?.path === img.path;
-                return (
-                  <li key={img.path}>
-                    <button
-                      type="button"
-                      aria-pressed={ativa}
-                      onClick={() => setEscolhida(img)}
-                      className={`w-full rounded-lg border p-1 text-left ${FOCO} ${
-                        ativa ? "border-flowity-cyan bg-bg-elevated" : "border-border hover:border-flowity-purple"
-                      }`}
-                    >
-                      <img src={img.url} alt={`Imagem do bucket: ${img.path}`} loading="lazy"
-                        className="h-24 w-full object-cover rounded" />
-                      <span className="block truncate text-xs text-text-secondary mt-1">{img.path}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              <select
+                id={ids.bucket}
+                className="input"
+                value={escolhida?.path || ""}
+                onChange={(e) => setEscolhida(bucket.find((img) => img.path === e.target.value) || null)}
+              >
+                <option value="">Escolha uma imagem…</option>
+                {bucket.map((img) => (
+                  <option key={img.path} value={img.path}>
+                    {img.path}
+                  </option>
+                ))}
+              </select>
+              {escolhida && (
+                <figure className="mt-2 rounded-lg border border-border bg-bg-base p-2 inline-block">
+                  <img src={escolhida.url} alt={`Imagem do bucket: ${escolhida.path}`}
+                    className="max-h-48 max-w-full rounded" />
+                  <figcaption className="text-xs text-text-secondary mt-1">{escolhida.path}</figcaption>
+                </figure>
+              )}
+            </>
           )}
         </div>
       )}
