@@ -73,6 +73,7 @@ MARCADORES: list[tuple[str, Callable[[Inspector], bool]]] = [
     ("7a3d9c2e4f15", _tem_colunas("posts", "linkedin_post_urn")),
     # 0011 só recria a view e o claim (sem coluna nova); não dá para detectar pelo schema
     ("8b4e1d6f3a27", _tem_colunas("posts", "linkedin_post_urn")),
+    ("c4f8a2e6d913", _tem_colunas("posts", "pillar")),
 ]
 
 # Sinais parciais: se algum existe sem a revisão inteira, o banco está num estado estranho.

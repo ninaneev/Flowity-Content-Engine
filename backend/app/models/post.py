@@ -27,6 +27,10 @@ class Post(Base):
     tone: Mapped[str | None] = mapped_column(String(50), comment="estratégico | educativo | inspiracional | direto")
     objective: Mapped[str | None] = mapped_column(String(100))
     format: Mapped[str | None] = mapped_column(String(50), comment="lista | narrativa | pergunta | dado")
+    # Pilar de conteúdo do calendário (rodízio workflow → proof → build → pov → story)
+    pillar: Mapped[str | None] = mapped_column(
+        String(30), nullable=True, comment="workflow | proof | build | pov | story"
+    )
 
     # ── Status e datas ────────────────────────────────────────────
     status: Mapped[str] = mapped_column(

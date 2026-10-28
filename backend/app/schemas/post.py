@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field, field_validator
 VALID_STATUS = {"idea", "draft", "revised", "scheduled", "publishing", "published", "failed"}
 VALID_CHANNELS = {"linkedin", "x", "newsletter"}
 VALID_WORKFLOWS = {"manual", "pi1", "pi2"}
+# Chaves estáveis; os rótulos e cores ficam em frontend/src/lib/pillars.js
+VALID_PILLARS = {"workflow", "proof", "build", "pov", "story"}
 
 
 def _validar_workflow(v: str | None) -> str | None:
@@ -13,6 +15,15 @@ def _validar_workflow(v: str | None) -> str | None:
         return None
     if v not in VALID_WORKFLOWS:
         raise ValueError("workflow deve ser: manual, pi1 ou pi2")
+    return v
+
+
+def _validar_pillar(v: str | None) -> str | None:
+    """Pilar de conteúdo do calendário; vazio vira None (sem pilar)."""
+    if v is None or v == "":
+        return None
+    if v not in VALID_PILLARS:
+        raise ValueError(f"pillar deve ser: {', '.join(sorted(VALID_PILLARS))}")
     return v
 
 
@@ -26,6 +37,7 @@ class PostBase(BaseModel):
     tone: str | None = None
     objective: str | None = None
     format: str | None = None
+    pillar: str | None = None
     status: str = "idea"
     scheduled_at: datetime | None = None
     generation_mode: str | None = None
@@ -39,6 +51,11 @@ class PostBase(BaseModel):
     @classmethod
     def validate_workflow(cls, v: str | None) -> str | None:
         return _validar_workflow(v)
+
+    @field_validator("pillar")
+    @classmethod
+    def validate_pillar(cls, v: str | None) -> str | None:
+        return _validar_pillar(v)
 
     @field_validator("channel")
     @classmethod
@@ -70,6 +87,7 @@ class PostUpdate(BaseModel):
     tone: str | None = None
     objective: str | None = None
     format: str | None = None
+    pillar: str | None = None
     status: str | None = None
     scheduled_at: datetime | None = None
     notes: str | None = None
@@ -82,6 +100,11 @@ class PostUpdate(BaseModel):
     @classmethod
     def validate_workflow(cls, v: str | None) -> str | None:
         return _validar_workflow(v)
+
+    @field_validator("pillar")
+    @classmethod
+    def validate_pillar(cls, v: str | None) -> str | None:
+        return _validar_pillar(v)
 
 
 class PostResponse(PostBase):
@@ -101,6 +124,7 @@ class CalendarPost(BaseModel):
     hook: str
     channel: str
     status: str
+    pillar: str | None = None
     scheduled_at: datetime | None = None
 
     model_config = {"from_attributes": True}
