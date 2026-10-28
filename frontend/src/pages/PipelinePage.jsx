@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
-import { PillarTag, PostDateChip, OffStructureFlag } from "../components/posts/PostMeta";
+import { PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
 import { postsApi } from "../lib/api";
 import { parseApiDate, sortByScheduled } from "../lib/postDates.js";
 import { planPillars } from "../lib/pillars.js";
@@ -71,7 +71,10 @@ export default function PipelinePage() {
   }, [posts]);
 
   function postsByStatus(status) {
-    return sortByScheduled(posts.filter((p) => p.status === status));
+    // "publishing" fica na coluna Scheduled até o Make registrar como published.
+    return sortByScheduled(
+      posts.filter((p) => p.status === status || (status === "scheduled" && p.status === "publishing")),
+    );
   }
 
   function handleDragStart(e, post) {
@@ -188,6 +191,11 @@ export default function PipelinePage() {
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         <PillarTag pillar={post.pillar} />
                       </div>
+                      {post.status === "publishing" && (
+                        <div className="mt-2">
+                          <StatusFlag status="publishing" />
+                        </div>
+                      )}
                       {(post.scheduled_at || pillarPlan.posts[post.id]?.offStructure) && (
                         <div className="mt-2 flex flex-wrap items-center gap-1">
                           <PostDateChip post={post} onRemoveDate={handleRemoveDate} />
