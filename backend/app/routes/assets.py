@@ -21,7 +21,7 @@ from app.schemas.post_asset import (
     RenderCarouselRequest,
     RenderImageRequest,
 )
-from app.services import carousel_renderer, image_renderer
+from app.services import carousel_renderer, image_renderer, storage
 from app.services.accessibility import ALT_MAX, ALT_MIN, AltTextInvalido, validar_alt_text
 
 router = APIRouter()
@@ -31,6 +31,7 @@ EXTENSIONS_BY_MIME = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
     "image/webp": ".webp",
+    "image/gif": ".gif",  # GIF animado vai como está, sem reencode
 }
 
 
@@ -125,6 +126,9 @@ async def upload_asset(
     except Exception:
         destination.unlink(missing_ok=True)
         raise
+
+    # Cópia pública no Supabase Storage para o autopost; sem configuração ou com erro, segue sem ela.
+    storage.publicar_asset(db, asset, content)
 
     return _com_url(asset)
 

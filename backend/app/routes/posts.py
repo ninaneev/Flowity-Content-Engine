@@ -36,8 +36,10 @@ def list_posts(
 ):
     posts = post_repo.get_all(db, status=status, channel=channel)
 
+    # Antes era uma consulta de source_ids por post (N+1): ~13 s com 55 posts no Supabase.
+    source_ids = post_repo.get_source_ids_map(db, [p.id for p in posts])
     for post in posts:
-        post.source_ids = post_repo.get_source_ids(db, post.id)
+        post.source_ids = source_ids.get(post.id, [])
 
     return posts
 

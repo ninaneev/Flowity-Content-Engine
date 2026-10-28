@@ -3,6 +3,7 @@ import { Sparkles, Zap, Copy, Check, ArrowRight, CalendarPlus, ChevronDown } fro
 import { useNavigate } from "react-router-dom";
 import SourceCard from "../components/sources/SourceCard";
 import { sourcesApi, generationApi, postsApi } from "../lib/api";
+import { fromLocalInput } from "../lib/postDates.js";
 import { validateGenerationSelection } from "../lib/generatorValidation.mjs";
 
 const TONES = [
@@ -164,7 +165,8 @@ export default function GeneratorPage() {
       const r = await generationApi.createPost({ source_ids: selected, channel, tone, format, objective, mode });
       const postId = r.data.run_id; // backend returns new_post.id in run_id field
       await postsApi.update(postId, {
-        scheduled_at: `${scheduleDate}T${scheduleTime}:00`,
+        // hora local do navegador -> UTC (11:00 BRT vira 14:00Z), igual ao calendário
+        scheduled_at: fromLocalInput(`${scheduleDate}T${scheduleTime}`),
         status: "scheduled",
       });
       navigate("/");

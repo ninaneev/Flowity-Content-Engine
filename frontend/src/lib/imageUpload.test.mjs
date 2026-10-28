@@ -15,9 +15,9 @@ test("aceita PNG e JPEG dentro do limite", () => {
   assert.equal(validarArquivo({ type: "image/jpeg", size: MAX_BYTES }), null);
 });
 
-test("recusa tipo fora de PNG/JPEG com mensagem em texto", () => {
-  assert.equal(validarArquivo({ type: "image/gif", size: 10 }), "Use apenas PNG ou JPEG.");
-  assert.equal(validarArquivo({ type: "application/pdf", size: 10 }), "Use apenas PNG ou JPEG.");
+test("recusa tipo fora de PNG/JPEG/GIF com mensagem em texto", () => {
+  assert.equal(validarArquivo({ type: "image/gif", size: 10 }), null);
+  assert.equal(validarArquivo({ type: "application/pdf", size: 10 }), "Use apenas PNG, JPEG ou GIF.");
 });
 
 test("recusa arquivo acima de 5 MB", () => {

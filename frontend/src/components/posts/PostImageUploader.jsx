@@ -101,7 +101,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
           ref={inputRef}
           id={ids.arquivo}
           type="file"
-          accept="image/png,image/jpeg"
+          accept="image/png,image/jpeg,image/gif"
           onChange={handleArquivo}
           aria-describedby={`${ids.arquivoAjuda}${erroArquivo ? ` ${ids.arquivoErro}` : ""}`}
           aria-invalid={erroArquivo ? "true" : undefined}
@@ -111,7 +111,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
             ${FOCO}`}
         />
         <p id={ids.arquivoAjuda} className="text-xs text-text-secondary mt-1">
-          PNG ou JPEG, até 5 MB.
+          PNG, JPEG ou GIF, até 5 MB.
         </p>
         {erroArquivo && (
           <p id={ids.arquivoErro} role="alert" className="text-sm text-red-300 mt-1 font-medium">

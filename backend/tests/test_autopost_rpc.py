@@ -6,9 +6,8 @@ O teste cria e apaga um banco próprio (autopost_test) nesse servidor. Nunca apo
 """
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import pytest
 from alembic import command
@@ -21,7 +20,6 @@ from app.core.config import settings
 BACKEND = Path(__file__).resolve().parent.parent
 REVISAO = "7a3d9c2e4f15"
 PG_URL = os.environ.get("AUTOPOST_PG_URL")
-SP = ZoneInfo("America/Sao_Paulo")
 
 
 def _cfg(url, monkeypatch):
@@ -85,8 +83,9 @@ def pg(pg_db, monkeypatch):
     engine.dispose()
 
 
-def _agora_sp():
-    return datetime.now(SP).replace(tzinfo=None, microsecond=0)
+def _agora():
+    # scheduled_at é UTC (0011): a hora de agora em UTC, sem fuso, como o banco guarda
+    return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
 
 def _post(engine, quando, status="scheduled", channel="linkedin", hook="Gancho", body="Corpo", cta="CTA"):
@@ -112,7 +111,7 @@ def _claim(engine):
 
 @precisa_pg
 def test_regra_de_pronto_para_publicar(pg):
-    agora = _agora_sp()
+    agora = _agora()
     vencido = _post(pg, agora - timedelta(minutes=5))
     futuro = _post(pg, agora + timedelta(minutes=30))
     rascunho = _post(pg, agora - timedelta(minutes=5), status="draft")
@@ -123,37 +122,87 @@ def test_regra_de_pronto_para_publicar(pg):
     assert {futuro, rascunho, revisado, outro_canal, sem_data}.isdisjoint(_ids_vencidos(pg))
 
 
-@precisa_pg
-def test_post_com_imagem_fica_manual(pg):
-    pid = _post(pg, _agora_sp() - timedelta(minutes=5))
-    with pg.begin() as conn:
+def _asset(engine, pid, url=None, kind="image", mime="image/png", position=0):
+    with engine.begin() as conn:
         conn.execute(
-            text("insert into post_assets (post_id, kind, position, file_path, mime_type, alt_text, created_at, updated_at) "
-                 "values (:i, 'image', 0, 'x.png', 'image/png', 'alt', now(), now())"),
-            {"i": pid},
+            text("insert into post_assets (post_id, kind, position, file_path, mime_type, alt_text, public_url, "
+                 "created_at, updated_at) values (:i, :k, :p, 'x', :m, 'alt', :u, now(), now())"),
+            {"i": pid, "k": kind, "p": position, "m": mime, "u": url},
         )
+
+
+@precisa_pg
+def test_imagem_sem_url_publica_fica_manual(pg):
+    pid = _post(pg, _agora() - timedelta(minutes=5))
+    _asset(pg, pid, url=None)
     assert pid not in _ids_vencidos(pg)
     assert _claim(pg) == []
 
 
 @precisa_pg
-def test_horario_e_de_sao_paulo_e_nao_utc(pg):
-    # 1 minuto atrás no relógio UTC = cerca de 3 horas no futuro em São Paulo: não pode sair ainda
-    utc_parede = datetime.utcnow().replace(microsecond=0) - timedelta(minutes=1)
-    cedo = _post(pg, utc_parede)
+def test_uma_imagem_publica_entra_com_url_e_mime(pg):
+    texto = _post(pg, _agora() - timedelta(hours=1))
+    gif = _post(pg, _agora() - timedelta(minutes=5))
+    _asset(pg, gif, url="https://x.supabase.co/storage/v1/object/public/post-images/posts/1/1-a.gif", mime="image/gif")
+    with pg.connect() as conn:
+        linhas = conn.execute(text("select id, image_url, image_mime from posts_due_now")).mappings().all()
+    assert [dict(r) for r in linhas] == [
+        {"id": texto, "image_url": None, "image_mime": None},
+        {"id": gif, "image_url": "https://x.supabase.co/storage/v1/object/public/post-images/posts/1/1-a.gif",
+         "image_mime": "image/gif"},
+    ]
+    assert _claim(pg)[0]["image_url"] is None
+    segundo = _claim(pg)[0]
+    assert segundo["id"] == gif
+    assert segundo["image_mime"] == "image/gif"
+    assert segundo["image_url"].endswith("1-a.gif")
+
+
+@precisa_pg
+def test_duas_imagens_ou_slide_ficam_manuais(pg):
+    duas = _post(pg, _agora() - timedelta(minutes=5))
+    _asset(pg, duas, url="https://x/a.png", position=0)
+    _asset(pg, duas, url="https://x/b.png", position=1)
+    slide = _post(pg, _agora() - timedelta(minutes=5))
+    _asset(pg, slide, url="https://x/s.png", kind="carousel_slide")
+    assert {duas, slide}.isdisjoint(_ids_vencidos(pg))
+    assert _claim(pg) == []
+
+
+@precisa_pg
+def test_downgrade_da_0013_volta_view_da_0011(pg, pg_db, monkeypatch):
+    cfg = _cfg(pg_db, monkeypatch)
+    command.downgrade(cfg, "8b4e1d6f3a27")
+    colunas = {c["name"] for c in inspect(pg).get_columns("posts_due_now")}
+    assert colunas == {"id", "scheduled_at", "hook", "commentary"}
+    assert "public_url" not in {c["name"] for c in inspect(pg).get_columns("post_assets")}
+    _post(pg, _agora() - timedelta(minutes=1))
+    with pg.begin() as conn:
+        conn.execute(text("set local role service_role"))
+        assert len(conn.execute(text("select * from claim_next_due_post()")).all()) == 1
+    command.upgrade(cfg, "head")
+
+
+@precisa_pg
+def test_horario_compara_com_now_em_utc(pg):
+    # Desde a 0011 scheduled_at (UTC) é comparado com now(): 11:00 BRT gravado como 14:00Z sai às 11:00 BRT
+    utc = _agora()
+    vencido = _post(pg, utc - timedelta(minutes=1))
+    cedo = _post(pg, utc + timedelta(minutes=5))
+    assert vencido in _ids_vencidos(pg)
     assert cedo not in _ids_vencidos(pg)
 
 
 @precisa_pg
 def test_texto_junta_gancho_corpo_e_cta(pg):
-    _post(pg, _agora_sp() - timedelta(minutes=1), hook=" Gancho ", body="Corpo", cta=None)
+    _post(pg, _agora() - timedelta(minutes=1), hook=" Gancho ", body="Corpo", cta=None)
     linha = _claim(pg)[0]
     assert linha["commentary"] == "Gancho\n\nCorpo"
 
 
 @precisa_pg
 def test_claim_pega_um_por_vez_o_mais_antigo_e_nao_repete(pg):
-    agora = _agora_sp()
+    agora = _agora()
     novo = _post(pg, agora - timedelta(minutes=1))
     antigo = _post(pg, agora - timedelta(hours=2))
     assert [r["id"] for r in _claim(pg)] == [antigo]
@@ -166,7 +215,7 @@ def test_claim_pega_um_por_vez_o_mais_antigo_e_nao_repete(pg):
 
 @precisa_pg
 def test_mark_posted_grava_urn_e_e_idempotente(pg):
-    pid = _post(pg, _agora_sp() - timedelta(minutes=1))
+    pid = _post(pg, _agora() - timedelta(minutes=1))
     _claim(pg)
     urn = f"urn:li:share:{uuid.uuid4().int % 10**18}"
     with pg.begin() as conn:
@@ -182,7 +231,7 @@ def test_mark_posted_grava_urn_e_e_idempotente(pg):
 
 @precisa_pg
 def test_mark_posted_exige_urn(pg):
-    pid = _post(pg, _agora_sp() - timedelta(minutes=1))
+    pid = _post(pg, _agora() - timedelta(minutes=1))
     with pytest.raises(Exception, match="post_urn is required"):
         with pg.begin() as conn:
             conn.execute(text("select * from mark_posted(:i, '  ')"), {"i": pid})
@@ -190,7 +239,7 @@ def test_mark_posted_exige_urn(pg):
 
 @precisa_pg
 def test_mark_post_failed_so_vale_para_publishing(pg):
-    pid = _post(pg, _agora_sp() - timedelta(minutes=1))
+    pid = _post(pg, _agora() - timedelta(minutes=1))
     with pg.begin() as conn:
         assert conn.execute(text("select * from mark_post_failed(:i, 'x')"), {"i": pid}).all() == []
     _claim(pg)
@@ -203,7 +252,7 @@ def test_mark_post_failed_so_vale_para_publishing(pg):
 
 @precisa_pg
 def test_so_service_role_executa(pg):
-    _post(pg, _agora_sp() - timedelta(minutes=1))
+    _post(pg, _agora() - timedelta(minutes=1))
     for papel in ("anon", "authenticated"):
         with pytest.raises(Exception, match="permission denied"):
             with pg.begin() as conn:
@@ -222,7 +271,7 @@ def test_so_service_role_executa(pg):
 @precisa_pg
 def test_downgrade_remove_tudo(pg, pg_db, monkeypatch):
     cfg = _cfg(pg_db, monkeypatch)
-    command.downgrade(cfg, "-1")
+    command.downgrade(cfg, "0007_carousel_slides")
     with pg.connect() as conn:
         assert conn.execute(text("select to_regclass('public.posts_due_now')")).scalar() is None
         assert conn.execute(text("select count(*) from pg_proc where proname in "
