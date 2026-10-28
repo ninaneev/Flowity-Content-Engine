@@ -54,6 +54,9 @@ services:
       - .env
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
+      # Supabase Storage para as imagens do autopost (vazias = upload pulado)
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

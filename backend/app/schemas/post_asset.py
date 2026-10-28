@@ -22,6 +22,7 @@ class PostAssetResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     url: str | None = None
+    public_url: str | None = None
 
     model_config = {"from_attributes": True}
 

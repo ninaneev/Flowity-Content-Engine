@@ -3,7 +3,7 @@
  * Sem React, para ser fácil de testar com `node --test`.
  */
 
-export const TIPOS = ["image/png", "image/jpeg"];
+export const TIPOS = ["image/png", "image/jpeg", "image/gif"];
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const ALT_MIN = 10;
 export const ALT_MAX = 300;
@@ -11,7 +11,7 @@ export const ALT_MAX = 300;
 /** Devolve a mensagem de erro do arquivo, ou null se ele pode ser enviado. */
 export function validarArquivo(file) {
   if (!file) return "Escolha um arquivo de imagem.";
-  if (!TIPOS.includes(file.type)) return "Use apenas PNG ou JPEG.";
+  if (!TIPOS.includes(file.type)) return "Use apenas PNG, JPEG ou GIF.";
   if (file.size > MAX_BYTES) return "A imagem precisa ter no máximo 5 MB.";
   return null;
 }

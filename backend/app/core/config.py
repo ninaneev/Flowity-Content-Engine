@@ -15,7 +15,13 @@ class Settings(BaseSettings):
     MEDIA_DIR: str = "./media"
     MEDIA_URL_PREFIX: str = "/media"
     MAX_UPLOAD_BYTES: int = 5 * 1024 * 1024
-    ALLOWED_IMAGE_MIME: str = "image/png,image/jpeg,image/webp"
+    ALLOWED_IMAGE_MIME: str = "image/png,image/jpeg,image/webp,image/gif"
+
+    # ── Supabase Storage (imagens públicas para o autopost do Make) ──
+    # Sem as duas variáveis o upload para o Storage é pulado e o post com imagem fica manual.
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "post-images"
 
     # ── Autenticação ──────────────────────────────────────────────
     JWT_SECRET: str = "troque-isso-por-uma-string-aleatoria-de-64-chars"

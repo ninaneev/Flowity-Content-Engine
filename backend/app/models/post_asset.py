@@ -59,6 +59,9 @@ class PostAsset(Base):
 
     caption: Mapped[str | None] = mapped_column(String(500))
 
+    # URL pública no Supabase Storage (bucket post-images); o Make baixa a imagem daqui
+    public_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         server_default=func.now(),
