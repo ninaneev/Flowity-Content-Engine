@@ -1,14 +1,18 @@
 """Operações CRUD para posts e post_sources. Usado pelos integrantes 6 e 7."""
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, noload
 from app.models.post import Post
 from app.models.generation import PostSource
 from app.schemas.post import PostCreate, PostUpdate
 
 
 def get_all(db: Session, status: str | None = None, channel: str | None = None) -> list[Post]:
-    """Lista posts com filtros opcionais de status e canal."""
-    q = db.query(Post)
+    """Lista posts com filtros opcionais de status e canal.
+
+    A lista não devolve imagens nem métricas (o PostResponse não tem esses campos), então os
+    relacionamentos não são carregados: cada carga extra é mais uma ida e volta ao Supabase.
+    """
+    q = db.query(Post).options(noload(Post.assets), noload(Post.metrics))
     if status:
         q = q.filter(Post.status == status)
     if channel:
@@ -32,6 +36,7 @@ def get_for_calendar(db: Session, year: int, month: int) -> list[Post]:
     fim = (datetime(year + (month == 12), month % 12 + 1, 1)) + timedelta(days=1)
     return (
         db.query(Post)
+        .options(noload(Post.assets), noload(Post.metrics))
         .filter(
             Post.scheduled_at.isnot(None),
             Post.scheduled_at >= inicio,
@@ -46,6 +51,22 @@ def get_source_ids(db: Session, post_id: int) -> list[int]:
     """Retorna os IDs das sources associadas a um post."""
     rows = db.query(PostSource.source_id).filter(PostSource.post_id == post_id).all()
     return [r.source_id for r in rows]
+
+
+def get_source_ids_map(db: Session, post_ids: list[int]) -> dict[int, list[int]]:
+    """IDs das sources de vários posts numa consulta só (evita N+1 na listagem)."""
+    mapa: dict[int, list[int]] = {pid: [] for pid in post_ids}
+    if not post_ids:
+        return mapa
+    rows = (
+        db.query(PostSource.post_id, PostSource.source_id)
+        .filter(PostSource.post_id.in_(post_ids))
+        .order_by(PostSource.id)
+        .all()
+    )
+    for r in rows:
+        mapa.setdefault(r.post_id, []).append(r.source_id)
+    return mapa
 
 
 def create(db: Session, data: PostCreate) -> Post:
