@@ -113,7 +113,7 @@ def _claim(engine):
 def test_regra_de_pronto_para_publicar(pg):
     agora = _agora()
     vencido = _post(pg, agora - timedelta(minutes=5))
-    futuro = _post(pg, agora + timedelta(minutes=30))
+    futuro = _post(pg, agora + timedelta(days=2))
     rascunho = _post(pg, agora - timedelta(minutes=5), status="draft")
     revisado = _post(pg, agora - timedelta(minutes=5), status="revised")
     outro_canal = _post(pg, agora - timedelta(minutes=5), channel="x")
@@ -184,13 +184,20 @@ def test_downgrade_da_0013_volta_view_da_0011(pg, pg_db, monkeypatch):
 
 
 @precisa_pg
-def test_horario_compara_com_now_em_utc(pg):
-    # Desde a 0011 scheduled_at (UTC) é comparado com now(): 11:00 BRT gravado como 14:00Z sai às 11:00 BRT
-    utc = _agora()
-    vencido = _post(pg, utc - timedelta(minutes=1))
-    cedo = _post(pg, utc + timedelta(minutes=5))
-    assert vencido in _ids_vencidos(pg)
-    assert cedo not in _ids_vencidos(pg)
+def test_post_de_hoje_sai_em_qualquer_hora_e_o_de_amanha_espera(pg):
+    # Desde a 0014: rodar o Make publica o agendado de hoje (São Paulo) mesmo antes da hora; amanhã não
+    from zoneinfo import ZoneInfo
+
+    sp = ZoneInfo("America/Sao_Paulo")
+    meia_noite = datetime.now(sp).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    fim_de_hoje = (meia_noite - timedelta(minutes=1)).astimezone(timezone.utc).replace(tzinfo=None)
+    amanha = (meia_noite + timedelta(minutes=1)).astimezone(timezone.utc).replace(tzinfo=None)
+    hoje = _post(pg, fim_de_hoje)
+    depois = _post(pg, amanha)
+    assert hoje in _ids_vencidos(pg)
+    assert depois not in _ids_vencidos(pg)
+    assert _claim(pg)[0]["id"] == hoje
+    assert _claim(pg) == []
 
 
 @precisa_pg
