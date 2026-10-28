@@ -1,8 +1,10 @@
-"""Operações CRUD para posts e post_sources. Usado pelos integrantes 6 e 7."""
+"""CRUD operations for posts and post_sources. Used by team members 6 and 7."""
 from datetime import datetime, timezone
+from sqlalchemy import delete as sql_delete, update as sql_update
 from sqlalchemy.orm import Session, noload
+from app.models.carousel_slide import CarouselSlide
 from app.models.post import Post
-from app.models.generation import PostSource
+from app.models.generation import GenerationRun, PostSource
 from app.schemas.post import PostCreate, PostUpdate
 
 
@@ -125,6 +127,21 @@ def update(db: Session, post_id: int, data: PostUpdate) -> Post | None:
     db.commit()
     db.refresh(post)
     return post
+
+
+def delete(db: Session, post: Post) -> None:
+    """Deletes the post and everything that hangs off it.
+
+    Assets and metrics go through the ORM cascade; the rest is deleted explicitly so it also
+    works on databases that do not enforce foreign keys (SQLite). Generation runs are kept,
+    only detached from the post.
+    """
+    post_id = post.id
+    db.execute(sql_delete(CarouselSlide).where(CarouselSlide.post_id == post_id))
+    db.execute(sql_delete(PostSource).where(PostSource.post_id == post_id))
+    db.execute(sql_update(GenerationRun).where(GenerationRun.post_id == post_id).values(post_id=None))
+    db.delete(post)
+    db.commit()
 
 
 def get_ready_to_publish(db: Session) -> list[Post]:

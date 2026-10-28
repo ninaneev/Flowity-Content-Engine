@@ -114,7 +114,7 @@ def test_ajustar_fonte_corta_com_reticencias_no_minimo():
 
 
 def test_alt_text_padrao():
-    assert ir.alt_text_padrao("Olá mundo") == "Cartão com o texto: Olá mundo"
+    assert ir.alt_text_padrao("Olá mundo") == "Card with the text: Olá mundo"
 
 
 # ── Card ─────────────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ def test_render_image_cria_asset_com_alt_text(client, post_id):
     assert corpo["kind"] == "image"
     assert corpo["width"] == 1200 and corpo["height"] == 1200
     assert corpo["mime_type"] == "image/png"
-    assert corpo["alt_text"] == f"Cartão com o texto: {HOOK_LONGO[:280]}"
+    assert corpo["alt_text"] == f"Card with the text: {HOOK_LONGO[:280]}"
     assert corpo["url"] == f"/media/{corpo['file_path']}"
     arquivo = Path(settings.MEDIA_DIR) / corpo["file_path"]
     assert Image.open(arquivo).size == (1200, 1200)
@@ -174,7 +174,7 @@ def test_render_image_cria_asset_com_alt_text(client, post_id):
     segunda = client.post(f"/posts/{post_id}/render/image", json={"hook": HOOK_CURTO})
     assert segunda.status_code == 201
     assert segunda.json()["position"] == corpo["position"] + 1
-    assert segunda.json()["alt_text"] == f"Cartão com o texto: {HOOK_CURTO}"
+    assert segunda.json()["alt_text"] == f"Card with the text: {HOOK_CURTO}"
 
 
 def test_render_image_aceita_alt_text_proprio_e_valida(client, post_id):

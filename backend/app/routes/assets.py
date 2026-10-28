@@ -1,4 +1,4 @@
-"""Endpoints de upload e gerenciamento de imagens de posts."""
+"""Endpoints for uploading and managing post images."""
 
 import uuid
 from pathlib import Path
@@ -34,7 +34,7 @@ EXTENSIONS_BY_MIME = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
     "image/webp": ".webp",
-    "image/gif": ".gif",  # GIF animado vai como está, sem reencode
+    "image/gif": ".gif",  # animated GIF is kept as is, no re-encode
 }
 
 
@@ -46,12 +46,12 @@ def _error(status_code: int, code: str, message: str) -> HTTPException:
 
 
 def _mensagem_alt_text(erro: ValidationError) -> str:
-    """Traduz o erro do AltTextIn para a mensagem em português da regra."""
+    """Turns the AltTextIn error into the rule's English message."""
     for item in erro.errors():
         causa = (item.get("ctx") or {}).get("error")
         if isinstance(causa, AltTextInvalido):
             return str(causa)
-    return f"O texto alternativo precisa ter de {ALT_MIN} a {ALT_MAX} caracteres."
+    return f"Alt text must be {ALT_MIN} to {ALT_MAX} characters long."
 
 
 def _validar_alt_text_form(valor: str) -> str:
@@ -76,7 +76,7 @@ def _asset_path(asset) -> Path:
     root = _media_root()
     path = (root / asset.file_path).resolve()
     if root != path and root not in path.parents:
-        raise _error(500, "INVALID_ASSET_PATH", "Caminho de mídia inválido")
+        raise _error(500, "INVALID_ASSET_PATH", "Invalid media path")
     return path
 
 
@@ -84,7 +84,7 @@ def _asset_path(asset) -> Path:
     "/posts/{post_id}/assets",
     response_model=PostAssetResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Envia uma imagem e anexa ao post",
+    summary="Upload an image and attach it to the post",
 )
 async def upload_asset(
     post_id: int,
@@ -96,16 +96,16 @@ async def upload_asset(
     _admin=Depends(get_current_admin),
 ):
     if not post_repo.get_by_id(db, post_id):
-        raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+        raise _error(404, "POST_NOT_FOUND", "Post not found")
     alt_text = _validar_alt_text_form(alt_text)
     if file.content_type not in ALLOWED_MIME:
-        raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Formato não suportado: {file.content_type}")
+        raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Unsupported format: {file.content_type}")
     if kind not in {"image", "carousel_slide"}:
-        raise _error(422, "INVALID_ASSET_KIND", "kind deve ser image ou carousel_slide")
+        raise _error(422, "INVALID_ASSET_KIND", "kind must be image or carousel_slide")
 
     content = await file.read(settings.MAX_UPLOAD_BYTES + 1)
     if len(content) > settings.MAX_UPLOAD_BYTES:
-        raise _error(413, "FILE_TOO_LARGE", "Arquivo maior que o limite de 5 MB")
+        raise _error(413, "FILE_TOO_LARGE", "File is larger than the 5 MB limit")
 
     extension = EXTENSIONS_BY_MIME[file.content_type]
     filename = f"{uuid.uuid4().hex}{extension}"
@@ -130,7 +130,7 @@ async def upload_asset(
         destination.unlink(missing_ok=True)
         raise
 
-    # Cópia pública no Supabase Storage para o autopost; sem configuração ou com erro, segue sem ela.
+    # Public copy in Supabase Storage for autopost; without configuration or on error, carry on without it.
     storage.publicar_asset(db, asset, content)
 
     return _com_url(asset)
@@ -139,22 +139,22 @@ async def upload_asset(
 @router.get(
     "/storage/images",
     response_model=list[StorageImage],
-    summary="Lista as imagens que já estão no bucket público",
+    summary="List the images already in the public bucket",
 )
 def list_storage_images(_admin=Depends(get_current_admin)):
     if not storage.configurado():
-        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage não configurado no .env")
+        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage is not configured in .env")
     try:
         return storage.listar_imagens()
     except httpx.HTTPError as erro:
-        raise _error(502, "STORAGE_ERROR", f"Não foi possível listar o bucket: {erro}") from erro
+        raise _error(502, "STORAGE_ERROR", f"Could not list the bucket: {erro}") from erro
 
 
 @router.post(
     "/posts/{post_id}/assets/from-storage",
     response_model=PostAssetResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Anexa ao post uma imagem que já está no bucket",
+    summary="Attach an image already in the bucket to the post",
 )
 def attach_from_storage(
     post_id: int,
@@ -163,17 +163,17 @@ def attach_from_storage(
     _admin=Depends(get_current_admin),
 ):
     if not post_repo.get_by_id(db, post_id):
-        raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+        raise _error(404, "POST_NOT_FOUND", "Post not found")
     if not storage.configurado():
-        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage não configurado no .env")
+        raise _error(503, "STORAGE_NOT_CONFIGURED", "Supabase Storage is not configured in .env")
     try:
         content, mime = storage.baixar(data.path)
     except httpx.HTTPError as erro:
-        raise _error(404, "STORAGE_OBJECT_NOT_FOUND", f"Imagem não encontrada no bucket: {data.path}") from erro
+        raise _error(404, "STORAGE_OBJECT_NOT_FOUND", f"Image not found in the bucket: {data.path}") from erro
     if mime not in ALLOWED_MIME:
-        raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Formato não suportado: {mime}")
+        raise _error(415, "UNSUPPORTED_MEDIA_TYPE", f"Unsupported format: {mime}")
     if len(content) > settings.MAX_UPLOAD_BYTES:
-        raise _error(413, "FILE_TOO_LARGE", "Arquivo maior que o limite de 5 MB")
+        raise _error(413, "FILE_TOO_LARGE", "File is larger than the 5 MB limit")
 
     # Cópia local para a pré-visualização e a remoção funcionarem como num upload normal;
     # a URL pública continua a do objeto que já está no bucket (sem novo envio).
@@ -205,7 +205,7 @@ def attach_from_storage(
 @router.get(
     "/posts/{post_id}/assets",
     response_model=list[PostAssetResponse],
-    summary="Lista as imagens de um post",
+    summary="List a post's images",
 )
 def list_assets(
     post_id: int,
@@ -213,14 +213,14 @@ def list_assets(
     _admin=Depends(get_current_admin),
 ):
     if not post_repo.get_by_id(db, post_id):
-        raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+        raise _error(404, "POST_NOT_FOUND", "Post not found")
     return [_com_url(asset) for asset in asset_repo.list_by_post(db, post_id)]
 
 
 @router.patch(
     "/assets/{asset_id}",
     response_model=PostAssetResponse,
-    summary="Edita os metadados de uma imagem",
+    summary="Edit an image's metadata",
 )
 def update_asset(
     asset_id: int,
@@ -230,7 +230,7 @@ def update_asset(
 ):
     asset = asset_repo.get_by_id(db, asset_id)
     if not asset:
-        raise _error(404, "ASSET_NOT_FOUND", "Asset não encontrado")
+        raise _error(404, "ASSET_NOT_FOUND", "Asset not found")
     # O PostAssetUpdate já normaliza e valida o alt_text enviado (mesma regra do upload).
     # Aqui só sobra o caso de alguém mandar "alt_text": null de propósito.
     if "alt_text" in data.model_fields_set:
@@ -244,7 +244,7 @@ def update_asset(
 @router.put(
     "/posts/{post_id}/assets/order",
     response_model=list[PostAssetResponse],
-    summary="Reordena as imagens de um post",
+    summary="Reorder a post's images",
 )
 def reorder_assets(
     post_id: int,
@@ -253,7 +253,7 @@ def reorder_assets(
     _admin=Depends(get_current_admin),
 ):
     if not post_repo.get_by_id(db, post_id):
-        raise _error(404, "POST_NOT_FOUND", "Post não encontrado")
+        raise _error(404, "POST_NOT_FOUND", "Post not found")
     try:
         assets = asset_repo.reorder(db, post_id, data.asset_ids)
     except ValueError as exc:
@@ -264,7 +264,7 @@ def reorder_assets(
 @router.delete(
     "/assets/{asset_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Remove uma imagem do post",
+    summary="Remove an image from the post",
 )
 def delete_asset(
     asset_id: int,
@@ -273,7 +273,7 @@ def delete_asset(
 ):
     asset = asset_repo.get_by_id(db, asset_id)
     if not asset:
-        raise _error(404, "ASSET_NOT_FOUND", "Asset não encontrado")
+        raise _error(404, "ASSET_NOT_FOUND", "Asset not found")
     path = _asset_path(asset)
     asset_repo.delete(db, asset)
     path.unlink(missing_ok=True)
@@ -283,7 +283,7 @@ def delete_asset(
     "/posts/{post_id}/render/image",
     response_model=PostAssetResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Gera o card 1200x1200 do post",
+    summary="Generate the post's 1200x1200 card",
 )
 def render_image(
     post_id: int,
@@ -293,10 +293,10 @@ def render_image(
 ):
     post = post_repo.get_by_id(db, post_id)
     if not post:
-        raise HTTPException(status_code=404, detail="Post não encontrado")
+        raise HTTPException(status_code=404, detail="Post not found")
     hook = ((data.hook if data else None) or post.hook or "").strip()
     if not hook:
-        raise HTTPException(status_code=422, detail="O post precisa de um hook.")
+        raise HTTPException(status_code=422, detail="The post needs a hook.")
     cta = (data.cta if data else None) or post.cta
     try:
         alt_text = validar_alt_text((data.alt_text if data else None) or image_renderer.alt_text_padrao(hook))
@@ -327,7 +327,7 @@ def render_image(
     "/posts/{post_id}/render/carousel",
     response_model=CarouselResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Gera os slides e o PDF do carrossel",
+    summary="Generate the carousel slides and PDF",
 )
 def render_carousel(
     post_id: int,
@@ -337,7 +337,7 @@ def render_carousel(
 ):
     post = post_repo.get_by_id(db, post_id)
     if not post:
-        raise HTTPException(status_code=404, detail="Post não encontrado")
+        raise HTTPException(status_code=404, detail="Post not found")
     slides = (data.slides if data else None) or carousel_renderer.dividir_em_slides(
         post.hook, post.body, post.cta)
     try:

@@ -25,7 +25,7 @@ MAX_BLOCOS = MAX_SLIDES - 2   # capa + ate 8 blocos de conteudo + CTA
 
 
 def dividir_em_slides(hook: str | None, body: str | None, cta: str | None) -> list[str]:
-    """Monta capa (hook) + blocos de conteúdo (body) + slide de CTA."""
+    """Builds cover (hook) + content blocks (body) + CTA slide."""
     texto = (body or "").strip()
     blocos = [b.strip() for b in re.split(r"\n\s*\n", texto) if b.strip()]
     if len(blocos) < 3:                      # sem paragrafos, quebra por frase
@@ -40,19 +40,19 @@ def dividir_em_slides(hook: str | None, body: str | None, cta: str | None) -> li
 
 
 def validar_quantidade(slides: list[str]) -> None:
-    """Levanta ValueError se o carrossel ficar fora de 3 a 10 slides ou tiver slide vazio."""
+    """Raises ValueError if the carousel is outside 3 to 10 slides or has an empty slide."""
     total = len(slides or [])
     if total < MIN_SLIDES or total > MAX_SLIDES:
         raise ValueError(
-            f"O carrossel precisa ter de {MIN_SLIDES} a {MAX_SLIDES} slides (recebido: {total}).")
+            f"The carousel needs {MIN_SLIDES} to {MAX_SLIDES} slides (received: {total}).")
     vazios = [i for i, texto in enumerate(slides, start=1) if not (texto or "").strip()]
     if vazios:
-        raise ValueError(f"Slide(s) sem texto: {', '.join(map(str, vazios))}.")
+        raise ValueError(f"Slide(s) with no text: {', '.join(map(str, vazios))}.")
 
 
 def alt_text_slide(texto: str, indice: int, total: int) -> str:
-    """Texto alternativo próprio de cada slide."""
-    return f"Slide {indice} de {total} do carrossel: {texto[:240]}"
+    """Alt text specific to each slide."""
+    return f"Carousel slide {indice} of {total}: {texto[:240]}"
 
 
 def renderizar_slide(texto: str, indice: int, total: int, destino: Path, eh_capa: bool) -> dict:

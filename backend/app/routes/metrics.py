@@ -22,9 +22,9 @@ def registrar_metrica(
     db: Session = Depends(get_db),
     _admin=Depends(get_current_admin)
 ):
-    """Registro manual dos números lidos no LinkedIn ou no X."""
+    """Manual entry of the numbers read from LinkedIn or X."""
     if not post_repo.get_by_id(db, post_id):  # Retorna 404 caso o post não exista
-        raise HTTPException(status_code=404, detail="Post não encontrado")
+        raise HTTPException(status_code=404, detail="Post not found")
     return metric_repo.create(db, post_id, data)
 
 

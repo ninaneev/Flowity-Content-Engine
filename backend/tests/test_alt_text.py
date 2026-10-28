@@ -94,12 +94,12 @@ def test_validar_alt_text_normaliza_espacos():
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 @pytest.mark.parametrize("alt", ["foto", "   ", "screenshot", "x" * 301])
-def test_upload_com_alt_invalido_responde_422_em_portugues(client, post_id, alt):
+def test_upload_com_alt_invalido_responde_422_em_ingles(client, post_id, alt):
     resposta = _upload(client, post_id, alt)
     assert resposta.status_code == 422
     detalhe = resposta.json()["detail"]
     assert detalhe["code"] == "INVALID_ALT_TEXT"
-    assert "texto alternativo" in detalhe["message"].lower() or "genéricos" in detalhe["message"]
+    assert "alt text" in detalhe["message"].lower() or "generic" in detalhe["message"].lower()
 
 
 def test_upload_com_alt_valido_responde_201(client, post_id):
@@ -153,7 +153,7 @@ def test_status_bloqueado_com_imagem_sem_alt(client, sessao, post_id, verbo, sta
     assert erro["code"] == "acessibilidade_pendente"
     assert erro["field"] == "assets.alt_text"
     assert erro["asset_ids"] == [ruim]
-    assert "1 imagem(ns)" in erro["message"]
+    assert "1 image(s)" in erro["message"]
 
     # o status não mudou
     assert client.get(f"/posts/{post_id}").json()["status"] == "draft"
