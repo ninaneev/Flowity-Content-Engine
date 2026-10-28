@@ -59,3 +59,35 @@ def test_listagem_traz_source_ids_de_cada_post(client, db):
 
     por_id = {p["id"]: p["source_ids"] for p in client.get("/posts/").json()}
     assert por_id == {a: [s1.id, s2.id], b: []}
+
+
+def test_por_data_agenda_e_tirar_data_desagenda(client):
+    pid = client.post("/posts/", json={"hook": "Rascunho", "status": "draft"}).json()["id"]
+    assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2030-01-10T14:00:00Z"})
+    assert r.json()["status"] == "scheduled"
+    assert [p["id"] for p in client.get("/posts/calendar", params={"month": "2030-01"}).json()] == [pid]
+
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": None, "status": "scheduled"})
+    assert r.json()["status"] == "revised"
+    assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_criar_com_data_futura_ja_agenda(client):
+    r = client.post("/posts/", json={"hook": "Novo", "status": "draft", "scheduled_at": "2030-01-11T14:00:00Z"})
+    assert r.json()["status"] == "scheduled"
+
+
+def test_data_no_passado_nao_agenda_sozinha(client):
+    pid = client.post("/posts/", json={"hook": "Antigo", "status": "draft"}).json()["id"]
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2020-01-10T14:00:00Z"})
+    assert r.json()["status"] == "draft"
+
+
+def test_mover_de_coluna_tira_do_calendario_e_mantem_a_data(client):
+    pid = client.post("/posts/", json={"hook": "X", "scheduled_at": "2030-01-12T14:00:00Z"}).json()["id"]
+    r = client.patch(f"/posts/{pid}", json={"status": "draft"})
+    assert r.json()["status"] == "draft"
+    assert r.json()["scheduled_at"].startswith("2030-01-12")
+    assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
