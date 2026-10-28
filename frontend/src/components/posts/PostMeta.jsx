@@ -51,6 +51,25 @@ export function MissedFlag() {
   );
 }
 
+const STATUS_FLAGS = {
+  scheduled: { label: "Scheduled", className: "border-sky-400/50 bg-sky-400/10 text-sky-300" },
+  publishing: { label: "Publishing…", className: "border-amber-400/50 bg-amber-400/10 text-amber-300" },
+  published: { label: "✓ Published", className: "border-emerald-400/60 bg-emerald-400/20 text-emerald-300" },
+  failed: { label: "Failed", className: "border-red-500/50 bg-red-500/20 text-red-300" },
+};
+
+export function StatusFlag({ status }) {
+  const flag = STATUS_FLAGS[status];
+  if (!flag) return null;
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1 text-[10px] font-semibold leading-tight ${flag.className}`}
+    >
+      {flag.label}
+    </span>
+  );
+}
+
 export function OffStructureFlag({ expected }) {
   const label = PILLARS[expected]?.label;
   return (

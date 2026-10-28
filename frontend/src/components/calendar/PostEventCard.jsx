@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { Linkedin, Mail, Twitter } from "lucide-react";
 import { PILLARS } from "../../lib/pillars.js";
 import { isMissed, parseApiDate } from "../../lib/postDates.js";
-import { MissedFlag, OffStructureFlag, PillarTag, RemoveDateButton } from "../posts/PostMeta";
+import { MissedFlag, OffStructureFlag, PillarTag, RemoveDateButton, StatusFlag } from "../posts/PostMeta";
 
 const STATUS_BG = {
   idea: "bg-bg-elevated border-border",
@@ -14,6 +14,8 @@ const STATUS_BG = {
   published: "bg-status-published/30 border-status-published/70",
   failed: "bg-status-failed/30 border-status-failed/70",
 };
+
+const SHOWS_STATUS_FLAG = new Set(["scheduled", "publishing", "published", "failed"]);
 
 export default function PostEventCard({ post, onClick, onRemoveDate, plan, now = new Date() }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
@@ -47,8 +49,9 @@ export default function PostEventCard({ post, onClick, onRemoveDate, plan, now =
         <span className="font-medium truncate flex-1 min-w-0">{post.hook}</span>
         <RemoveDateButton post={post} onRemoveDate={onRemoveDate} />
       </div>
-      {(pillar || missed || offStructure) && (
+      {(pillar || missed || offStructure || SHOWS_STATUS_FLAG.has(post.status)) && (
         <div className="flex flex-wrap items-center gap-1 px-1.5 pb-0.5">
+          <StatusFlag status={post.status} />
           <PillarTag pillar={post.pillar} />
           {missed && <MissedFlag />}
           {offStructure && <OffStructureFlag expected={plan.expected} />}
