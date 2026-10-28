@@ -55,6 +55,13 @@ def _banco_limpo():
     Base.metadata.drop_all(engine)
 
 
+@pytest.fixture(autouse=True)
+def _sem_supabase_de_verdade(monkeypatch):
+    """Testes nunca falam com o Supabase Storage real, mesmo com as chaves no .env do container."""
+    monkeypatch.setattr(settings, "SUPABASE_URL", "")
+    monkeypatch.setattr(settings, "SUPABASE_SERVICE_ROLE_KEY", "")
+
+
 @pytest.fixture
 def db():
     """Sessão direta no banco de teste, para montar cenários."""
