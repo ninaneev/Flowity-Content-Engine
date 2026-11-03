@@ -16,6 +16,32 @@ import { fromLocalInput, isMissed, toLocalInput } from "../../lib/postDates.js";
 const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
+/**
+ * Saves every image of the post as post-<id>-<n>.<ext>. The images live in the Supabase bucket (another origin),
+ * where <a download> is ignored, so each one is fetched as a blob first. Returns how many failed.
+ */
+async function downloadImages(images, postId) {
+  let failed = 0;
+  for (const [i, img] of images.entries()) {
+    try {
+      const res = await fetch(mediaUrl(img.url));
+      if (!res.ok) throw new Error(res.statusText);
+      const blob = await res.blob();
+      const ext = (img.url.split("?")[0].match(/\.(\w+)$/) || [, "png"])[1];
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = images.length > 1 ? `post-${postId}-${i + 1}.${ext}` : `post-${postId}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    } catch {
+      failed += 1;
+    }
+  }
+  return failed;
+}
+
 /** "Post images" section: lists the uploaded images and opens the upload for a new one. */
 function PostImagesSection({ postId, registerPending, issues = [], onImagesChange }) {
   const tituloRef = useRef(null);
@@ -467,10 +493,16 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
                     }}>
                     Copy text
                   </button>
-                  {images?.[0] && (
-                    <a className={`btn-secondary ${FOCO}`} href={mediaUrl(images[0].url)} download target="_blank" rel="noreferrer">
-                      Download image
-                    </a>
+                  {images?.length > 0 && (
+                    <button type="button" className={`btn-secondary ${FOCO}`}
+                      onClick={async () => {
+                        const failed = await downloadImages(images, post.id);
+                        setCopied(failed
+                          ? `${failed} of ${images.length} could not be downloaded. Open them from Post images below.`
+                          : images.length > 1 ? `${images.length} images downloaded.` : "Image downloaded.");
+                      }}>
+                      {images.length > 1 ? `Download all images (${images.length})` : "Download image"}
+                    </button>
                   )}
                   {post.status !== "published" && (
                     <button type="button" className={`btn-secondary ${FOCO}`} disabled={saving}

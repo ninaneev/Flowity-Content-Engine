@@ -89,8 +89,8 @@ export function pillarsForChannel(set) {
   return ALL_PILLARS;
 }
 
-/** Posting days as date-fns getDay() numbers (0 = Sunday). Mon–Fri. */
-export const POSTING_DAYS = [1, 2, 3, 4, 5];
+/** Posting days as date-fns getDay() numbers (0 = Sunday). Every day. */
+export const POSTING_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 export const dayKey = (date) => format(date, "yyyy-MM-dd");
 
