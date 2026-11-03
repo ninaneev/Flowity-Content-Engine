@@ -1,6 +1,9 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { assetsApi } from "../../lib/api";
+import BucketImagePicker from "./BucketImagePicker";
+import ImageLightbox from "./ImageLightbox";
+import { IssueDot } from "./PostMeta";
 import {
   ALT_MAX,
   ALT_MIN,
@@ -15,15 +18,16 @@ const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
 /**
- * Seletor de imagem do post com texto alternativo obrigatório.
- * Sem drag-and-drop: o <input type="file"> já é operável por teclado e leitor de tela.
+ * Post image picker with required alt text.
+ * No drag-and-drop: the <input type="file"> is already operable by keyboard and screen reader.
  */
-export default function PostImageUploader({ postId, onUploaded }) {
+export default function PostImageUploader({ postId, onUploaded, registerPending }) {
   const uid = useId();
   const ids = {
     arquivo: `${uid}-arquivo`,
     arquivoAjuda: `${uid}-arquivo-ajuda`,
     arquivoErro: `${uid}-arquivo-erro`,
+    bucket: `${uid}-bucket`,
     alt: `${uid}-alt`,
     altAjuda: `${uid}-alt-ajuda`,
     altContador: `${uid}-alt-contador`,
@@ -37,13 +41,14 @@ export default function PostImageUploader({ postId, onUploaded }) {
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
   const [aviso, setAviso] = useState("");
-  // "novo" = enviar arquivo do computador; "bucket" = escolher imagem que já está no Supabase Storage
+  // "novo" = upload a file from the computer; "bucket" = pick an image already in Supabase Storage
   const [origem, setOrigem] = useState("novo");
   const [bucket, setBucket] = useState(null);
   const [erroBucket, setErroBucket] = useState("");
   const [escolhida, setEscolhida] = useState(null);
+  const [ampliada, setAmpliada] = useState(null); // { src, alt } shown at real size
 
-  // Libera a URL temporária da pré-visualização quando ela muda ou o componente sai da tela.
+  // Releases the temporary preview URL when it changes or the component unmounts.
   useEffect(() => () => previa && URL.revokeObjectURL(previa), [previa]);
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
       .then(({ data }) => setBucket(data))
       .catch((err) => {
         setBucket([]);
-        setErroBucket(mensagemDeErro(err, "Não foi possível abrir o bucket."));
+        setErroBucket(mensagemDeErro(err, "Could not open the bucket."));
       });
   }, [origem, bucket]);
 
@@ -95,9 +100,14 @@ export default function PostImageUploader({ postId, onUploaded }) {
     setPrevia(URL.createObjectURL(escolhido));
   }
 
-  async function handleSalvar(e) {
+  function handleSalvar(e) {
     e.preventDefault();
     if (!selecionou || !altTextValido(altText) || enviando) return;
+    salvar().catch(() => {}); // the error is already shown under the form
+  }
+
+  // Also called by the post's main Save button, so a chosen image is never dropped.
+  async function salvar() {
     setEnviando(true);
     setErroEnvio("");
     setAviso("");
@@ -107,15 +117,16 @@ export default function PostImageUploader({ postId, onUploaded }) {
           ? await assetsApi.fromStorage(postId, escolhida.path, altText.trim())
           : await assetsApi.upload(postId, arquivo, altText.trim());
       limparSelecao();
-      setBucket(null); // recarrega a lista: um upload novo também entra no bucket
+      setBucket(null); // reload the list: a new upload also lands in the bucket
       setAviso(
         data.public_url
-          ? "Imagem salva e publicada no bucket."
-          : "Imagem salva só neste computador (bucket não configurado)."
+          ? "Image saved and published to the bucket."
+          : "Image saved on this computer only (bucket not configured)."
       );
       onUploaded?.(data);
     } catch (err) {
-      setErroEnvio(mensagemDeErro(err, "Não foi possível enviar a imagem. Tente de novo."));
+      setErroEnvio(mensagemDeErro(err, "Could not upload the image. Try again."));
+      throw err;
     } finally {
       setEnviando(false);
     }
@@ -123,6 +134,14 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
   const altOk = altTextValido(altText);
   const selecionou = origem === "bucket" ? Boolean(escolhida) : Boolean(arquivo);
+
+  // Tells the post modal there is a chosen image that is not saved yet.
+  const salvarRef = useRef(salvar);
+  salvarRef.current = salvar;
+  useEffect(() => {
+    registerPending?.(selecionou ? { altOk, save: () => salvarRef.current() } : null);
+  }, [registerPending, selecionou, altOk]);
+  useEffect(() => () => registerPending?.(null), [registerPending]);
   const podeSalvar = selecionou && altOk && !enviando;
   const faltaAlt = selecionou && !altOk;
 
@@ -133,49 +152,49 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
   return (
     <form className="space-y-3" onSubmit={handleSalvar} noValidate>
-      <div role="group" aria-label="Origem da imagem" className="inline-flex gap-1 rounded-lg border border-border p-1">
+      <div role="group" aria-label="Image source" className="inline-flex gap-1 rounded-lg border border-border p-1">
         <button type="button" aria-pressed={origem === "novo"} className={abaClasse(origem === "novo")}
           onClick={() => trocarOrigem("novo")}>
-          Enviar nova
+          Upload new
         </button>
         <button type="button" aria-pressed={origem === "bucket"} className={abaClasse(origem === "bucket")}
           onClick={() => trocarOrigem("bucket")}>
-          Escolher do bucket
+          Choose from bucket
         </button>
       </div>
 
       {origem === "bucket" && (
         <div>
-          <p className="label">Imagens no bucket post-images</p>
-          {bucket === null && <p className="text-sm text-text-secondary">Carregando...</p>}
+          <label htmlFor={ids.bucket} className="label">
+            Image from the post-images bucket
+          </label>
+          {bucket === null && <p className="text-sm text-text-secondary">Loading...</p>}
           {erroBucket && (
-            <p role="alert" className="text-sm text-red-300 font-medium">Erro: {erroBucket}</p>
+            <p role="alert" className="text-sm text-red-300 font-medium">Error: {erroBucket}</p>
           )}
           {bucket?.length === 0 && !erroBucket && (
-            <p className="text-sm text-text-secondary">O bucket ainda não tem imagens.</p>
+            <p className="text-sm text-text-secondary">The bucket has no images yet.</p>
           )}
           {bucket?.length > 0 && (
-            <ul className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
-              {bucket.map((img) => {
-                const ativa = escolhida?.path === img.path;
-                return (
-                  <li key={img.path}>
-                    <button
-                      type="button"
-                      aria-pressed={ativa}
-                      onClick={() => setEscolhida(img)}
-                      className={`w-full rounded-lg border p-1 text-left ${FOCO} ${
-                        ativa ? "border-flowity-cyan bg-bg-elevated" : "border-border hover:border-flowity-purple"
-                      }`}
-                    >
-                      <img src={img.url} alt={`Imagem do bucket: ${img.path}`} loading="lazy"
-                        className="h-24 w-full object-cover rounded" />
-                      <span className="block truncate text-xs text-text-secondary mt-1">{img.path}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              <BucketImagePicker
+                id={ids.bucket}
+                images={bucket}
+                value={escolhida?.path || ""}
+                onChange={setEscolhida}
+              />
+              {escolhida && (
+                <figure className="mt-2 rounded-lg border border-border bg-bg-base p-2 inline-block">
+                  <button type="button" className={`block rounded cursor-zoom-in ${FOCO}`}
+                    onClick={() => setAmpliada({ src: escolhida.url, alt: `Bucket image: ${escolhida.path}` })}
+                    aria-label={`See ${escolhida.path} at real size`}>
+                    <img src={escolhida.url} alt={`Bucket image: ${escolhida.path}`}
+                      className="max-h-48 max-w-full rounded" />
+                  </button>
+                  <figcaption className="text-xs text-text-secondary mt-1">{escolhida.path} · click to see real size</figcaption>
+                </figure>
+              )}
+            </>
           )}
         </div>
       )}
@@ -183,7 +202,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
       {origem === "novo" && (
       <div>
         <label htmlFor={ids.arquivo} className="label">
-          Escolher imagem
+          Choose image
         </label>
         <input
           ref={inputRef}
@@ -199,11 +218,11 @@ export default function PostImageUploader({ postId, onUploaded }) {
             ${FOCO}`}
         />
         <p id={ids.arquivoAjuda} className="text-xs text-text-secondary mt-1">
-          PNG, JPEG ou GIF, até 5 MB.
+          PNG, JPEG or GIF, up to 5 MB.
         </p>
         {erroArquivo && (
           <p id={ids.arquivoErro} role="alert" className="text-sm text-red-300 mt-1 font-medium">
-            Erro: {erroArquivo}
+            Error: {erroArquivo}
           </p>
         )}
       </div>
@@ -211,20 +230,25 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
       {previa && (
         <figure className="rounded-lg border border-border bg-bg-base p-2 inline-block">
-          <img
-            src={previa}
-            alt={tamanhoAlt(altText) ? altText.trim() : `Pré-visualização do arquivo ${arquivo?.name}`}
-            className="max-h-48 max-w-full rounded"
-          />
+          <button type="button" className={`block rounded cursor-zoom-in ${FOCO}`}
+            onClick={() => setAmpliada({ src: previa, alt: `Preview of file ${arquivo?.name}` })}
+            aria-label={`See ${arquivo?.name} at real size`}>
+            <img
+              src={previa}
+              alt={tamanhoAlt(altText) ? altText.trim() : `Preview of file ${arquivo?.name}`}
+              className="max-h-48 max-w-full rounded"
+            />
+          </button>
           <figcaption className="text-xs text-text-secondary mt-1">
-            Pré-visualização: {arquivo?.name}
+            Preview: {arquivo?.name} · click to see real size
           </figcaption>
         </figure>
       )}
 
       <div>
-        <label htmlFor={ids.alt} className="label">
-          Texto alternativo (obrigatório)
+        <label htmlFor={ids.alt} className="label inline-flex items-center gap-2">
+          Alt text (required)
+          {faltaAlt && <IssueDot issues={[{ message: "Write the alt text, or this image will not be saved." }]} />}
         </label>
         <textarea
           id={ids.alt}
@@ -237,10 +261,10 @@ export default function PostImageUploader({ postId, onUploaded }) {
           aria-invalid={faltaAlt ? "true" : undefined}
           aria-describedby={`${ids.altAjuda} ${ids.altContador}`}
           onChange={(e) => setAltText(e.target.value)}
-          placeholder="Descreva o que a imagem mostra para quem não consegue vê-la."
+          placeholder="Describe what the image shows for people who cannot see it."
         />
         <p id={ids.altAjuda} className="text-xs text-text-secondary mt-1">
-          Descreva o conteúdo e a função da imagem, de {ALT_MIN} a {ALT_MAX} caracteres.
+          Describe the content and purpose of the image, {ALT_MIN} to {ALT_MAX} characters.
         </p>
         <p
           id={ids.altContador}
@@ -261,26 +285,27 @@ export default function PostImageUploader({ postId, onUploaded }) {
             disabled:cursor-not-allowed ${FOCO}`}
         >
           <Upload size={14} aria-hidden="true" />
-          {enviando ? "Enviando..." : "Salvar imagem"}
+          {enviando ? "Uploading..." : "Save image"}
         </button>
         {!selecionou && !erroArquivo && (
-          <span className="text-xs text-text-secondary">Escolha uma imagem para habilitar o envio.</span>
+          <span className="text-xs text-text-secondary">Choose an image to enable uploading.</span>
         )}
         {faltaAlt && (
           <span className="text-xs text-amber-300">
-            Preencha o texto alternativo com pelo menos {ALT_MIN} caracteres para salvar.
+            Fill in the alt text with at least {ALT_MIN} characters to save.
           </span>
         )}
       </div>
 
       {erroEnvio && (
         <p role="alert" className="text-sm text-red-300 font-medium">
-          Erro: {erroEnvio}
+          Error: {erroEnvio}
         </p>
       )}
       <p role="status" aria-live="polite" className="text-sm text-emerald-300">
         {aviso}
       </p>
+      {ampliada && <ImageLightbox src={ampliada.src} alt={ampliada.alt} onClose={() => setAmpliada(null)} />}
     </form>
   );
 }

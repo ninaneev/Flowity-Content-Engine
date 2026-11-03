@@ -17,27 +17,27 @@ TERMOS_GENERICOS = {
 
 
 class AltTextInvalido(ValueError):
-    """Levantado quando o texto alternativo não atende às regras."""
+    """Raised when the alt text does not meet the rules."""
 
 
 def validar_alt_text(valor: str | None) -> str:
     """Valida e normaliza o alt_text (espaços repetidos viram um só).
 
-    Levanta AltTextInvalido com a mensagem em português quando reprova.
+    Raises AltTextInvalido with an English message when it fails.
     """
     if valor is None:
-        raise AltTextInvalido("O texto alternativo é obrigatório para toda imagem.")
+        raise AltTextInvalido("Alt text is required for every image.")
     limpo = " ".join(valor.split())
     if len(limpo) < ALT_MIN or len(limpo) > ALT_MAX:
         raise AltTextInvalido(
-            f"O texto alternativo precisa ter de {ALT_MIN} a {ALT_MAX} caracteres.")
+            f"Alt text must be {ALT_MIN} to {ALT_MAX} characters long.")
     if limpo.strip(" .!-").lower() in TERMOS_GENERICOS:
-        raise AltTextInvalido("Descreva o conteúdo da imagem, não use termos genéricos.")
+        raise AltTextInvalido("Describe the content of the image; do not use generic terms.")
     return limpo
 
 
 def alt_text_valido(valor: str | None) -> bool:
-    """Versão booleana de validar_alt_text, usada na auditoria antes de publicar."""
+    """Boolean version of validar_alt_text, used in the audit before publishing."""
     try:
         validar_alt_text(valor)
     except AltTextInvalido:

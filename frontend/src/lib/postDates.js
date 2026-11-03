@@ -2,7 +2,7 @@
  * Post date helpers shared by the calendar, the pipeline and PostModal.
  *
  * scheduled_at is stored in UTC (timestamptz). The screens work in the browser's local time
- * (São Paulo: 11:00 BRT is stored as 14:00Z), so every value read from the API goes through
+ * (Sao Paulo: 11:00 BRT is stored as 14:00Z), so every value read from the API goes through
  * parseApiDate and every value sent goes out as an ISO string with Z.
  */
 import { format } from "date-fns";

@@ -1,8 +1,10 @@
-"""Operações CRUD para posts e post_sources. Usado pelos integrantes 6 e 7."""
+"""CRUD operations for posts and post_sources. Used by team members 6 and 7."""
 from datetime import datetime, timezone
+from sqlalchemy import delete as sql_delete, update as sql_update
 from sqlalchemy.orm import Session, noload
+from app.models.carousel_slide import CarouselSlide
 from app.models.post import Post
-from app.models.generation import PostSource
+from app.models.generation import GenerationRun, PostSource
 from app.schemas.post import PostCreate, PostUpdate
 
 
@@ -26,8 +28,11 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
 
 # Status que aparecem no calendário: o que está agendado e o que já saiu
 NO_CALENDARIO = ("scheduled", "publishing", "published", "failed")
-# Status que viram "scheduled" quando ganham data (data no calendário = agendado)
-ANTES_DE_AGENDAR = ("idea", "draft", "revised")
+# Status que viram "scheduled" quando ganham data (data no calendário = agendado).
+# "failed" e "publishing" entram porque é assim que um post que falhou no Make volta pra fila.
+ANTES_DE_AGENDAR = ("idea", "draft", "revised", "failed", "publishing")
+# Status que viram "revised" quando perdem a data (inclui o post preso em publishing)
+SAEM_DA_AGENDA = ("scheduled", "failed", "publishing")
 
 
 def _futura(quando: datetime) -> bool:
@@ -48,7 +53,7 @@ def _data_define_status(post: Post, data_antes, status_mudou: bool) -> None:
         return
     if post.scheduled_at is not None and post.status in ANTES_DE_AGENDAR and _futura(post.scheduled_at):
         post.status = "scheduled"
-    elif post.scheduled_at is None and post.status == "scheduled" and not status_mudou:
+    elif post.scheduled_at is None and post.status in SAEM_DA_AGENDA and not status_mudou:
         post.status = "revised"
 
 
@@ -122,9 +127,26 @@ def update(db: Session, post_id: int, data: PostUpdate) -> Post | None:
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(post, key, value)
     _data_define_status(post, data_antes, status_mudou=post.status != status_antes)
+    if post.linkedin_post_urn:  # já está no LinkedIn: nenhum save devolve o post pra fila
+        post.status = "published"
     db.commit()
     db.refresh(post)
     return post
+
+
+def delete(db: Session, post: Post) -> None:
+    """Deletes the post and everything that hangs off it.
+
+    Assets and metrics go through the ORM cascade; the rest is deleted explicitly so it also
+    works on databases that do not enforce foreign keys (SQLite). Generation runs are kept,
+    only detached from the post.
+    """
+    post_id = post.id
+    db.execute(sql_delete(CarouselSlide).where(CarouselSlide.post_id == post_id))
+    db.execute(sql_delete(PostSource).where(PostSource.post_id == post_id))
+    db.execute(sql_update(GenerationRun).where(GenerationRun.post_id == post_id).values(post_id=None))
+    db.delete(post)
+    db.commit()
 
 
 def get_ready_to_publish(db: Session) -> list[Post]:

@@ -20,7 +20,7 @@ class CarouselSlidesUpdate(BaseModel):
     slides: list[str] = Field(min_length=MIN_SLIDES, max_length=MAX_SLIDES)
 
 
-@router.get("/posts/{post_id}/slides", summary="Lista os textos editáveis do carrossel")
+@router.get("/posts/{post_id}/slides", summary="List the editable carousel texts")
 def list_carousel_slides(
     post_id: int,
     db: Session = Depends(get_db),
@@ -28,13 +28,13 @@ def list_carousel_slides(
 ):
     post = post_repo.get_by_id(db, post_id)
     if not post:
-        raise HTTPException(status_code=404, detail={"code": "POST_NOT_FOUND", "message": "Post não encontrado."})
+        raise HTTPException(status_code=404, detail={"code": "POST_NOT_FOUND", "message": "Post not found."})
     rows = db.scalars(select(CarouselSlide).where(CarouselSlide.post_id == post_id).order_by(CarouselSlide.position)).all()
     if not rows:
         initial = [post.hook or "", post.body or "", post.cta or ""]
         initial = [text.strip()[:MAX_CHARS] for text in initial if text and text.strip()]
         while len(initial) < MIN_SLIDES:
-            initial.append("Adicione o conteúdo deste slide.")
+            initial.append("Add the content for this slide.")
         initial = initial[:MAX_SLIDES]
         rows = [CarouselSlide(post_id=post_id, position=i + 1, slide_text=value) for i, value in enumerate(initial)]
         db.add_all(rows)
@@ -43,7 +43,7 @@ def list_carousel_slides(
     return {"post_id": post_id, "slides": [{"id": row.id, "position": row.position, "slide_text": row.slide_text} for row in rows]}
 
 
-@router.put("/posts/{post_id}/slides", summary="Salva textos editáveis do carrossel")
+@router.put("/posts/{post_id}/slides", summary="Save the editable carousel texts")
 def save_carousel_slides(
     post_id: int,
     payload: CarouselSlidesUpdate,
@@ -52,12 +52,12 @@ def save_carousel_slides(
 ):
     post = post_repo.get_by_id(db, post_id)
     if not post:
-        raise HTTPException(status_code=404, detail={"code": "POST_NOT_FOUND", "message": "Post não encontrado."})
+        raise HTTPException(status_code=404, detail={"code": "POST_NOT_FOUND", "message": "Post not found."})
     values = [value.strip() for value in payload.slides]
     if any(not value for value in values):
-        raise HTTPException(status_code=422, detail={"code": "EMPTY_SLIDE", "message": "Preencha o texto de todos os slides."})
+        raise HTTPException(status_code=422, detail={"code": "EMPTY_SLIDE", "message": "Fill in the text of all slides."})
     if any(len(value) > MAX_CHARS for value in values):
-        raise HTTPException(status_code=422, detail={"code": "SLIDE_TOO_LONG", "message": f"Cada slide pode ter até {MAX_CHARS} caracteres."})
+        raise HTTPException(status_code=422, detail={"code": "SLIDE_TOO_LONG", "message": f"Each slide can have up to {MAX_CHARS} characters."})
     try:
         db.execute(delete(CarouselSlide).where(CarouselSlide.post_id == post_id))
         db.add_all([CarouselSlide(post_id=post_id, position=i + 1, slide_text=value) for i, value in enumerate(values)])

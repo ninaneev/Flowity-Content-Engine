@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class GenerationRequest(BaseModel):
     source_ids: list[int]           # 1 a 3 sources obrigatórias
     channel: str = "linkedin"       # linkedin | x | newsletter
-    tone: str = "estratégico"       # estratégico | educativo | inspiracional | direto
+    tone: str = "strategic"          # strategic | educational | inspirational | direct
     objective: str | None = None    # ex: "gerar leads", "educar audiência"
     format: str = "lista"           # lista | narrativa | pergunta | dado
     extra_instructions: str | None = None

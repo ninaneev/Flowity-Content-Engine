@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { Linkedin, Mail, Twitter } from "lucide-react";
 import { PILLARS } from "../../lib/pillars.js";
 import { isMissed, parseApiDate } from "../../lib/postDates.js";
-import { MissedFlag, OffStructureFlag, PillarTag, RemoveDateButton } from "../posts/PostMeta";
+import { postIssues } from "../../lib/postIssues.js";
+import { IssueDot, MissedFlag, OffStructureFlag, PillarTag, RemoveDateButton, StatusFlag } from "../posts/PostMeta";
 
 const STATUS_BG = {
   idea: "bg-bg-elevated border-border",
@@ -15,6 +16,8 @@ const STATUS_BG = {
   failed: "bg-status-failed/30 border-status-failed/70",
 };
 
+const SHOWS_STATUS_FLAG = new Set(["scheduled", "publishing", "published", "failed"]);
+
 export default function PostEventCard({ post, onClick, onRemoveDate, plan, now = new Date() }) {
   const bgClass = STATUS_BG[post.status] || STATUS_BG.idea;
   const Icon = post.channel === "linkedin" ? Linkedin : post.channel === "newsletter" ? Mail : Twitter;
@@ -22,6 +25,7 @@ export default function PostEventCard({ post, onClick, onRemoveDate, plan, now =
   const missed = isMissed(post, now);
   const offStructure = plan?.offStructure;
   const pillar = PILLARS[post.pillar];
+  const issues = postIssues(post, now);
 
   return (
     <div
@@ -32,7 +36,7 @@ export default function PostEventCard({ post, onClick, onRemoveDate, plan, now =
         e.dataTransfer.effectAllowed = "move";
       }}
       className={`rounded border text-[10px] leading-tight cursor-pointer transition-all hover:scale-[1.02] active:scale-95 ${bgClass} ${
-        missed ? "ring-1 ring-red-500/60" : ""
+        missed || issues.length ? "ring-1 ring-red-500/60" : ""
       }`}
       style={pillar ? { borderLeft: `3px solid ${pillar.color}` } : undefined}
       onClick={(e) => {
@@ -45,10 +49,12 @@ export default function PostEventCard({ post, onClick, onRemoveDate, plan, now =
         <Icon size={10} className="shrink-0 opacity-80" />
         {date && <span className="shrink-0 font-mono opacity-80">{format(date, "HH:mm")}</span>}
         <span className="font-medium truncate flex-1 min-w-0">{post.hook}</span>
+        <IssueDot issues={issues} />
         <RemoveDateButton post={post} onRemoveDate={onRemoveDate} />
       </div>
-      {(pillar || missed || offStructure) && (
+      {(pillar || missed || offStructure || SHOWS_STATUS_FLAG.has(post.status)) && (
         <div className="flex flex-wrap items-center gap-1 px-1.5 pb-0.5">
+          <StatusFlag status={post.status} />
           <PillarTag pillar={post.pillar} />
           {missed && <MissedFlag />}
           {offStructure && <OffStructureFlag expected={plan.expected} />}

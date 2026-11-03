@@ -99,18 +99,18 @@ def test_dividir_junta_blocos_quando_passa_de_oito():
 
 @pytest.mark.parametrize("quantidade", [0, 1, 2, 11, 15])
 def test_validar_quantidade_recusa_fora_de_3_a_10(quantidade):
-    with pytest.raises(ValueError, match="3 a 10"):
+    with pytest.raises(ValueError, match="3 to 10"):
         cr.validar_quantidade(["texto"] * quantidade)
 
 
 def test_validar_quantidade_recusa_slide_vazio():
-    with pytest.raises(ValueError, match="sem texto"):
+    with pytest.raises(ValueError, match="no text"):
         cr.validar_quantidade(["capa", "   ", "fim"])
 
 
 def test_alt_text_slide():
-    assert cr.alt_text_slide("Olá", 2, 5) == "Slide 2 de 5 do carrossel: Olá"
-    assert len(cr.alt_text_slide("x" * 1000, 10, 10)) == len("Slide 10 de 10 do carrossel: ") + 240
+    assert cr.alt_text_slide("Olá", 2, 5) == "Carousel slide 2 of 5: Olá"
+    assert len(cr.alt_text_slide("x" * 1000, 10, 10)) == len("Carousel slide 10 of 10: ") + 240
 
 
 def test_reaproveita_funcoes_da_tarefa_7():
@@ -163,7 +163,7 @@ def test_render_carousel_sem_body_divide_o_post(client, sessao):
     for indice, (slide, texto) in enumerate(zip(corpo["slides"], esperado), start=1):
         assert slide["kind"] == "carousel_slide"
         assert slide["width"] == 1080 and slide["height"] == 1350
-        assert slide["alt_text"] == f"Slide {indice} de {len(esperado)} do carrossel: {texto}"
+        assert slide["alt_text"] == f"Carousel slide {indice} of {len(esperado)}: {texto}"
         assert slide["url"] == f"/media/{slide['file_path']}"
         assert Image.open(Path(settings.MEDIA_DIR) / slide["file_path"]).size == (1080, 1350)
 
@@ -186,7 +186,7 @@ def test_render_carousel_com_slides_editados_continua_a_posicao(client, sessao):
     corpo = resposta.json()
     assert corpo["total_slides"] == 4
     assert [s["position"] for s in corpo["slides"]] == [1, 2, 3, 4]
-    assert corpo["slides"][0]["alt_text"] == "Slide 1 de 4 do carrossel: Capa editada"
+    assert corpo["slides"][0]["alt_text"] == "Carousel slide 1 of 4: Capa editada"
 
 
 @pytest.mark.parametrize("quantidade", [2, 11])
@@ -195,7 +195,7 @@ def test_render_carousel_fora_do_limite_responde_422(client, sessao, quantidade)
     resposta = client.post(f"/posts/{post_id}/render/carousel",
                            json={"slides": [f"Slide {i}" for i in range(quantidade)]})
     assert resposta.status_code == 422
-    assert "3 a 10" in resposta.json()["detail"]
+    assert "3 to 10" in resposta.json()["detail"]
     assert client.get(f"/posts/{post_id}/assets").json() == []
 
 

@@ -30,7 +30,7 @@ function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = ""
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(new Date());
-  // Mesma lista do pipeline: o calendário mostra todo post com data, de qualquer status.
+  // Same list as the pipeline: the calendar shows every post with a date, whatever its status.
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -39,17 +39,27 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchPosts();
+    // Posts can change outside this tab (Make, imports, another window): refetch quietly on focus and every minute.
+    const refresh = () => document.visibilityState === "visible" && fetchPosts({ silent: true });
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      clearInterval(timer);
+    };
   }, []);
 
-  async function fetchPosts() {
-    setLoading(true);
+  async function fetchPosts({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     try {
       const res = await postsApi.list();
       setPosts(res.data);
     } catch (err) {
       console.error("Error loading calendar posts:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -67,7 +77,7 @@ export default function DashboardPage() {
   }
 
   async function updatePost(post, data) {
-    // Otimista: a tela muda já; se a API falhar, volta.
+    // Optimistic: the screen updates at once; if the API fails, it rolls back.
     setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, ...data } : p)));
     try {
       const res = await postsApi.update(post.id, data);
@@ -83,6 +93,11 @@ export default function DashboardPage() {
   async function handleSaveExistingPost(data) {
     const res = await postsApi.update(selectedPost.id, data);
     applySaved(res.data);
+  }
+
+  async function handleDeletePost(post) {
+    await postsApi.remove(post.id);
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
   }
 
   async function handleCreatePost(data) {
@@ -217,6 +232,7 @@ export default function DashboardPage() {
           mode="edit"
           onClose={() => setSelectedPost(null)}
           onSave={handleSaveExistingPost}
+          onDelete={handleDeletePost}
         />
       )}
 

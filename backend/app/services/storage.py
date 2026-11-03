@@ -82,7 +82,7 @@ def enviar(asset, conteudo: bytes) -> str | None:
     global _avisou_sem_config
     if not configurado():
         if not _avisou_sem_config:
-            logger.info("Supabase Storage não configurado (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY): imagens ficam só no disco.")
+            logger.info("Supabase Storage not configured (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY): images stay on disk only.")
             _avisou_sem_config = True
         return None
     caminho = caminho_no_bucket(asset)

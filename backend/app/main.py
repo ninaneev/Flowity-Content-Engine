@@ -34,7 +34,7 @@ async def validation_exception_handler(_, exc: RequestValidationError):
         content={
             "detail": {
                 "code": "VALIDATION_ERROR",
-                "message": "Dados inválidos",
+                "message": "Invalid data",
                 "errors": jsonable_encoder(exc.errors()),
             }
         },

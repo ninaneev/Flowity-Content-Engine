@@ -36,7 +36,7 @@ export default function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/carousel/:postId" element={<CarouselPage />} />
                 <Route path="/carousel" element={<CarouselBuilder />} />
-                {/* Sem post escolhido, o carrossel começa pelo Pipeline */}
+                {/* With no post chosen, the carousel starts from the Pipeline */}
                 {/* <Route path="/carousel" element={<Navigate to="/pipeline" replace />} /> */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

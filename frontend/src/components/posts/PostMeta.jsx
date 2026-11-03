@@ -43,10 +43,41 @@ export function RemoveDateButton({ post, onRemoveDate, size = 10 }) {
   );
 }
 
+/** Red dot = something here needs fixing. Hover shows what; screen readers get the same text. */
+export function IssueDot({ issues, className = "" }) {
+  if (!issues?.length) return null;
+  const text = issues.map((i) => i.message).join("\n");
+  return (
+    <span className={`inline-flex shrink-0 ${className}`} title={text}>
+      <span className="h-2 w-2 rounded-full bg-red-500 ring-2 ring-red-500/30" aria-hidden="true" />
+      <span className="sr-only">Needs fixing: {text}</span>
+    </span>
+  );
+}
+
 export function MissedFlag() {
   return (
     <span className="inline-flex items-center rounded bg-red-500/20 border border-red-500/50 px-1 text-[10px] font-semibold leading-tight text-red-300">
       Missed date
+    </span>
+  );
+}
+
+const STATUS_FLAGS = {
+  scheduled: { label: "Scheduled", className: "border-sky-400/50 bg-sky-400/10 text-sky-300" },
+  publishing: { label: "Publishing…", className: "border-amber-400/50 bg-amber-400/10 text-amber-300" },
+  published: { label: "✓ Published", className: "border-emerald-400/60 bg-emerald-400/20 text-emerald-300" },
+  failed: { label: "Failed", className: "border-red-500/50 bg-red-500/20 text-red-300" },
+};
+
+export function StatusFlag({ status }) {
+  const flag = STATUS_FLAGS[status];
+  if (!flag) return null;
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1 text-[10px] font-semibold leading-tight ${flag.className}`}
+    >
+      {flag.label}
     </span>
   );
 }

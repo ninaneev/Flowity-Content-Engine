@@ -5,18 +5,18 @@ from app.models.source import Source
 
 def test_patch_scheduled_at_null_limpa_a_data(client, post_criado):
     pid = post_criado["id"]
-    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2026-11-02T14:00:00Z"})
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2030-11-02T14:00:00Z"})
     assert r.status_code == 200, r.text
-    assert r.json()["scheduled_at"].startswith("2026-11-02T14:00")
+    assert r.json()["scheduled_at"].startswith("2030-11-02T14:00")
 
-    r = client.get("/posts/calendar", params={"month": "2026-11"})
+    r = client.get("/posts/calendar", params={"month": "2030-11"})
     assert [p["id"] for p in r.json()] == [pid]
 
     r = client.patch(f"/posts/{pid}", json={"scheduled_at": None})
     assert r.status_code == 200, r.text
     assert r.json()["scheduled_at"] is None
     assert client.get(f"/posts/{pid}").json()["scheduled_at"] is None
-    assert client.get("/posts/calendar", params={"month": "2026-11"}).json() == []
+    assert client.get("/posts/calendar", params={"month": "2030-11"}).json() == []
 
 
 def test_patch_sem_scheduled_at_nao_mexe_na_data(client, post_criado):
@@ -74,6 +74,28 @@ def test_por_data_agenda_e_tirar_data_desagenda(client):
     assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
 
 
+def test_tirar_data_de_post_preso_ou_com_falha_desagenda(client, db):
+    from app.models.post import Post
+
+    for status in ("publishing", "failed"):
+        pid = client.post("/posts/", json={"hook": status, "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+        db.get(Post, pid).status = status
+        db.commit()
+        r = client.patch(f"/posts/{pid}", json={"scheduled_at": None})
+        assert r.json()["status"] == "revised", status
+        assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_nova_data_futura_reagenda_post_com_falha(client, db):
+    from app.models.post import Post
+
+    pid = client.post("/posts/", json={"hook": "Falhou", "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+    db.get(Post, pid).status = "failed"
+    db.commit()
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2030-01-11T14:00:00Z"})
+    assert r.json()["status"] == "scheduled"
+
+
 def test_criar_com_data_futura_ja_agenda(client):
     r = client.post("/posts/", json={"hook": "Novo", "status": "draft", "scheduled_at": "2030-01-11T14:00:00Z"})
     assert r.json()["status"] == "scheduled"
@@ -91,3 +113,33 @@ def test_mover_de_coluna_tira_do_calendario_e_mantem_a_data(client):
     assert r.json()["status"] == "draft"
     assert r.json()["scheduled_at"].startswith("2030-01-12")
     assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_post_ja_no_linkedin_continua_publicado_depois_de_salvar(client, db):
+    from app.models.post import Post
+
+    pid = client.post("/posts/", json={"hook": "Saiu", "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+    post = db.get(Post, pid)
+    post.status, post.linkedin_post_urn = "published", "urn:li:share:1"
+    db.commit()
+    r = client.patch(f"/posts/{pid}", json={"status": "scheduled", "hook": "Saiu editado"})
+    assert r.json()["status"] == "published"
+
+
+def test_lista_e_calendario_trazem_resumo_das_imagens(client, db):
+    from app.models.post_asset import PostAsset
+
+    pid = client.post("/posts/", json={"hook": "Com imagem", "scheduled_at": "2030-02-10T14:00:00Z"}).json()["id"]
+    db.add_all([
+        PostAsset(post_id=pid, kind="image", position=0, file_path="a.png", mime_type="image/png",
+                  alt_text="Um funil com quatro etapas", public_url="https://x/a.png"),
+        PostAsset(post_id=pid, kind="image", position=1, file_path="b.png", mime_type="image/png",
+                  alt_text="", public_url=None),
+    ])
+    db.commit()
+
+    esperado = {"image_count": 2, "images_without_alt": 1, "images_not_in_bucket": 1}
+    item = next(p for p in client.get("/posts/").json() if p["id"] == pid)
+    assert {k: item[k] for k in esperado} == esperado
+    cal = client.get("/posts/calendar", params={"month": "2030-02"}).json()[0]
+    assert {k: cal[k] for k in esperado} == esperado

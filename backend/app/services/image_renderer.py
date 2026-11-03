@@ -146,8 +146,8 @@ def _desenhar_linhas(draw, linhas: list[str], fonte: Fonte, x: int, y: int, cor:
 
 
 def alt_text_padrao(hook: str) -> str:
-    """Texto alternativo do card, gerado a partir do gancho."""
-    return f"Cartão com o texto: {hook}"
+    """Alt text for the card, generated from the hook."""
+    return f"Card with the text: {hook}"
 
 
 def renderizar_card(hook: str, cta: str | None, destino: Path) -> dict:

@@ -15,23 +15,23 @@ test("aceita PNG e JPEG dentro do limite", () => {
   assert.equal(validarArquivo({ type: "image/jpeg", size: MAX_BYTES }), null);
 });
 
-test("recusa tipo fora de PNG/JPEG/GIF com mensagem em texto", () => {
+test("rejects types other than PNG/JPEG/GIF with a text message", () => {
   assert.equal(validarArquivo({ type: "image/gif", size: 10 }), null);
-  assert.equal(validarArquivo({ type: "application/pdf", size: 10 }), "Use apenas PNG, JPEG ou GIF.");
+  assert.equal(validarArquivo({ type: "application/pdf", size: 10 }), "Use only PNG, JPEG or GIF.");
 });
 
-test("recusa arquivo acima de 5 MB", () => {
+test("rejects files over 5 MB", () => {
   assert.equal(
     validarArquivo({ type: "image/png", size: MAX_BYTES + 1 }),
-    "A imagem precisa ter no máximo 5 MB."
+    "The image must be 5 MB or smaller."
   );
 });
 
-test("sem arquivo pede para escolher um", () => {
-  assert.equal(validarArquivo(null), "Escolha um arquivo de imagem.");
+test("no file asks to choose one", () => {
+  assert.equal(validarArquivo(null), "Choose an image file.");
 });
 
-test("alt text exige de 10 a 300 caracteres, sem contar espaços nas pontas", () => {
+test("alt text needs 10 to 300 characters, ignoring edge spaces", () => {
   assert.equal(altTextValido(""), false);
   assert.equal(altTextValido("   curto   "), false);
   assert.equal(altTextValido("a".repeat(ALT_MIN)), true);
@@ -39,12 +39,12 @@ test("alt text exige de 10 a 300 caracteres, sem contar espaços nas pontas", ()
   assert.equal(altTextValido("a".repeat(ALT_MAX + 1)), false);
 });
 
-test("contador diz quantos caracteres faltam", () => {
-  assert.equal(descreverContador("abc"), "3/300 caracteres. Faltam 7 para o mínimo de 10.");
-  assert.equal(descreverContador("a".repeat(12)), "12/300 caracteres. Mínimo de 10 atingido.");
+test("counter says how many characters are missing", () => {
+  assert.equal(descreverContador("abc"), "3/300 characters. 7 more needed to reach the minimum of 10.");
+  assert.equal(descreverContador("a".repeat(12)), "12/300 characters. Minimum of 10 reached.");
 });
 
-test("mensagemDeErro lê o detail do backend", () => {
+test("mensagemDeErro reads the backend detail", () => {
   assert.equal(
     mensagemDeErro({ response: { data: { detail: { code: "X", message: "Formato não suportado" } } } }),
     "Formato não suportado"
@@ -62,6 +62,6 @@ test("mensagemDeErro lê o detail do backend", () => {
     }),
     "1 imagem(ns) sem texto alternativo válido."
   );
-  assert.match(mensagemDeErro({ request: {} }), /Sem conexão/);
+  assert.match(mensagemDeErro({ request: {} }), /No connection/);
   assert.equal(mensagemDeErro({}, "padrão"), "padrão");
 });

@@ -5,7 +5,7 @@ import { axe } from "vitest-axe";
 import { MemoryRouter } from "react-router-dom";
 import PostModal from "./PostModal";
 
-// O modal tem um <Link> para o carrossel (T10), então precisa de um Router.
+// The modal has a <Link> to the carousel (T10), so it needs a Router.
 function renderModal() {
   return render(
     <MemoryRouter>
@@ -16,8 +16,8 @@ function renderModal() {
 
 const postFake = {
   id: 1,
-  hook: "Como medir o engajamento de um post",
-  body: "Texto de exemplo para o teste.",
+  hook: "How to measure the engagement of a post",
+  body: "Sample text for the test.",
   channel: "linkedin",
   status: "draft",
   scheduled_at: null,
@@ -25,21 +25,21 @@ const postFake = {
 };
 
 describe("PostModal", () => {
-  // Depende da Tarefa 9 (upload de imagem no PostModal, issue #86):
-  // o teste só roda quando o campo "Texto alternativo" existir no modal.
-  it("desabilita o botão Salvar imagem enquanto o alt text estiver vazio", (ctx) => {
+  // Depends on Task 9 (image upload in PostModal, issue #86):
+  // the test only runs when the "Alt text" field exists in the modal.
+  it("disables the Save image button while the alt text is empty", (ctx) => {
     renderModal();
-    const campoAlt = screen.queryByLabelText(/texto alternativo/i);
+    const campoAlt = screen.queryByLabelText(/alt text/i);
     if (!campoAlt) {
       ctx.skip();
       return;
     }
     fireEvent.change(campoAlt, { target: { value: "" } });
-    const salvar = screen.getByRole("button", { name: /salvar imagem/i });
+    const salvar = screen.getByRole("button", { name: /save image/i });
     expect(salvar).toBeDisabled();
   });
 
-  it("Remove date limpa a data num clique e mostra o pilar", async () => {
+  it("Remove date clears the date in one click and shows the pillar", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(
       <MemoryRouter>
@@ -57,10 +57,55 @@ describe("PostModal", () => {
     expect(screen.getByLabelText("Schedule")).toHaveValue("");
   });
 
-  it("não tem violações de acessibilidade no axe", async () => {
+  it("asks for confirmation before deleting and then calls onDelete and onClose", async () => {
+    const onDelete = vi.fn().mockResolvedValue(undefined);
+    const onClose = vi.fn();
+    render(
+      <MemoryRouter>
+        <PostModal post={postFake} onClose={onClose} onSave={() => {}} onDelete={onDelete} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Delete post" }));
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.getByRole("group", { name: "Delete this post?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Yes, delete post" }));
+    await vi.waitFor(() => expect(onDelete).toHaveBeenCalledWith(postFake));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("keeps the post when the confirmation is cancelled", () => {
+    const onDelete = vi.fn();
+    render(
+      <MemoryRouter>
+        <PostModal post={postFake} onClose={() => {}} onSave={() => {}} onDelete={onDelete} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Delete post" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep post" }));
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.queryByRole("group", { name: "Delete this post?" })).toBeNull();
+  });
+
+  it("does not offer to confirm deleting a post that is publishing", () => {
+    render(
+      <MemoryRouter>
+        <PostModal
+          post={{ ...postFake, status: "publishing" }}
+          onClose={() => {}}
+          onSave={() => {}}
+          onDelete={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Delete post" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/being published/);
+    expect(screen.queryByRole("group", { name: "Delete this post?" })).toBeNull();
+  });
+
+  it("has no accessibility violations in axe", async () => {
     const { container } = renderModal();
-    // O jsdom não calcula cores renderizadas, então a regra de contraste
-    // fica desligada aqui e é conferida no navegador (axe DevTools).
+    // jsdom does not compute rendered colors, so the contrast rule
+    // is turned off here and checked in the browser (axe DevTools).
     const resultado = await axe(container, {
       rules: { "color-contrast": { enabled: false } },
     });

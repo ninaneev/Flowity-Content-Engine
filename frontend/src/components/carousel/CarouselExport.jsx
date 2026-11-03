@@ -13,8 +13,8 @@ const BOTAO_SECUNDARIO = `inline-flex items-center gap-2 px-4 py-2 rounded-lg te
   bg-bg-elevated text-text-primary hover:border-flowity-purple ${FOCO}`;
 
 /**
- * Baixa o PDF do carrossel gerado e copia a legenda do post.
- * O PDF vem do `pdf_url` devolvido por POST /posts/{id}/render/carousel (Tarefa 8).
+ * Downloads the generated carousel PDF and copies the post caption.
+ * The PDF comes from the `pdf_url` returned by POST /posts/{id}/render/carousel (Task 8).
  */
 export default function CarouselExport({ post, carrossel, onBaixado }) {
   const [baixando, setBaixando] = useState(false);
@@ -27,14 +27,14 @@ export default function CarouselExport({ post, carrossel, onBaixado }) {
     setAviso("");
     try {
       if (!carrossel?.pdf_url) throw new Error("sem pdf_url");
-      await apiDownload(carrossel.pdf_url, "carrossel.pdf");
-      setAviso("PDF baixado: carrossel.pdf.");
+      await apiDownload(carrossel.pdf_url, "carousel.pdf");
+      setAviso("PDF downloaded: carousel.pdf.");
       onBaixado?.();
     } catch (err) {
       setErro(
         err?.message === "sem pdf_url"
-          ? "O servidor não devolveu o endereço do PDF. Gere o carrossel de novo."
-          : mensagemDeErro(err, "Não foi possível baixar o PDF. Tente de novo.")
+          ? "The server did not return the PDF address. Generate the carousel again."
+          : mensagemDeErro(err, "Could not download the PDF. Try again.")
       );
     } finally {
       setBaixando(false);
@@ -46,19 +46,19 @@ export default function CarouselExport({ post, carrossel, onBaixado }) {
     setAviso("");
     try {
       await navigator.clipboard.writeText(montarLegenda(post));
-      setAviso("Legenda copiada.");
+      setAviso("Caption copied.");
     } catch {
-      setErro("Não foi possível copiar a legenda. Selecione o texto do post e copie manualmente.");
+      setErro("Could not copy the caption. Select the post text and copy it manually.");
     }
   }
 
   return (
     <section aria-labelledby="exportar-titulo" className="card space-y-3">
       <h2 id="exportar-titulo" className="text-base font-semibold text-text-primary">
-        Baixar e publicar
+        Download and publish
       </h2>
       <p className="text-sm text-text-secondary">
-        O LinkedIn publica carrossel como documento PDF. Baixe o arquivo e cole a legenda no post.
+        LinkedIn publishes carousels as PDF documents. Download the file and paste the caption into the post.
       </p>
       <div className="flex flex-wrap gap-3">
         <button
@@ -69,16 +69,16 @@ export default function CarouselExport({ post, carrossel, onBaixado }) {
           className={BOTAO_PRIMARIO}
         >
           <Download size={14} aria-hidden="true" />
-          {baixando ? "Gerando PDF..." : "Baixar PDF"}
+          {baixando ? "Generating PDF..." : "Download PDF"}
         </button>
         <button type="button" onClick={copiarLegenda} className={BOTAO_SECUNDARIO}>
           <Copy size={14} aria-hidden="true" />
-          Copiar legenda
+          Copy caption
         </button>
       </div>
       {erro && (
         <p role="alert" className="text-sm text-red-300 font-medium">
-          Erro: {erro}
+          Error: {erro}
         </p>
       )}
       <p role="status" aria-live="polite" className="text-sm text-emerald-300">

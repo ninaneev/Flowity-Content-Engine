@@ -4,7 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import AnalyticsPage from "./AnalyticsPage";
 
-// Resposta de exemplo do GET /metrics/summary (dados fictícios de teste).
+// Sample response from GET /metrics/summary (fake test data).
 const resumoFake = {
   total_publicados: 3,
   engagement_rate: 0.025,
@@ -29,38 +29,38 @@ vi.mock("../lib/api", () => ({
 }));
 
 describe("AnalyticsPage", () => {
-  it("mostra os 4 cartões preenchidos", async () => {
+  it("shows the 4 filled cards", async () => {
     render(<AnalyticsPage />);
-    expect(await screen.findByText("2.500")).toBeInTheDocument();
-    expect(screen.getByText("Impressões")).toBeInTheDocument();
+    expect(await screen.findByText("2,500")).toBeInTheDocument();
+    expect(screen.getByText("Impressions")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("65")).toBeInTheDocument();
-    expect(screen.getByText("2,5%")).toBeInTheDocument();
+    expect(screen.getByText("2.5%")).toBeInTheDocument();
   });
 
-  it("gráfico em SVG com title, desc e tabela equivalente", async () => {
+  it("SVG chart with title, desc and equivalent table", async () => {
     render(<AnalyticsPage />);
-    const grafico = await screen.findByRole("img", { name: /engajamento médio por dia da semana/i });
+    const grafico = await screen.findByRole("img", { name: /average engagement by day of the week/i });
     expect(grafico.querySelector("title")).not.toBeNull();
     expect(grafico.querySelector("desc")).not.toBeNull();
 
-    const tabela = screen.getByRole("table", { name: /engajamento médio por dia da semana/i });
-    const segunda = within(tabela).getByRole("row", { name: /segunda-feira/i });
-    expect(segunda).toHaveTextContent("3,0%");
-    expect(segunda).toHaveTextContent("2 publicações");
-    expect(within(tabela).getByRole("row", { name: /terça-feira/i })).toHaveTextContent("sem dados");
+    const tabela = screen.getByRole("table", { name: /average engagement by day of the week/i });
+    const segunda = within(tabela).getByRole("row", { name: /monday/i });
+    expect(segunda).toHaveTextContent("3.0%");
+    expect(segunda).toHaveTextContent("2 posts");
+    expect(within(tabela).getByRole("row", { name: /tuesday/i })).toHaveTextContent("no data");
   });
 
-  it("compara LinkedIn e X pela taxa normalizada e mostra o número de publicações", async () => {
+  it("compares LinkedIn and X by normalized rate and shows the post count", async () => {
     render(<AnalyticsPage />);
-    expect(await screen.findByText(/3,0% em 2 publicações/)).toBeInTheDocument();
-    expect(screen.getByText(/1,0% em 1 publicação$/)).toBeInTheDocument();
+    expect(await screen.findByText(/3\.0% across 2 posts/)).toBeInTheDocument();
+    expect(screen.getByText(/1\.0% across 1 post$/)).toBeInTheDocument();
   });
 
-  it("não tem violações de acessibilidade no axe", async () => {
+  it("has no accessibility violations in axe", async () => {
     const { container } = render(<AnalyticsPage />);
-    await screen.findByText("2.500");
-    // Contraste é conferido no navegador; o jsdom não calcula cores renderizadas.
+    await screen.findByText("2,500");
+    // Contrast is checked in the browser; jsdom does not compute rendered colors.
     const resultado = await axe(container, { rules: { "color-contrast": { enabled: false } } });
     expect(resultado.violations).toHaveLength(0);
   });

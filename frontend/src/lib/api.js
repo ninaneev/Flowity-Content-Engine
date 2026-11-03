@@ -77,20 +77,21 @@ export const postsApi = {
   get:      (id)            => api.get(`/posts/${id}`),
   create:   (data)          => api.post("/posts/", data),
   update:   (id, data)      => api.put(`/posts/${id}`, data),
+  remove:   (id)            => api.delete(`/posts/${id}`),
   calendar: (month)         => api.get("/posts/calendar", { params: { month } }),
   pipeline: ()              => api.get("/posts/", { params: {} }),
   slides: {
     list: (postId) => api.get(`/posts/${postId}/slides`),
     save: (postId, slides) => api.put(`/posts/${postId}/slides`, { slides }),
   },
-  // Geração de PNG e PDF do carrossel
+  // PNG and PDF generation for the carousel
   render: {
     carousel: (postId, slides) =>
       api.post(`/posts/${postId}/render/carousel`, { slides }),
   },
 };
 
-// ASSETS (imagens do post)
+// ASSETS (post images)
 export const assetsApi = {
   list: (postId) => api.get(`/posts/${postId}/assets`),
   upload: (postId, file, altText) => {
@@ -103,13 +104,13 @@ export const assetsApi = {
   },
   update: (id, data) => api.patch(`/assets/${id}`, data),
   remove: (id) => api.delete(`/assets/${id}`),
-  // Imagens que já estão no bucket público do Supabase Storage
+  // Images already in the public Supabase Storage bucket
   storageList: () => api.get("/storage/images"),
   fromStorage: (postId, path, altText) =>
     api.post(`/posts/${postId}/assets/from-storage`, { path, alt_text: altText }),
 };
 
-/** Baixa um arquivo autenticado (ex.: o PDF do carrossel) e salva com o nome indicado. */
+/** Downloads an authenticated file (e.g. the carousel PDF) and saves it under the given name. */
 export async function apiDownload(url, nomeArquivo) {
   const resposta = await api.get(url, { responseType: "blob" });
   const href = URL.createObjectURL(resposta.data);
@@ -122,7 +123,7 @@ export async function apiDownload(url, nomeArquivo) {
   URL.revokeObjectURL(href);
 }
 
-/** Monta a URL completa de um arquivo servido pelo backend (ex.: "/media/posts/1/a.png"). */
+/** Builds the full URL of a file served by the backend (e.g. "/media/posts/1/a.png"). */
 export function mediaUrl(path) {
   if (!path || /^https?:\/\//.test(path)) return path;
   return `${BASE_URL.replace(/\/$/, "")}${path}`;

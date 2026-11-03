@@ -114,6 +114,10 @@ class PostResponse(PostBase):
     created_at: datetime
     updated_at: datetime
     source_ids: list[int] = []
+    # Image summary, so the pipeline can flag what needs fixing without opening the post.
+    image_count: int = 0
+    images_without_alt: int = 0
+    images_not_in_bucket: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -126,5 +130,9 @@ class CalendarPost(BaseModel):
     status: str
     pillar: str | None = None
     scheduled_at: datetime | None = None
+    updated_at: datetime | None = None
+    image_count: int = 0
+    images_without_alt: int = 0
+    images_not_in_bucket: int = 0
 
     model_config = {"from_attributes": True}

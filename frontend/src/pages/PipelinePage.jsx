@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
-import { PillarTag, PostDateChip, OffStructureFlag } from "../components/posts/PostMeta";
+import { IssueDot, PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
+import { postIssues } from "../lib/postIssues.js";
 import { postsApi } from "../lib/api";
 import { parseApiDate, sortByScheduled } from "../lib/postDates.js";
 import { planPillars } from "../lib/pillars.js";
@@ -29,21 +30,33 @@ export default function PipelinePage() {
   const [dragOverCol, setDragOverCol] = useState(null);
   const draggingId = useRef(null);
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => {
+    fetchPosts();
+    // Posts can change outside this tab (Make, imports, another window): refetch quietly on focus and every minute.
+    const refresh = () => document.visibilityState === "visible" && fetchPosts({ silent: true });
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      clearInterval(timer);
+    };
+  }, []);
 
-  async function fetchPosts() {
-    setLoading(true);
+  async function fetchPosts({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     try {
       const r = await postsApi.list();
       setPosts(r.data);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
-  // Troca o post na lista pela versão salva: a coluna reordena na hora, sem recarregar tudo.
+  // Swaps the post in the list for the saved version: the column reorders at once, without reloading everything.
   function applySaved(saved) {
     setPosts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
   }
@@ -51,6 +64,11 @@ export default function PipelinePage() {
   async function handleSave(data) {
     const r = await postsApi.update(selectedPost.id, data);
     applySaved(r.data);
+  }
+
+  async function handleDelete(post) {
+    await postsApi.remove(post.id);
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
   }
 
   async function handleRemoveDate(post) {
@@ -71,7 +89,12 @@ export default function PipelinePage() {
   }, [posts]);
 
   function postsByStatus(status) {
-    return sortByScheduled(posts.filter((p) => p.status === status));
+    // "publishing" stays in the Scheduled column until Make records it as published.
+    // "failed" (Make could not post it) stays there too, flagged, until it gets a new date.
+    const inScheduled = ["publishing", "failed"];
+    return sortByScheduled(
+      posts.filter((p) => p.status === status || (status === "scheduled" && inScheduled.includes(p.status))),
+    );
   }
 
   function handleDragStart(e, post) {
@@ -107,7 +130,7 @@ export default function PipelinePage() {
       return;
     }
 
-    // A data não muda com o status: o post continua no calendário até alguém remover a data.
+    // The date does not change with the status: the post stays on the calendar until someone removes the date.
     const updatePayload = { status: targetStatus };
 
     // Optimistic update so the card moves instantly
@@ -183,11 +206,19 @@ export default function PipelinePage() {
                       className="card cursor-grab active:cursor-grabbing hover:border-border-bright transition-all select-none"
                       onClick={() => setSelectedPost(post)}
                     >
-                      <p className="text-text-primary text-sm font-medium line-clamp-2 mb-2">{post.hook}</p>
+                      <div className="flex items-start gap-2 mb-2">
+                        <p className="text-text-primary text-sm font-medium line-clamp-2 flex-1 min-w-0">{post.hook}</p>
+                        <IssueDot issues={postIssues(post)} className="mt-1.5" />
+                      </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         <PillarTag pillar={post.pillar} />
                       </div>
+                      {(post.status === "publishing" || post.status === "failed") && (
+                        <div className="mt-2">
+                          <StatusFlag status={post.status} />
+                        </div>
+                      )}
                       {(post.scheduled_at || pillarPlan.posts[post.id]?.offStructure) && (
                         <div className="mt-2 flex flex-wrap items-center gap-1">
                           <PostDateChip post={post} onRemoveDate={handleRemoveDate} />
@@ -201,10 +232,10 @@ export default function PipelinePage() {
                         onClick={(event) => event.stopPropagation()}
                         draggable="false"
                         className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-primary hover:border-flowity-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan"
-                        aria-label={`Abrir carrossel do post ${post.id}`}
+                        aria-label={`Open carousel for post ${post.id}`}
                       >
                         <Layers size={13} aria-hidden="true" />
-                        Editar carrossel
+                        Edit carousel
                       </Link>
                     </div>
                   ))}
@@ -216,7 +247,12 @@ export default function PipelinePage() {
       )}
 
       {selectedPost && (
-        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} onSave={handleSave} />
+        <PostModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
       )}
     </div>
   );

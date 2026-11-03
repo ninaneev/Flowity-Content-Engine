@@ -15,16 +15,16 @@ export default function AnalyticsPage() {
     metricsApi
       .summary()
       .then((r) => setResumo(r.data))
-      .catch(() => setErro("Não foi possível carregar as métricas. Tente novamente em instantes."))
+      .catch(() => setErro("Could not load the metrics. Try again shortly."))
       .finally(() => setCarregando(false));
   }, []);
 
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-text-primary">Análise das publicações</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Post analytics</h1>
         <p className="text-text-secondary text-sm mt-0.5">
-          Em que dia o engajamento é maior e qual plataforma rende mais por publicação.
+          Which day gets the most engagement and which platform performs better per post.
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
 
       {carregando && (
         <p role="status" className="text-sm text-text-secondary">
-          Carregando métricas...
+          Loading metrics...
         </p>
       )}
 
@@ -46,18 +46,18 @@ export default function AnalyticsPage() {
         <div className="space-y-6">
           <section aria-labelledby="titulo-numeros">
             <h2 id="titulo-numeros" className="sr-only">
-              Números gerais
+              Overall numbers
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard rotulo="Publicações" valor={formatarNumero(resumo.total_publicados)} />
-              <StatCard rotulo="Impressões" valor={formatarNumero(resumo.total_impressoes)} />
+              <StatCard rotulo="Posts" valor={formatarNumero(resumo.total_publicados)} />
+              <StatCard rotulo="Impressions" valor={formatarNumero(resumo.total_impressoes)} />
               <StatCard
-                rotulo="Interações"
+                rotulo="Interactions"
                 valor={formatarNumero(resumo.total_interacoes)}
-                detalhe="Curtidas, comentários e compartilhamentos"
+                detalhe="Likes, comments and shares"
               />
               <StatCard
-                rotulo="Taxa média de engajamento"
+                rotulo="Average engagement rate"
                 valor={formatarPercentual(resumo.engagement_rate)}
               />
             </div>
@@ -65,27 +65,27 @@ export default function AnalyticsPage() {
 
           {resumo.total_publicados === 0 ? (
             <p className="card text-sm text-text-secondary">
-              Nenhuma métrica registrada ainda. Registre os números de um post publicado para ver o
-              painel.
+              No metrics recorded yet. Record the numbers for a published post to see the
+              dashboard.
             </p>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               <section className="card lg:col-span-3" aria-labelledby="titulo-dias">
                 <h2 id="titulo-dias" className="font-medium text-text-primary text-sm mb-1">
-                  Engajamento médio por dia da semana
+                  Average engagement by day of the week
                 </h2>
                 <p className="text-xs text-text-secondary mb-4">
-                  Pelo dia em que o post foi publicado. Dias sem publicação aparecem com um traço.
+                  By the day the post was published. Days with no posts show a dash.
                 </p>
                 <BarChart dados={resumo.por_dia_semana} />
               </section>
 
               <section className="card lg:col-span-2" aria-labelledby="titulo-plataformas">
                 <h2 id="titulo-plataformas" className="font-medium text-text-primary text-sm mb-1">
-                  LinkedIn x X
+                  LinkedIn vs X
                 </h2>
                 <p className="text-xs text-text-secondary mb-4">
-                  Taxa normalizada: interações divididas por impressões.
+                  Normalized rate: interactions divided by impressions.
                 </p>
                 <PlatformCompare porPlataforma={resumo.por_plataforma} />
               </section>
