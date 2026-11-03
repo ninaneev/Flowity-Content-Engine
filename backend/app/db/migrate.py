@@ -79,6 +79,8 @@ MARCADORES: list[tuple[str, Callable[[Inspector], bool]]] = [
     ("f3c9a1b7d260", _tem_colunas("posts", "reshare_urn")),
     # 0016 só recria CHECKs; não dá para detectar pelo schema
     ("0a7d5e2c9b31", _tem_colunas("posts", "reshare_urn")),
+    # 0017 só cria o claim de artigos/blog; não dá para detectar pelo schema
+    ("1b8e4f2a7c55", _tem_colunas("posts", "reshare_urn")),
 ]
 
 # Sinais parciais: se algum existe sem a revisão inteira, o banco está num estado estranho.
