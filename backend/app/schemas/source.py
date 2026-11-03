@@ -17,7 +17,8 @@ class SourceBase(BaseModel):
     @field_validator("source_type")
     @classmethod
     def validate_type(cls, v: str) -> str:
-        allowed = {"post_antigo", "insight", "frase", "objecao", "dor", "trecho", "comentario", "newsletter", "referencia"}
+        # "ideia": ideia de conteúdo salva durante o trabalho do dia (origin = de qual conversa veio)
+        allowed = {"post_antigo", "insight", "frase", "objecao", "dor", "trecho", "comentario", "newsletter", "referencia", "ideia"}
         if v not in allowed:
             raise ValueError(f"source_type must be one of: {', '.join(sorted(allowed))}")
         return v

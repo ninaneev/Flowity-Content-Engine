@@ -76,6 +76,7 @@ MARCADORES: list[tuple[str, Callable[[Inspector], bool]]] = [
     ("c4f8a2e6d913", _tem_colunas("posts", "pillar")),
     ("d7a1c3e9b524", _tem_colunas("post_assets", "public_url")),
     ("e2b7f4a9c816", _tem_colunas("post_assets", "public_url")),
+    ("f3c9a1b7d260", _tem_colunas("posts", "reshare_urn")),
 ]
 
 # Sinais parciais: se algum existe sem a revisão inteira, o banco está num estado estranho.

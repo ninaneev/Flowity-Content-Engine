@@ -9,7 +9,8 @@ import { IssueDot } from "./PostMeta";
 import { issuesFor, postIssues } from "../../lib/postIssues.js";
 import { assetsApi, mediaUrl } from "../../lib/api";
 import { mensagemDeErro } from "../../lib/imageUpload.mjs";
-import { PILLARS, PILLAR_ROTATION } from "../../lib/pillars.js";
+import { PILLARS, pillarsForChannel } from "../../lib/pillars.js";
+import { CHANNELS, CHANNEL_ORDER, postText } from "../../lib/channels.js";
 import { fromLocalInput, isMissed, toLocalInput } from "../../lib/postDates.js";
 
 const FOCO =
@@ -163,11 +164,12 @@ function PostImagesSection({ postId, registerPending, issues = [], onImagesChang
   );
 }
 
-const STATUSES = ["idea", "draft", "revised", "scheduled", "publishing", "published", "failed"];
+const STATUSES = ["idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed"];
 const STATUS_LABELS = {
   idea: "Idea",
   draft: "Draft",
   revised: "Revised",
+  to_approve: "To approve",
   scheduled: "Scheduled",
   publishing: "Publishing",
   published: "Published",
@@ -176,8 +178,9 @@ const STATUS_LABELS = {
 const STATUS_HELP = {
   idea: "Initial idea without final copy.",
   draft: "Draft created by Generator or manually.",
-  revised: "Approved by human review; ready to schedule.",
-  scheduled: "Cleared for n8n to publish on the selected date.",
+  revised: "Reviewed, without a date yet.",
+  to_approve: "Written by Claude with a proposed date. Check it and click Approve.",
+  scheduled: "Approved. Make publishes it on the date (LinkedIn), or you post it and click Mark published (manual channels).",
   publishing: "Automation is publishing this post.",
   published: "Published successfully.",
   failed: "Automation reported a failure.",
@@ -190,16 +193,12 @@ const WORKFLOW_OPTIONS = [
   { value: "pi2", label: "pi2" },
 ];
 
-const CHANNEL_LABELS = {
-  linkedin: "LinkedIn",
-  x: "X / Twitter",
-  newsletter: "Newsletter",
-};
+const CHANNEL_OPTIONS = CHANNEL_ORDER.map((k) => ({ value: k, label: CHANNELS[k].label }));
 
-const PILLAR_OPTIONS = [
-  { value: "", label: "No pillar" },
-  ...PILLAR_ROTATION.map((k) => ({ value: k, label: PILLARS[k].label })),
-];
+function pillarOptions(channel) {
+  const keys = pillarsForChannel((CHANNELS[channel] || CHANNELS.linkedin).pillars);
+  return [{ value: "", label: "No pillar" }, ...keys.map((k) => ({ value: k, label: PILLARS[k].label }))];
+}
 
 /** The form works with the input's local date; the API receives ISO in UTC. */
 function toForm(post) {
@@ -231,7 +230,9 @@ function normalizeForApi(form) {
 }
 
 export default function PostModal({ post, onClose, onSave, onDelete, mode = "edit" }) {
-  const [form, setForm] = useState(() => toForm(post));
+  const [formState, setForm] = useState(() => toForm(post));
+  const form = formState;
+  const [copied, setCopied] = useState("");
   const [saving, setSaving] = useState(false);
   const [dateNotice, setDateNotice] = useState("");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -337,7 +338,8 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
   // A blocked save jumps to the "Needs fixing" box at the top.
   const showProblems = () => dialogRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
 
-  async function handleSave() {
+  async function handleSave(override = {}) {
+    const form = { ...formState, ...override };
     setSaveError(null);
     if (form.status === "scheduled" && !form.scheduled_at) {
       setSaveError({ field: "date", message: "Pick a date before moving this post to Scheduled." });
@@ -420,7 +422,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
                 {mode === "create" ? "New post" : `Post #${post.id}`}
               </p>
               <p className="text-xs text-text-muted">
-                {CHANNEL_LABELS[form.channel] || form.channel || "LinkedIn"}
+                {CHANNELS[form.channel]?.label || form.channel || "LinkedIn"}
               </p>
             </div>
           </div>
@@ -444,6 +446,49 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
               <p className="text-[11px] text-red-200/70 mt-2">Red dots below mark where. Everything without a dot is fine.</p>
             </div>
           )}
+          {mode !== "create" && (post.status === "to_approve" || !CHANNELS[form.channel]?.auto) && (
+            <div className="card bg-bg-elevated/40 flex flex-wrap items-center gap-2">
+              {post.status === "to_approve" && (
+                <button type="button" className={`btn-primary ${FOCO}`} disabled={saving}
+                  onClick={() => handleSave({ status: "scheduled" })}>
+                  Approve and schedule
+                </button>
+              )}
+              {!CHANNELS[form.channel]?.auto && (
+                <>
+                  <button type="button" className={`btn-secondary ${FOCO}`}
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(postText(form));
+                        setCopied("Text copied.");
+                      } catch {
+                        setCopied("Could not copy. Select the text in the fields below.");
+                      }
+                    }}>
+                    Copy text
+                  </button>
+                  {images?.[0] && (
+                    <a className={`btn-secondary ${FOCO}`} href={mediaUrl(images[0].url)} download target="_blank" rel="noreferrer">
+                      Download image
+                    </a>
+                  )}
+                  {post.status !== "published" && (
+                    <button type="button" className={`btn-secondary ${FOCO}`} disabled={saving}
+                      onClick={() => handleSave({ status: "published" })}>
+                      Mark published
+                    </button>
+                  )}
+                </>
+              )}
+              <p role="status" aria-live="polite" className="text-xs text-emerald-300 w-full">{copied}</p>
+              <p className="text-[11px] text-text-muted w-full">
+                {CHANNELS[form.channel]?.auto
+                  ? "Approving schedules it: Make publishes it on the date."
+                  : `${CHANNELS[form.channel]?.label} is posted by you: copy, post, then Mark published.`}
+              </p>
+            </div>
+          )}
+
           <div className="card bg-bg-elevated/40">
             <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
@@ -535,11 +580,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
                 name="channel"
                 value={form.channel || "linkedin"}
                 onChange={handleChange}
-                options={[
-                  { value: "linkedin", label: "LinkedIn" },
-                  { value: "x",        label: "X (Twitter)" },
-                  { value: "newsletter", label: "Newsletter" },
-                ]}
+                options={CHANNEL_OPTIONS}
               />
             </div>
           </div>
@@ -578,7 +619,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
                 name="pillar"
                 value={form.pillar || ""}
                 onChange={handleChange}
-                options={PILLAR_OPTIONS}
+                options={pillarOptions(form.channel)}
               />
               {PILLARS[form.pillar] && (
                 <p className="text-[11px] mt-1" style={{ color: PILLARS[form.pillar].color }}>
@@ -730,7 +771,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
             </button>
           )}
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSave} disabled={saving}>
+          <button className="btn-primary" onClick={() => handleSave()} disabled={saving}>
             {saving ? "Saving..." : mode === "create" ? "Create post" : "Save changes"}
           </button>
         </div>

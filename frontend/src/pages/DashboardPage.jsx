@@ -5,7 +5,9 @@ import ContentCalendar from "../components/calendar/ContentCalendar";
 import DayActionDialog from "../components/calendar/DayActionDialog";
 import PostModal from "../components/posts/PostModal";
 import { postsApi } from "../lib/api";
-import { PILLARS, PILLAR_ROTATION, dayKey, planPillars } from "../lib/pillars.js";
+import { PILLARS, PILLAR_ROTATION, COMPANY_PILLAR_KEYS, dayKey, planPillars } from "../lib/pillars.js";
+import { filterPosts } from "../lib/channels.js";
+import PostFilters, { useSavedFilters } from "../components/posts/PostFilters";
 import { DEFAULT_POST_TIME, atTimeOnDay, moveToDay } from "../lib/postDates.js";
 
 function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = "") {
@@ -28,6 +30,17 @@ function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = ""
   };
 }
 
+// Full class names so Tailwind generates them (a built string like `bg-status-${x}` is never generated).
+const LEGEND_DOT = {
+  idea: "bg-text-muted",
+  draft: "bg-status-draft",
+  revised: "bg-status-revised",
+  to_approve: "bg-amber-400",
+  scheduled: "bg-status-scheduled",
+  published: "bg-status-published",
+  failed: "bg-status-failed",
+};
+
 export default function DashboardPage() {
   const [month, setMonth] = useState(new Date());
   // Same list as the pipeline: the calendar shows every post with a date, whatever its status.
@@ -36,6 +49,12 @@ export default function DashboardPage() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [creatingPost, setCreatingPost] = useState(null);
   const [dayAction, setDayAction] = useState(null);
+  const [filters, setFilters] = useSavedFilters("ce-calendar-filters");
+  const visiblePosts = useMemo(() => filterPosts(posts, filters), [posts, filters]);
+  const channelCounts = useMemo(
+    () => posts.reduce((acc, p) => ({ ...acc, [p.channel]: (acc[p.channel] || 0) + 1 }), {}),
+    [posts],
+  );
 
   useEffect(() => {
     fetchPosts();
@@ -64,7 +83,8 @@ export default function DashboardPage() {
   }
 
   const plan = useMemo(
-    () => planPillars({ posts, today: new Date(), until: endOfMonth(month) }),
+    // The Mon-Fri rotation is for Nina's own LinkedIn; the other channels have their own rhythm.
+    () => planPillars({ posts: posts.filter((p) => p.channel === "linkedin"), today: new Date(), until: endOfMonth(month) }),
     [posts, month],
   );
 
@@ -174,10 +194,10 @@ export default function DashboardPage() {
       <div className="card mb-4 bg-bg-surface/70">
         <h2 className="text-sm font-semibold text-text-primary mb-2">Approval flow</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-text-muted">
-          <p><strong className="text-text-secondary">1. Idea/Draft:</strong> content created manually or by Generator.</p>
-          <p><strong className="text-text-secondary">2. Revised:</strong> human editorial approval before publishing.</p>
-          <p><strong className="text-text-secondary">3. Scheduled:</strong> n8n can publish when the date arrives.</p>
-          <p><strong className="text-text-secondary">4. Published/Failed:</strong> automation result is recorded.</p>
+          <p><strong className="text-amber-300">1. To approve:</strong> Claude wrote it, with image and a proposed date. Nothing goes out yet.</p>
+          <p><strong className="text-text-secondary">2. You approve:</strong> open it, check text and image, click Approve. It becomes Scheduled.</p>
+          <p><strong className="text-text-secondary">3. Make publishes:</strong> your LinkedIn (Mon to Fri) and the Flowity page (Mon, Wed, Fri, reposted on your profile in the afternoon).</p>
+          <p><strong className="text-text-secondary">4. Manual channels:</strong> X, newsletter, articles and blog. Copy, post, then click Mark published.</p>
         </div>
       </div>
 
@@ -186,12 +206,13 @@ export default function DashboardPage() {
           { status: "idea", label: "Idea" },
           { status: "draft", label: "Draft" },
           { status: "revised", label: "Revised" },
+          { status: "to_approve", label: "To approve" },
           { status: "scheduled", label: "Scheduled" },
           { status: "published", label: "Published" },
           { status: "failed", label: "Failed" },
         ].map(({ status, label }) => (
           <div key={status} className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full bg-status-${status}`} />
+            <div className={`w-2 h-2 rounded-full ${LEGEND_DOT[status]}`} />
             <span className="text-xs text-text-muted">{label}</span>
           </div>
         ))}
@@ -207,6 +228,17 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+      <div className="flex flex-wrap items-center gap-4 mb-4" aria-label="Flowity page pillars">
+        <span className="text-xs font-semibold text-text-secondary">Flowity page (Mon, Wed, Fri)</span>
+        {COMPANY_PILLAR_KEYS.map((key) => (
+          <div key={key} className="flex items-center gap-1.5" title={`${PILLARS[key].description} Goal: ${PILLARS[key].goal}.`}>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PILLARS[key].color }} />
+            <span className="text-xs" style={{ color: PILLARS[key].color }}>{PILLARS[key].label}</span>
+          </div>
+        ))}
+      </div>
+
+      <PostFilters filters={filters} onChange={setFilters} counts={channelCounts} />
 
       {loading ? (
         <div className="grid grid-cols-7 gap-1.5">
@@ -216,7 +248,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <ContentCalendar
-          posts={posts}
+          posts={visiblePosts}
           month={month}
           plan={plan}
           onDayClick={(day) => setDayAction(day)}

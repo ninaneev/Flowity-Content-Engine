@@ -23,7 +23,7 @@ class Post(Base):
     alt_title: Mapped[str | None] = mapped_column(String(280), comment="Título alternativo")
 
     # ── Canal e configurações ─────────────────────────────────────
-    channel: Mapped[str] = mapped_column(String(20), default="linkedin", comment="linkedin | x | newsletter")
+    channel: Mapped[str] = mapped_column(String(20), default="linkedin", comment="linkedin | linkedin_company | x | newsletter | article | blog")
     tone: Mapped[str | None] = mapped_column(String(50), comment="estratégico | educativo | inspiracional | direto")
     objective: Mapped[str | None] = mapped_column(String(100))
     format: Mapped[str | None] = mapped_column(String(50), comment="lista | narrativa | pergunta | dado")
@@ -43,6 +43,9 @@ class Post(Base):
     linkedin_post_urn: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="URN do post no LinkedIn (urn:li:share:...)"
     )
+    # Post da página da Flowity repostado no perfil da Nina (cenário da tarde no Make)
+    reshare_urn: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reshared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # ── Geração ───────────────────────────────────────────────────
     generation_mode: Mapped[str | None] = mapped_column(String(20), comment="template | ollama | manual")

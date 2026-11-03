@@ -20,6 +20,7 @@ const SOURCE_TYPES = [
   { value: "comentario", label: "Customer comment" },
   { value: "newsletter", label: "Newsletter" },
   { value: "referencia", label: "External reference" },
+  { value: "ideia", label: "Content idea (from a work session)" },
 ];
 
 export default function NewSourceForm({ initialData, onSave, onCancel, loading }) {

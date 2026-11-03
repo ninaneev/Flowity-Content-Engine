@@ -2,11 +2,17 @@
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
-VALID_STATUS = {"idea", "draft", "revised", "scheduled", "publishing", "published", "failed"}
-VALID_CHANNELS = {"linkedin", "x", "newsletter"}
+# "to_approve": Claude wrote it with a proposed date; Nina approves it into "scheduled".
+VALID_STATUS = {"idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed"}
+# linkedin = Nina's profile, linkedin_company = Flowity page, article = flowity.ai, blog = ninaneev.github.io
+VALID_CHANNELS = {"linkedin", "linkedin_company", "x", "newsletter", "article", "blog"}
 VALID_WORKFLOWS = {"manual", "pi1", "pi2"}
 # Chaves estáveis; os rótulos e cores ficam em frontend/src/lib/pillars.js
-VALID_PILLARS = {"workflow", "proof", "build", "pov", "story"}
+VALID_PILLARS = {
+    "workflow", "proof", "build", "pov", "story",
+    # Flowity company page
+    "company_method", "company_problem", "company_trust", "company_behind",
+}
 
 
 def _validar_workflow(v: str | None) -> str | None:
@@ -111,6 +117,7 @@ class PostResponse(PostBase):
     id: int
     published_at: datetime | None = None
     linkedin_post_urn: str | None = None
+    reshare_urn: str | None = None
     created_at: datetime
     updated_at: datetime
     source_ids: list[int] = []
