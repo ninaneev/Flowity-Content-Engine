@@ -28,8 +28,11 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
 
 # Status que aparecem no calendário: o que está agendado e o que já saiu
 NO_CALENDARIO = ("scheduled", "publishing", "published", "failed")
-# Status que viram "scheduled" quando ganham data (data no calendário = agendado)
-ANTES_DE_AGENDAR = ("idea", "draft", "revised")
+# Status que viram "scheduled" quando ganham data (data no calendário = agendado).
+# "failed" e "publishing" entram porque é assim que um post que falhou no Make volta pra fila.
+ANTES_DE_AGENDAR = ("idea", "draft", "revised", "failed", "publishing")
+# Status que viram "revised" quando perdem a data (inclui o post preso em publishing)
+SAEM_DA_AGENDA = ("scheduled", "failed", "publishing")
 
 
 def _futura(quando: datetime) -> bool:
@@ -50,7 +53,7 @@ def _data_define_status(post: Post, data_antes, status_mudou: bool) -> None:
         return
     if post.scheduled_at is not None and post.status in ANTES_DE_AGENDAR and _futura(post.scheduled_at):
         post.status = "scheduled"
-    elif post.scheduled_at is None and post.status == "scheduled" and not status_mudou:
+    elif post.scheduled_at is None and post.status in SAEM_DA_AGENDA and not status_mudou:
         post.status = "revised"
 
 

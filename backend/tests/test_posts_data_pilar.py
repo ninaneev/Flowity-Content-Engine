@@ -5,18 +5,18 @@ from app.models.source import Source
 
 def test_patch_scheduled_at_null_limpa_a_data(client, post_criado):
     pid = post_criado["id"]
-    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2026-11-02T14:00:00Z"})
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2030-11-02T14:00:00Z"})
     assert r.status_code == 200, r.text
-    assert r.json()["scheduled_at"].startswith("2026-11-02T14:00")
+    assert r.json()["scheduled_at"].startswith("2030-11-02T14:00")
 
-    r = client.get("/posts/calendar", params={"month": "2026-11"})
+    r = client.get("/posts/calendar", params={"month": "2030-11"})
     assert [p["id"] for p in r.json()] == [pid]
 
     r = client.patch(f"/posts/{pid}", json={"scheduled_at": None})
     assert r.status_code == 200, r.text
     assert r.json()["scheduled_at"] is None
     assert client.get(f"/posts/{pid}").json()["scheduled_at"] is None
-    assert client.get("/posts/calendar", params={"month": "2026-11"}).json() == []
+    assert client.get("/posts/calendar", params={"month": "2030-11"}).json() == []
 
 
 def test_patch_sem_scheduled_at_nao_mexe_na_data(client, post_criado):
@@ -72,6 +72,28 @@ def test_por_data_agenda_e_tirar_data_desagenda(client):
     r = client.patch(f"/posts/{pid}", json={"scheduled_at": None, "status": "scheduled"})
     assert r.json()["status"] == "revised"
     assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_tirar_data_de_post_preso_ou_com_falha_desagenda(client, db):
+    from app.models.post import Post
+
+    for status in ("publishing", "failed"):
+        pid = client.post("/posts/", json={"hook": status, "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+        db.get(Post, pid).status = status
+        db.commit()
+        r = client.patch(f"/posts/{pid}", json={"scheduled_at": None})
+        assert r.json()["status"] == "revised", status
+        assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_nova_data_futura_reagenda_post_com_falha(client, db):
+    from app.models.post import Post
+
+    pid = client.post("/posts/", json={"hook": "Falhou", "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+    db.get(Post, pid).status = "failed"
+    db.commit()
+    r = client.patch(f"/posts/{pid}", json={"scheduled_at": "2030-01-11T14:00:00Z"})
+    assert r.json()["status"] == "scheduled"
 
 
 def test_criar_com_data_futura_ja_agenda(client):

@@ -89,8 +89,10 @@ export default function PipelinePage() {
 
   function postsByStatus(status) {
     // "publishing" stays in the Scheduled column until Make records it as published.
+    // "failed" (Make could not post it) stays there too, flagged, until it gets a new date.
+    const inScheduled = ["publishing", "failed"];
     return sortByScheduled(
-      posts.filter((p) => p.status === status || (status === "scheduled" && p.status === "publishing")),
+      posts.filter((p) => p.status === status || (status === "scheduled" && inScheduled.includes(p.status))),
     );
   }
 
@@ -208,9 +210,9 @@ export default function PipelinePage() {
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         <PillarTag pillar={post.pillar} />
                       </div>
-                      {post.status === "publishing" && (
+                      {(post.status === "publishing" || post.status === "failed") && (
                         <div className="mt-2">
-                          <StatusFlag status="publishing" />
+                          <StatusFlag status={post.status} />
                         </div>
                       )}
                       {(post.scheduled_at || pillarPlan.posts[post.id]?.offStructure) && (
