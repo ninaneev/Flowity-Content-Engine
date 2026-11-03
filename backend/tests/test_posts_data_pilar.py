@@ -32,11 +32,11 @@ def test_pilar_ida_e_volta(client):
     pid = r.json()["id"]
     assert r.json()["pillar"] == "workflow"
 
-    r = client.patch(f"/posts/{pid}", json={"pillar": "proof", "scheduled_at": "2026-11-03T14:00:00Z"})
+    r = client.patch(f"/posts/{pid}", json={"pillar": "proof", "scheduled_at": "2030-11-04T14:00:00Z"})
     assert r.json()["pillar"] == "proof"
     assert client.get(f"/posts/{pid}").json()["pillar"] == "proof"
     assert [p["pillar"] for p in client.get("/posts/").json()] == ["proof"]
-    assert client.get("/posts/calendar", params={"month": "2026-11"}).json()[0]["pillar"] == "proof"
+    assert client.get("/posts/calendar", params={"month": "2030-11"}).json()[0]["pillar"] == "proof"
 
     r = client.patch(f"/posts/{pid}", json={"pillar": ""})
     assert r.json()["pillar"] is None
