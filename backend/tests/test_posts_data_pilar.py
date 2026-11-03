@@ -113,3 +113,14 @@ def test_mover_de_coluna_tira_do_calendario_e_mantem_a_data(client):
     assert r.json()["status"] == "draft"
     assert r.json()["scheduled_at"].startswith("2030-01-12")
     assert client.get("/posts/calendar", params={"month": "2030-01"}).json() == []
+
+
+def test_post_ja_no_linkedin_continua_publicado_depois_de_salvar(client, db):
+    from app.models.post import Post
+
+    pid = client.post("/posts/", json={"hook": "Saiu", "scheduled_at": "2030-01-10T14:00:00Z"}).json()["id"]
+    post = db.get(Post, pid)
+    post.status, post.linkedin_post_urn = "published", "urn:li:share:1"
+    db.commit()
+    r = client.patch(f"/posts/{pid}", json={"status": "scheduled", "hook": "Saiu editado"})
+    assert r.json()["status"] == "published"

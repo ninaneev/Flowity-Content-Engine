@@ -18,7 +18,7 @@ const FOCO =
  * Post image picker with required alt text.
  * No drag-and-drop: the <input type="file"> is already operable by keyboard and screen reader.
  */
-export default function PostImageUploader({ postId, onUploaded }) {
+export default function PostImageUploader({ postId, onUploaded, registerPending }) {
   const uid = useId();
   const ids = {
     arquivo: `${uid}-arquivo`,
@@ -96,9 +96,14 @@ export default function PostImageUploader({ postId, onUploaded }) {
     setPrevia(URL.createObjectURL(escolhido));
   }
 
-  async function handleSalvar(e) {
+  function handleSalvar(e) {
     e.preventDefault();
     if (!selecionou || !altTextValido(altText) || enviando) return;
+    salvar().catch(() => {}); // the error is already shown under the form
+  }
+
+  // Also called by the post's main Save button, so a chosen image is never dropped.
+  async function salvar() {
     setEnviando(true);
     setErroEnvio("");
     setAviso("");
@@ -117,6 +122,7 @@ export default function PostImageUploader({ postId, onUploaded }) {
       onUploaded?.(data);
     } catch (err) {
       setErroEnvio(mensagemDeErro(err, "Could not upload the image. Try again."));
+      throw err;
     } finally {
       setEnviando(false);
     }
@@ -124,6 +130,13 @@ export default function PostImageUploader({ postId, onUploaded }) {
 
   const altOk = altTextValido(altText);
   const selecionou = origem === "bucket" ? Boolean(escolhida) : Boolean(arquivo);
+
+  // Tells the post modal there is a chosen image that is not saved yet.
+  useEffect(() => {
+    if (!registerPending) return;
+    registerPending(selecionou ? { altOk, save: salvar } : null);
+  });
+  useEffect(() => () => registerPending?.(null), [registerPending]);
   const podeSalvar = selecionou && altOk && !enviando;
   const faltaAlt = selecionou && !altOk;
 

@@ -13,7 +13,7 @@ const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
 /** "Post images" section: lists the uploaded images and opens the upload for a new one. */
-function PostImagesSection({ postId }) {
+function PostImagesSection({ postId, registerPending }) {
   const tituloRef = useRef(null);
   const [imagens, setImagens] = useState([]);
   const [carregando, setCarregando] = useState(false);
@@ -127,6 +127,7 @@ function PostImagesSection({ postId }) {
             <h4 className="text-xs font-semibold text-text-primary mb-3">Upload new image</h4>
             <PostImageUploader
               postId={postId}
+              registerPending={registerPending}
               onUploaded={(nova) => {
                 setAviso("");
                 setImagens((lista) => [...lista, nova]);
@@ -182,6 +183,13 @@ function toForm(post) {
   return { ...(post || {}), scheduled_at: toLocalInput(post?.scheduled_at) };
 }
 
+/** Only the fields the user changed, so a stale form never overwrites what Make wrote (e.g. status). */
+function changedFields(payload, original) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([k, v]) => JSON.stringify(v ?? null) !== JSON.stringify(original[k] ?? null)),
+  );
+}
+
 function normalizeForApi(form) {
   return {
     ...form,
@@ -209,6 +217,10 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
   const confirmingRef = useRef(false);
   const deleteButtonRef = useRef(null);
   const keepButtonRef = useRef(null);
+  const pendingImageRef = useRef(null);
+  const registerPendingImage = useCallback((pending) => {
+    pendingImageRef.current = pending;
+  }, []);
 
   confirmingRef.current = confirmingDelete;
 
@@ -299,9 +311,22 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
       window.alert("Choose a schedule date/time before moving this post to Scheduled.");
       return;
     }
+    const pendingImage = pendingImageRef.current;
+    if (pendingImage && !pendingImage.altOk) {
+      window.alert("Fill in the image alt text before saving, or clear the image you chose.");
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(normalizeForApi(form));
+      if (pendingImage) {
+        try {
+          await pendingImage.save();
+        } catch {
+          return; // the upload error is shown in the image section; keep the modal open
+        }
+      }
+      const payload = normalizeForApi(form);
+      await onSave(mode === "create" ? payload : changedFields(payload, normalizeForApi(toForm(post))));
       onClose();
     } finally {
       setSaving(false);
@@ -399,7 +424,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
             <p className="text-[11px] text-text-muted mt-1">{(form.short_x || "").length}/280 characters</p>
           </div>
 
-          <PostImagesSection postId={post.id} />
+          <PostImagesSection postId={post.id} registerPending={registerPendingImage} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

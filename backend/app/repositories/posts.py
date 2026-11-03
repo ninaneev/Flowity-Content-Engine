@@ -127,6 +127,8 @@ def update(db: Session, post_id: int, data: PostUpdate) -> Post | None:
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(post, key, value)
     _data_define_status(post, data_antes, status_mudou=post.status != status_antes)
+    if post.linkedin_post_urn:  # já está no LinkedIn: nenhum save devolve o post pra fila
+        post.status = "published"
     db.commit()
     db.refresh(post)
     return post
