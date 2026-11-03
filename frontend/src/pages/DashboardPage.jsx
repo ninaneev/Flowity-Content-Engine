@@ -30,6 +30,17 @@ function newPostForDate(date = new Date(), time = DEFAULT_POST_TIME, pillar = ""
   };
 }
 
+// Full class names so Tailwind generates them (a built string like `bg-status-${x}` is never generated).
+const LEGEND_DOT = {
+  idea: "bg-text-muted",
+  draft: "bg-status-draft",
+  revised: "bg-status-revised",
+  to_approve: "bg-amber-400",
+  scheduled: "bg-status-scheduled",
+  published: "bg-status-published",
+  failed: "bg-status-failed",
+};
+
 export default function DashboardPage() {
   const [month, setMonth] = useState(new Date());
   // Same list as the pipeline: the calendar shows every post with a date, whatever its status.
@@ -201,7 +212,7 @@ export default function DashboardPage() {
           { status: "failed", label: "Failed" },
         ].map(({ status, label }) => (
           <div key={status} className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${status === "to_approve" ? "bg-amber-400" : `bg-status-${status}`}`} />
+            <div className={`w-2 h-2 rounded-full ${LEGEND_DOT[status]}`} />
             <span className="text-xs text-text-muted">{label}</span>
           </div>
         ))}
