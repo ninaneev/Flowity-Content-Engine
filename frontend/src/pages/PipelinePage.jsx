@@ -11,10 +11,10 @@ import PostFilters, { useSavedFilters } from "../components/posts/PostFilters";
 import { Link } from "react-router-dom";
 import { Layers } from "lucide-react";
 
+// Claude writes posts straight into To approve, so the board starts there.
+// Older idea/draft/revised posts are shown in To approve (see postsByStatus) so nothing disappears.
+const BEFORE_APPROVAL = ["idea", "draft", "revised"];
 const PIPELINE_COLUMNS = [
-  { status: "idea",      label: "Idea" },
-  { status: "draft",     label: "Draft" },
-  { status: "revised",   label: "Revised" },
   { status: "to_approve", label: "To approve" },
   { status: "scheduled", label: "Scheduled" },
   { status: "published", label: "Published" },
@@ -98,7 +98,12 @@ export default function PipelinePage() {
     // "failed" (Make could not post it) stays there too, flagged, until it gets a new date.
     const inScheduled = ["publishing", "failed"];
     return sortByScheduled(
-      visiblePosts.filter((p) => p.status === status || (status === "scheduled" && inScheduled.includes(p.status))),
+      visiblePosts.filter(
+        (p) =>
+          p.status === status ||
+          (status === "scheduled" && inScheduled.includes(p.status)) ||
+          (status === "to_approve" && BEFORE_APPROVAL.includes(p.status)),
+      ),
     );
   }
 

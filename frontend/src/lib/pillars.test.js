@@ -18,7 +18,7 @@ describe("pillar config", () => {
 
 describe("planPillars", () => {
   it("with nothing published starts at workflow on the first posting day >= today", () => {
-    const { days } = planPillars({ posts: [], today: TODAY, until: new Date(2026, 10, 4) });
+    const { days } = planPillars({ posts: [], today: TODAY, until: new Date(2026, 10, 4), postingDays: [1, 2, 3, 4, 5] });
     expect(days).toEqual({
       "2026-10-28": { pillar: "workflow", suggested: true },
       "2026-10-29": { pillar: "proof", suggested: true },
@@ -28,6 +28,12 @@ describe("planPillars", () => {
       "2026-11-03": { pillar: "story", suggested: true },
       "2026-11-04": { pillar: "workflow", suggested: true },
     });
+  });
+
+  it("posts every day by default, weekends included", () => {
+    const { days } = planPillars({ posts: [], today: TODAY, until: new Date(2026, 10, 1) });
+    expect(days["2026-10-31"]).toEqual({ pillar: "pov", suggested: true });
+    expect(days["2026-11-01"]).toEqual({ pillar: "story", suggested: true });
   });
 
   it("continues after the most recent published pillar", () => {
