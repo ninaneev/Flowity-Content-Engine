@@ -27,7 +27,7 @@ def get_by_id(db: Session, post_id: int) -> Post | None:
 
 
 # Status que aparecem no calendário: o que está agendado e o que já saiu
-NO_CALENDARIO = ("scheduled", "publishing", "published", "failed")
+NO_CALENDARIO = ("to_approve", "scheduled", "publishing", "published", "failed")
 # Status que viram "scheduled" quando ganham data (data no calendário = agendado).
 # "failed" e "publishing" entram porque é assim que um post que falhou no Make volta pra fila.
 ANTES_DE_AGENDAR = ("idea", "draft", "revised", "failed", "publishing")
@@ -129,6 +129,9 @@ def update(db: Session, post_id: int, data: PostUpdate) -> Post | None:
     _data_define_status(post, data_antes, status_mudou=post.status != status_antes)
     if post.linkedin_post_urn:  # já está no LinkedIn: nenhum save devolve o post pra fila
         post.status = "published"
+    if post.status == "published" and post.published_at is None:
+        # canais manuais (X, newsletter): "Mark published" na tela registra quando saiu
+        post.published_at = datetime.utcnow()
     db.commit()
     db.refresh(post)
     return post
