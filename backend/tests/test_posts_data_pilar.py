@@ -124,3 +124,22 @@ def test_post_ja_no_linkedin_continua_publicado_depois_de_salvar(client, db):
     db.commit()
     r = client.patch(f"/posts/{pid}", json={"status": "scheduled", "hook": "Saiu editado"})
     assert r.json()["status"] == "published"
+
+
+def test_lista_e_calendario_trazem_resumo_das_imagens(client, db):
+    from app.models.post_asset import PostAsset
+
+    pid = client.post("/posts/", json={"hook": "Com imagem", "scheduled_at": "2030-02-10T14:00:00Z"}).json()["id"]
+    db.add_all([
+        PostAsset(post_id=pid, kind="image", position=0, file_path="a.png", mime_type="image/png",
+                  alt_text="Um funil com quatro etapas", public_url="https://x/a.png"),
+        PostAsset(post_id=pid, kind="image", position=1, file_path="b.png", mime_type="image/png",
+                  alt_text="", public_url=None),
+    ])
+    db.commit()
+
+    esperado = {"image_count": 2, "images_without_alt": 1, "images_not_in_bucket": 1}
+    item = next(p for p in client.get("/posts/").json() if p["id"] == pid)
+    assert {k: item[k] for k in esperado} == esperado
+    cal = client.get("/posts/calendar", params={"month": "2030-02"}).json()[0]
+    assert {k: cal[k] for k in esperado} == esperado

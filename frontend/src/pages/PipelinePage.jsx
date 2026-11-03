@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
-import { PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
+import { IssueDot, PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
+import { postIssues } from "../lib/postIssues.js";
 import { postsApi } from "../lib/api";
 import { parseApiDate, sortByScheduled } from "../lib/postDates.js";
 import { planPillars } from "../lib/pillars.js";
@@ -205,7 +206,10 @@ export default function PipelinePage() {
                       className="card cursor-grab active:cursor-grabbing hover:border-border-bright transition-all select-none"
                       onClick={() => setSelectedPost(post)}
                     >
-                      <p className="text-text-primary text-sm font-medium line-clamp-2 mb-2">{post.hook}</p>
+                      <div className="flex items-start gap-2 mb-2">
+                        <p className="text-text-primary text-sm font-medium line-clamp-2 flex-1 min-w-0">{post.hook}</p>
+                        <IssueDot issues={postIssues(post)} className="mt-1.5" />
+                      </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
                         <PillarTag pillar={post.pillar} />

@@ -31,6 +31,13 @@ def _garantir_acessibilidade(db, post_id: int, novo_status: str | None) -> None:
             "asset_ids": [a.id for a in pendentes]}})
 
 
+def _anexar_resumo_imagens(db, posts) -> None:
+    resumo = asset_repo.resumo_imagens(db, [p.id for p in posts])
+    for post in posts:
+        for campo, valor in resumo[post.id].items():
+            setattr(post, campo, valor)
+
+
 @router.get("/", response_model=list[PostResponse])
 def list_posts(
     status: str | None = Query(None),
@@ -44,6 +51,7 @@ def list_posts(
     source_ids = post_repo.get_source_ids_map(db, [p.id for p in posts])
     for post in posts:
         post.source_ids = source_ids.get(post.id, [])
+    _anexar_resumo_imagens(db, posts)
 
     return posts
 
@@ -70,7 +78,9 @@ def get_calendar(
             detail="month must be YYYY-MM, e.g. 2025-06",
         )
 
-    return post_repo.get_for_calendar(db, year, m)
+    posts = post_repo.get_for_calendar(db, year, m)
+    _anexar_resumo_imagens(db, posts)
+    return posts
 
 
 @router.get("/{post_id}", response_model=PostResponse)
@@ -81,6 +91,7 @@ def get_post(post_id: int, db: Session = Depends(get_db), _admin=Depends(get_cur
         raise HTTPException(status_code=404, detail="Post not found")
 
     post.source_ids = post_repo.get_source_ids(db, post_id)
+    _anexar_resumo_imagens(db, [post])
 
     return post
 
@@ -96,6 +107,7 @@ def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db), _
         raise HTTPException(status_code=404, detail="Post not found")
 
     updated.source_ids = post_repo.get_source_ids(db, post_id)
+    _anexar_resumo_imagens(db, [updated])
 
     return updated
 

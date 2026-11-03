@@ -93,3 +93,26 @@ def next_position(db: Session, post_id: int) -> int:
 def sem_alt_text_valido(db: Session, post_id: int) -> list[PostAsset]:
     """Assets do post cujo alt_text reprova na regra de acessibilidade."""
     return [asset for asset in list_by_post(db, post_id) if not alt_text_valido(asset.alt_text)]
+
+
+def resumo_imagens(db: Session, post_ids: list[int]) -> dict[int, dict[str, int]]:
+    """Por post: quantas imagens, quantas sem alt text válido e quantas fora do bucket.
+
+    Uma query só para a lista inteira (o pipeline usa isso para marcar o que precisa de ajuste).
+    """
+    resumo = {pid: {"image_count": 0, "images_without_alt": 0, "images_not_in_bucket": 0} for pid in post_ids}
+    if not post_ids:
+        return resumo
+    linhas = (
+        db.query(PostAsset.post_id, PostAsset.alt_text, PostAsset.public_url)
+        .filter(PostAsset.post_id.in_(post_ids), PostAsset.kind == "image")
+        .all()
+    )
+    for post_id, alt_text, public_url in linhas:
+        r = resumo[post_id]
+        r["image_count"] += 1
+        if not alt_text_valido(alt_text):
+            r["images_without_alt"] += 1
+        if not public_url:
+            r["images_not_in_bucket"] += 1
+    return resumo

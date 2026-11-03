@@ -43,6 +43,18 @@ export function RemoveDateButton({ post, onRemoveDate, size = 10 }) {
   );
 }
 
+/** Red dot = something here needs fixing. Hover shows what; screen readers get the same text. */
+export function IssueDot({ issues, className = "" }) {
+  if (!issues?.length) return null;
+  const text = issues.map((i) => i.message).join("\n");
+  return (
+    <span className={`inline-flex shrink-0 ${className}`} title={text}>
+      <span className="h-2 w-2 rounded-full bg-red-500 ring-2 ring-red-500/30" aria-hidden="true" />
+      <span className="sr-only">Needs fixing: {text}</span>
+    </span>
+  );
+}
+
 export function MissedFlag() {
   return (
     <span className="inline-flex items-center rounded bg-red-500/20 border border-red-500/50 px-1 text-[10px] font-semibold leading-tight text-red-300">

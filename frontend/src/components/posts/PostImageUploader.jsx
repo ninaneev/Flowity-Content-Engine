@@ -1,6 +1,9 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { assetsApi } from "../../lib/api";
+import BucketImagePicker from "./BucketImagePicker";
+import ImageLightbox from "./ImageLightbox";
+import { IssueDot } from "./PostMeta";
 import {
   ALT_MAX,
   ALT_MIN,
@@ -43,6 +46,7 @@ export default function PostImageUploader({ postId, onUploaded, registerPending 
   const [bucket, setBucket] = useState(null);
   const [erroBucket, setErroBucket] = useState("");
   const [escolhida, setEscolhida] = useState(null);
+  const [ampliada, setAmpliada] = useState(null); // { src, alt } shown at real size
 
   // Releases the temporary preview URL when it changes or the component unmounts.
   useEffect(() => () => previa && URL.revokeObjectURL(previa), [previa]);
@@ -132,10 +136,11 @@ export default function PostImageUploader({ postId, onUploaded, registerPending 
   const selecionou = origem === "bucket" ? Boolean(escolhida) : Boolean(arquivo);
 
   // Tells the post modal there is a chosen image that is not saved yet.
+  const salvarRef = useRef(salvar);
+  salvarRef.current = salvar;
   useEffect(() => {
-    if (!registerPending) return;
-    registerPending(selecionou ? { altOk, save: salvar } : null);
-  });
+    registerPending?.(selecionou ? { altOk, save: () => salvarRef.current() } : null);
+  }, [registerPending, selecionou, altOk]);
   useEffect(() => () => registerPending?.(null), [registerPending]);
   const podeSalvar = selecionou && altOk && !enviando;
   const faltaAlt = selecionou && !altOk;
@@ -172,24 +177,21 @@ export default function PostImageUploader({ postId, onUploaded, registerPending 
           )}
           {bucket?.length > 0 && (
             <>
-              <select
+              <BucketImagePicker
                 id={ids.bucket}
-                className="input"
+                images={bucket}
                 value={escolhida?.path || ""}
-                onChange={(e) => setEscolhida(bucket.find((img) => img.path === e.target.value) || null)}
-              >
-                <option value="">Choose an image…</option>
-                {bucket.map((img) => (
-                  <option key={img.path} value={img.path}>
-                    {img.path}
-                  </option>
-                ))}
-              </select>
+                onChange={setEscolhida}
+              />
               {escolhida && (
                 <figure className="mt-2 rounded-lg border border-border bg-bg-base p-2 inline-block">
-                  <img src={escolhida.url} alt={`Bucket image: ${escolhida.path}`}
-                    className="max-h-48 max-w-full rounded" />
-                  <figcaption className="text-xs text-text-secondary mt-1">{escolhida.path}</figcaption>
+                  <button type="button" className={`block rounded cursor-zoom-in ${FOCO}`}
+                    onClick={() => setAmpliada({ src: escolhida.url, alt: `Bucket image: ${escolhida.path}` })}
+                    aria-label={`See ${escolhida.path} at real size`}>
+                    <img src={escolhida.url} alt={`Bucket image: ${escolhida.path}`}
+                      className="max-h-48 max-w-full rounded" />
+                  </button>
+                  <figcaption className="text-xs text-text-secondary mt-1">{escolhida.path} · click to see real size</figcaption>
                 </figure>
               )}
             </>
@@ -228,20 +230,25 @@ export default function PostImageUploader({ postId, onUploaded, registerPending 
 
       {previa && (
         <figure className="rounded-lg border border-border bg-bg-base p-2 inline-block">
-          <img
-            src={previa}
-            alt={tamanhoAlt(altText) ? altText.trim() : `Preview of file ${arquivo?.name}`}
-            className="max-h-48 max-w-full rounded"
-          />
+          <button type="button" className={`block rounded cursor-zoom-in ${FOCO}`}
+            onClick={() => setAmpliada({ src: previa, alt: `Preview of file ${arquivo?.name}` })}
+            aria-label={`See ${arquivo?.name} at real size`}>
+            <img
+              src={previa}
+              alt={tamanhoAlt(altText) ? altText.trim() : `Preview of file ${arquivo?.name}`}
+              className="max-h-48 max-w-full rounded"
+            />
+          </button>
           <figcaption className="text-xs text-text-secondary mt-1">
-            Preview: {arquivo?.name}
+            Preview: {arquivo?.name} · click to see real size
           </figcaption>
         </figure>
       )}
 
       <div>
-        <label htmlFor={ids.alt} className="label">
+        <label htmlFor={ids.alt} className="label inline-flex items-center gap-2">
           Alt text (required)
+          {faltaAlt && <IssueDot issues={[{ message: "Write the alt text, or this image will not be saved." }]} />}
         </label>
         <textarea
           id={ids.alt}
@@ -298,6 +305,7 @@ export default function PostImageUploader({ postId, onUploaded, registerPending 
       <p role="status" aria-live="polite" className="text-sm text-emerald-300">
         {aviso}
       </p>
+      {ampliada && <ImageLightbox src={ampliada.src} alt={ampliada.alt} onClose={() => setAmpliada(null)} />}
     </form>
   );
 }

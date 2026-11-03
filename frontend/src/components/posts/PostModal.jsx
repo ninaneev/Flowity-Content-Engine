@@ -4,6 +4,9 @@ import { Link } from "react-router-dom";
 import StatusBadge from "../shared/StatusBadge";
 import SelectField from "../shared/SelectField";
 import PostImageUploader from "./PostImageUploader";
+import ImageLightbox from "./ImageLightbox";
+import { IssueDot } from "./PostMeta";
+import { issuesFor, postIssues } from "../../lib/postIssues.js";
 import { assetsApi, mediaUrl } from "../../lib/api";
 import { mensagemDeErro } from "../../lib/imageUpload.mjs";
 import { PILLARS, PILLAR_ROTATION } from "../../lib/pillars.js";
@@ -13,13 +16,18 @@ const FOCO =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
 /** "Post images" section: lists the uploaded images and opens the upload for a new one. */
-function PostImagesSection({ postId, registerPending }) {
+function PostImagesSection({ postId, registerPending, issues = [], onImagesChange }) {
   const tituloRef = useRef(null);
   const [imagens, setImagens] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [removendo, setRemovendo] = useState(null);
+  const [ampliada, setAmpliada] = useState(null);
+
+  useEffect(() => {
+    onImagesChange?.(imagens);
+  }, [imagens, onImagesChange]);
 
   const carregar = useCallback(async () => {
     if (!postId) return;
@@ -62,10 +70,14 @@ function PostImagesSection({ postId, registerPending }) {
           id="imagens-do-post-titulo"
           ref={tituloRef}
           tabIndex={-1}
-          className="text-sm font-semibold text-text-primary focus:outline-none"
+          className="text-sm font-semibold text-text-primary focus:outline-none inline-flex items-center gap-2"
         >
           Post images
+          <IssueDot issues={issues} />
         </h3>
+        {issues.map((issue) => (
+          <p key={issue.id} className="text-xs text-red-300 font-medium mt-1">{issue.message}</p>
+        ))}
         <p className="text-xs text-text-secondary mt-1">
           Every image needs alt text: without it, the image does not exist for people who use a screen reader.
         </p>
@@ -88,16 +100,26 @@ function PostImagesSection({ postId, registerPending }) {
                   key={imagem.id}
                   className="flex items-start gap-3 rounded-lg border border-border bg-bg-surface p-2"
                 >
-                  <img
-                    src={mediaUrl(imagem.url)}
-                    alt={imagem.alt_text}
-                    className="h-16 w-16 flex-shrink-0 rounded object-cover bg-bg-base"
-                  />
+                  <button
+                    type="button"
+                    className={`flex-shrink-0 rounded cursor-zoom-in ${FOCO}`}
+                    onClick={() => setAmpliada({ src: mediaUrl(imagem.url), alt: imagem.alt_text || `Image ${indice + 1}` })}
+                    aria-label={`See image ${indice + 1} at real size`}
+                  >
+                    <img
+                      src={mediaUrl(imagem.url)}
+                      alt={imagem.alt_text}
+                      className="h-16 w-16 rounded object-cover bg-bg-base"
+                    />
+                  </button>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-text-secondary">
+                    <p className="text-xs font-medium text-text-secondary inline-flex items-center gap-2">
                       Image {indice + 1} · alt text:
+                      {!imagem.alt_text?.trim() && (
+                        <IssueDot issues={[{ message: "This image has no alt text. Remove it and upload it again with alt text." }]} />
+                      )}
                     </p>
-                    <p className="text-sm text-text-primary break-words">{imagem.alt_text}</p>
+                    <p className="text-sm text-text-primary break-words">{imagem.alt_text || "(missing)"}</p>
                   </div>
                   <button
                     type="button"
@@ -136,6 +158,7 @@ function PostImagesSection({ postId, registerPending }) {
           </div>
         </>
       )}
+      {ampliada && <ImageLightbox src={ampliada.src} alt={ampliada.alt} onClose={() => setAmpliada(null)} />}
     </section>
   );
 }
@@ -217,10 +240,15 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
   const confirmingRef = useRef(false);
   const deleteButtonRef = useRef(null);
   const keepButtonRef = useRef(null);
+  const dialogRef = useRef(null);
   const pendingImageRef = useRef(null);
+  const [pendingImage, setPendingImage] = useState(null);
   const registerPendingImage = useCallback((pending) => {
     pendingImageRef.current = pending;
+    setPendingImage(pending ? { altOk: pending.altOk } : null);
   }, []);
+  const [images, setImages] = useState(null); // live list from the images section
+  const [saveError, setSaveError] = useState(null); // { message, field }
 
   confirmingRef.current = confirmingDelete;
 
@@ -306,28 +334,43 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
     }
   }
 
+  // A blocked save jumps to the "Needs fixing" box at the top.
+  const showProblems = () => dialogRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+
   async function handleSave() {
+    setSaveError(null);
     if (form.status === "scheduled" && !form.scheduled_at) {
-      window.alert("Choose a schedule date/time before moving this post to Scheduled.");
+      setSaveError({ field: "date", message: "Pick a date before moving this post to Scheduled." });
+      showProblems();
       return;
     }
-    const pendingImage = pendingImageRef.current;
-    if (pendingImage && !pendingImage.altOk) {
-      window.alert("Fill in the image alt text before saving, or clear the image you chose.");
+    const pending = pendingImageRef.current;
+    if (pending && !pending.altOk) {
+      showProblems(); // the missing alt text is already listed there
       return;
     }
     setSaving(true);
     try {
-      if (pendingImage) {
+      if (pending) {
         try {
-          await pendingImage.save();
+          await pending.save();
         } catch {
-          return; // the upload error is shown in the image section; keep the modal open
+          setSaveError({ field: "images", message: "The image could not be saved. See the error in Post images." });
+          return;
         }
       }
       const payload = normalizeForApi(form);
       await onSave(mode === "create" ? payload : changedFields(payload, normalizeForApi(toForm(post))));
       onClose();
+    } catch (err) {
+      const altMissing = err?.response?.data?.detail?.error?.code === "acessibilidade_pendente";
+      setSaveError({
+        field: altMissing ? "images" : "status",
+        message: altMissing
+          ? "An image on this post has no alt text, so it cannot be scheduled. Fix it in Post images."
+          : mensagemDeErro(err, "Could not save the post. Try again."),
+      });
+      showProblems();
     } finally {
       setSaving(false);
     }
@@ -335,12 +378,35 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
 
   if (!post) return null;
 
+  const imageSummary = images
+    ? {
+        image_count: images.length,
+        images_without_alt: images.filter((i) => !String(i.alt_text || "").trim()).length,
+        images_not_in_bucket: images.filter((i) => !i.public_url).length,
+      }
+    : {};
+  const issues = mode === "create" ? [] : postIssues({
+    ...post,
+    ...imageSummary,
+    status: form.status,
+    channel: form.channel,
+    hook: form.hook,
+    body: form.body,
+    scheduled_at: fromLocalInput(form.scheduled_at),
+  });
+  if (pendingImage && !pendingImage.altOk) {
+    issues.push({ id: "pending-alt", field: "images", message: "You chose an image but its alt text is missing, so it will not be saved." });
+  }
+  if (saveError) issues.unshift({ id: "save", field: saveError.field, message: saveError.message });
+  const dot = (field) => <IssueDot issues={issuesFor(issues, field)} />;
+
   return (
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={mode === "create" ? "New post" : `Post #${post.id}`}
@@ -364,6 +430,20 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
         </div>
 
         <div className="p-6 space-y-4">
+          {issues.length > 0 && (
+            <div role="alert" className="rounded-lg border border-red-500/50 bg-red-500/10 p-3">
+              <p className="text-sm font-semibold text-red-200 mb-1">Needs fixing</p>
+              <ul className="space-y-1">
+                {issues.map((issue) => (
+                  <li key={issue.id} className="flex items-start gap-2 text-xs text-red-200">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-500" aria-hidden="true" />
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-red-200/70 mt-2">Red dots below mark where. Everything without a dot is fine.</p>
+            </div>
+          )}
           <div className="card bg-bg-elevated/40">
             <h3 className="text-sm font-semibold text-text-primary mb-1">Editorial approval</h3>
             <p className="text-xs text-text-muted">
@@ -372,7 +452,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
           </div>
 
           <div>
-            <label className="label" htmlFor="post-hook">Hook / main title</label>
+            <label className="label inline-flex items-center gap-2" htmlFor="post-hook">Hook / main title {dot("text")}</label>
             <textarea
               className="textarea text-base font-medium"
               id="post-hook"
@@ -424,11 +504,16 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
             <p className="text-[11px] text-text-muted mt-1">{(form.short_x || "").length}/280 characters</p>
           </div>
 
-          <PostImagesSection postId={post.id} registerPending={registerPendingImage} />
+          <PostImagesSection
+            postId={post.id}
+            registerPending={registerPendingImage}
+            issues={issuesFor(issues, "images")}
+            onImagesChange={setImages}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label" htmlFor="post-status">Status</label>
+              <label className="label inline-flex items-center gap-2" htmlFor="post-status">Status {dot("status")}</label>
               <SelectField
                 id="post-status"
                 name="status"
@@ -461,7 +546,7 @@ export default function PostModal({ post, onClose, onSave, onDelete, mode = "edi
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label" htmlFor="post-scheduled-at">Schedule</label>
+              <label className="label inline-flex items-center gap-2" htmlFor="post-scheduled-at">Schedule {dot("date")}</label>
               <div className="flex items-center gap-2">
                 <input
                   className="input"
