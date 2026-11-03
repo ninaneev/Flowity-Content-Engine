@@ -11,6 +11,7 @@ const TYPE_LABELS = {
   comentario: "Comment",
   newsletter: "Newsletter",
   referencia: "Reference",
+  ideia: "Idea",
 };
 
 export default function SourceCard({ source, onSelect, selected, selectedLabel = "Selected" }) {

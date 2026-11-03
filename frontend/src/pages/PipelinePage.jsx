@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import StatusBadge from "../components/shared/StatusBadge";
 import PostModal from "../components/posts/PostModal";
-import { IssueDot, PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
+import { ChannelTag, IssueDot, PillarTag, PostDateChip, OffStructureFlag, StatusFlag } from "../components/posts/PostMeta";
 import { postIssues } from "../lib/postIssues.js";
 import { postsApi } from "../lib/api";
 import { parseApiDate, sortByScheduled } from "../lib/postDates.js";
 import { planPillars } from "../lib/pillars.js";
+import { filterPosts } from "../lib/channels.js";
+import PostFilters, { useSavedFilters } from "../components/posts/PostFilters";
 import { Link } from "react-router-dom";
 import { Layers } from "lucide-react";
 
@@ -13,15 +15,11 @@ const PIPELINE_COLUMNS = [
   { status: "idea",      label: "Idea" },
   { status: "draft",     label: "Draft" },
   { status: "revised",   label: "Revised" },
+  { status: "to_approve", label: "To approve" },
   { status: "scheduled", label: "Scheduled" },
   { status: "published", label: "Published" },
 ];
 
-const CHANNEL_LABELS = {
-  linkedin: "LinkedIn",
-  x: "X",
-  newsletter: "Newsletter",
-};
 
 export default function PipelinePage() {
   const [posts, setPosts] = useState([]);
@@ -85,15 +83,22 @@ export default function PipelinePage() {
   const pillarPlan = useMemo(() => {
     const datas = posts.map((p) => parseApiDate(p.scheduled_at)).filter(Boolean);
     const until = datas.length ? new Date(Math.max(...datas)) : new Date();
-    return planPillars({ posts, today: new Date(), until });
+    return planPillars({ posts: posts.filter((p) => p.channel === "linkedin"), today: new Date(), until });
   }, [posts]);
+
+  const [filters, setFilters] = useSavedFilters("ce-pipeline-filters");
+  const visiblePosts = useMemo(() => filterPosts(posts, filters), [posts, filters]);
+  const channelCounts = useMemo(
+    () => posts.reduce((acc, p) => ({ ...acc, [p.channel]: (acc[p.channel] || 0) + 1 }), {}),
+    [posts],
+  );
 
   function postsByStatus(status) {
     // "publishing" stays in the Scheduled column until Make records it as published.
     // "failed" (Make could not post it) stays there too, flagged, until it gets a new date.
     const inScheduled = ["publishing", "failed"];
     return sortByScheduled(
-      posts.filter((p) => p.status === status || (status === "scheduled" && inScheduled.includes(p.status))),
+      visiblePosts.filter((p) => p.status === status || (status === "scheduled" && inScheduled.includes(p.status))),
     );
   }
 
@@ -155,8 +160,12 @@ export default function PipelinePage() {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-text-primary">Pipeline</h1>
-        <p className="text-text-muted text-sm mt-0.5">{posts.length} total posts</p>
+        <p className="text-text-muted text-sm mt-0.5">
+          {visiblePosts.length === posts.length ? `${posts.length} total posts` : `${visiblePosts.length} of ${posts.length} posts`}
+        </p>
       </div>
+
+      <PostFilters filters={filters} onChange={setFilters} counts={channelCounts} />
 
       {loading ? (
         <div className="flex gap-4 overflow-x-auto pb-4">
@@ -211,7 +220,7 @@ export default function PipelinePage() {
                         <IssueDot issues={postIssues(post)} className="mt-1.5" />
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-text-muted">{CHANNEL_LABELS[post.channel] || post.channel}</span>
+                        <ChannelTag channel={post.channel} />
                         <PillarTag pillar={post.pillar} />
                       </div>
                       {(post.status === "publishing" || post.status === "failed") && (

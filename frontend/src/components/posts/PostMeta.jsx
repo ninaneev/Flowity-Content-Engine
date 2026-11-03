@@ -2,6 +2,7 @@ import React from "react";
 import { format } from "date-fns";
 import { X } from "lucide-react";
 import { PILLARS } from "../../lib/pillars.js";
+import { CHANNELS } from "../../lib/channels.js";
 import { isMissed, parseApiDate } from "../../lib/postDates.js";
 
 const FOCO =
@@ -43,6 +44,17 @@ export function RemoveDateButton({ post, onRemoveDate, size = 10 }) {
   );
 }
 
+/** Small colored channel label ("Nina", "Flowity", "X"...). */
+export function ChannelTag({ channel }) {
+  const c = CHANNELS[channel] || CHANNELS.linkedin;
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold leading-none" style={{ color: c.color }} title={c.label}>
+      <span className="h-1.5 w-1.5 rounded-sm shrink-0" style={{ backgroundColor: c.color }} aria-hidden="true" />
+      {c.short}
+    </span>
+  );
+}
+
 /** Red dot = something here needs fixing. Hover shows what; screen readers get the same text. */
 export function IssueDot({ issues, className = "" }) {
   if (!issues?.length) return null;
@@ -64,6 +76,7 @@ export function MissedFlag() {
 }
 
 const STATUS_FLAGS = {
+  to_approve: { label: "To approve", className: "border-amber-400/60 bg-amber-400/15 text-amber-200" },
   scheduled: { label: "Scheduled", className: "border-sky-400/50 bg-sky-400/10 text-sky-300" },
   publishing: { label: "Publishing…", className: "border-amber-400/50 bg-amber-400/10 text-amber-300" },
   published: { label: "✓ Published", className: "border-emerald-400/60 bg-emerald-400/20 text-emerald-300" },

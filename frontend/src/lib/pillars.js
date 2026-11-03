@@ -43,8 +43,51 @@ export const PILLARS = {
   },
 };
 
+/** Flowity company page pillars (posted Mon/Wed/Fri, outside the personal rotation). */
+export const COMPANY_PILLARS = {
+  company_method: {
+    key: "company_method",
+    label: "Proof of method",
+    description: "How Flowity reads a company: the steps, shown plainly.",
+    goal: "Trust the method",
+    color: "#1CD8DE",
+  },
+  company_problem: {
+    key: "company_problem",
+    label: "Client problem",
+    description: "A signal companies miss and what it costs them.",
+    goal: "Recognise the pain",
+    color: "#60A5FA",
+  },
+  company_trust: {
+    key: "company_trust",
+    label: "Trust in AI decisions",
+    description: "When AI can be trusted with a business decision, and how to check it.",
+    goal: "Authority",
+    color: "#C084FC",
+  },
+  company_behind: {
+    key: "company_behind",
+    label: "Behind Flowity",
+    description: "The craft and the standards behind the work.",
+    goal: "Professionalism",
+    color: "#F9A8D4",
+  },
+};
+Object.assign(PILLARS, COMPANY_PILLARS);
+
+export const COMPANY_PILLAR_KEYS = Object.keys(COMPANY_PILLARS);
+
 /** Rotation order; the plan walks it and wraps around. */
 export const PILLAR_ROTATION = ["workflow", "proof", "build", "pov", "story"];
+export const ALL_PILLARS = [...PILLAR_ROTATION, ...COMPANY_PILLAR_KEYS];
+
+/** Pillars offered in the editor for a channel (see CHANNELS[...].pillars). */
+export function pillarsForChannel(set) {
+  if (set === "company") return COMPANY_PILLAR_KEYS;
+  if (set === "personal") return PILLAR_ROTATION;
+  return ALL_PILLARS;
+}
 
 /** Posting days as date-fns getDay() numbers (0 = Sunday). Mon–Fri. */
 export const POSTING_DAYS = [1, 2, 3, 4, 5];

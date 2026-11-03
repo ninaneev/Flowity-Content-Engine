@@ -12,6 +12,7 @@ const SOURCE_TYPE_OPTIONS = [
   { value: "comentario", label: "Comment" },
   { value: "newsletter", label: "Newsletter" },
   { value: "referencia", label: "Reference" },
+  { value: "ideia", label: "Idea" },
 ];
 
 export default function SourceFilters({

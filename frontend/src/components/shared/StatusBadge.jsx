@@ -17,6 +17,11 @@ const STATUS_CONFIG = {
     icon: Eye,
     color: "text-status-revised bg-status-revised/10 border-status-revised/30",
   },
+  to_approve: {
+    label: "To approve",
+    icon: Eye,
+    color: "text-amber-300 bg-amber-400/10 border-amber-400/40",
+  },
   scheduled: {
     label: "Scheduled",
     icon: Clock,
