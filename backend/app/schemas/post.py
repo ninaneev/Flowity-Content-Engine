@@ -3,7 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 # "to_approve": Claude wrote it with a proposed date; Nina approves it into "scheduled".
-VALID_STATUS = {"idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed"}
+# "archived": out of the active pipeline; never picked by autopost (claims only take "scheduled").
+VALID_STATUS = {"idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed", "archived"}
 # linkedin = Nina's profile, linkedin_company = Flowity page, article = flowity.ai, blog = ninaneev.github.io
 VALID_CHANNELS = {"linkedin", "linkedin_company", "x", "newsletter", "article", "blog"}
 VALID_WORKFLOWS = {"manual", "pi1", "pi2"}
@@ -30,6 +31,12 @@ def _validar_pillar(v: str | None) -> str | None:
         return None
     if v not in VALID_PILLARS:
         raise ValueError(f"pillar deve ser: {', '.join(sorted(VALID_PILLARS))}")
+    return v
+
+
+def _validar_status(v: str | None) -> str | None:
+    if v is not None and v not in VALID_STATUS:
+        raise ValueError(f"status must be one of: {', '.join(sorted(VALID_STATUS))}")
     return v
 
 
@@ -73,9 +80,7 @@ class PostBase(BaseModel):
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        if v not in VALID_STATUS:
-            raise ValueError(f"status must be one of: {', '.join(sorted(VALID_STATUS))}")
-        return v
+        return _validar_status(v)
 
 
 class PostCreate(PostBase):
@@ -111,6 +116,11 @@ class PostUpdate(BaseModel):
     @classmethod
     def validate_pillar(cls, v: str | None) -> str | None:
         return _validar_pillar(v)
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v: str | None) -> str | None:
+        return _validar_status(v)
 
 
 class PostResponse(PostBase):

@@ -1,5 +1,6 @@
 """Operações CRUD para a tabela sources. Usado pelos integrantes 5 e 7."""
 from sqlalchemy.orm import Session
+from app.models.generation import PostSource
 from app.models.source import Source
 from app.schemas.source import SourceCreate, SourceUpdate
 
@@ -39,3 +40,8 @@ def update(db: Session, source_id: int, data: SourceUpdate) -> Source | None:
 def get_many_by_ids(db: Session, ids: list[int]) -> list[Source]:
     """Busca múltiplas sources por lista de IDs. Usado pelo generator."""
     return db.query(Source).filter(Source.id.in_(ids)).all()
+
+
+def used_ids(db: Session) -> set[int]:
+    """IDs das sources já ligadas a algum post (Library mostra como "Used")."""
+    return {r.source_id for r in db.query(PostSource.source_id).distinct()}
