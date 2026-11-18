@@ -44,5 +44,6 @@ class SourceResponse(SourceBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    used: bool = False  # linked to at least one post (post_sources)
 
     model_config = {"from_attributes": True}

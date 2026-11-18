@@ -69,6 +69,8 @@ export const sourcesApi = {
   get:    (id)        => api.get(`/sources/${id}`),
   create: (data)      => api.post("/sources/", data),
   update: (id, data)  => api.put(`/sources/${id}`, data),
+  // Creates a post in To approve from this item and marks the item as used
+  approve: (id)       => api.post(`/sources/${id}/approve`),
 };
 
 // POSTS

@@ -13,6 +13,7 @@ export const FILTER_STATUSES = [
   { key: "draft", label: "Draft" },
   { key: "revised", label: "Revised" },
   { key: "idea", label: "Idea" },
+  { key: "archived", label: "Archived" },
 ];
 
 const EMPTY = { channels: [], statuses: [], pillars: [] };

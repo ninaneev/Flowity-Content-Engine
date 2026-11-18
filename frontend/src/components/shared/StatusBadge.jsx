@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle, XCircle, Clock, Loader, FileText, Lightbulb, Eye } from "lucide-react";
+import { Archive, CheckCircle, XCircle, Clock, Loader, FileText, Lightbulb, Eye } from "lucide-react";
 
 const STATUS_CONFIG = {
   idea: {
@@ -42,6 +42,11 @@ const STATUS_CONFIG = {
     label: "Failed",
     icon: XCircle,
     color: "text-status-failed bg-status-failed/10 border-status-failed/30",
+  },
+  archived: {
+    label: "Archived",
+    icon: Archive,
+    color: "text-text-muted bg-bg-elevated border-border",
   },
 };
 

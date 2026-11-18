@@ -74,7 +74,8 @@ export default function DashboardPage() {
     if (!silent) setLoading(true);
     try {
       const res = await postsApi.list();
-      setPosts(res.data);
+      // Archived posts live only in the Pipeline's Archived column, never on the calendar.
+      setPosts(res.data.filter((p) => p.status !== "archived"));
     } catch (err) {
       console.error("Error loading calendar posts:", err);
     } finally {
