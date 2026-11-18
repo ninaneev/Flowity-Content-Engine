@@ -190,7 +190,7 @@ function PostImagesSection({ postId, registerPending, issues = [], onImagesChang
   );
 }
 
-const STATUSES = ["idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed"];
+const STATUSES = ["idea", "draft", "revised", "to_approve", "scheduled", "publishing", "published", "failed", "archived"];
 const STATUS_LABELS = {
   idea: "Idea",
   draft: "Draft",
@@ -200,6 +200,7 @@ const STATUS_LABELS = {
   publishing: "Publishing",
   published: "Published",
   failed: "Failed",
+  archived: "Archived",
 };
 const STATUS_HELP = {
   idea: "Initial idea without final copy.",
@@ -210,6 +211,7 @@ const STATUS_HELP = {
   publishing: "Automation is publishing this post.",
   published: "Published successfully.",
   failed: "Automation reported a failure.",
+  archived: "Out of the pipeline and the calendar. Never published. Back to draft brings it back.",
 };
 
 const WORKFLOW_OPTIONS = [

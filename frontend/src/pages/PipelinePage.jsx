@@ -9,7 +9,7 @@ import { planPillars } from "../lib/pillars.js";
 import { filterPosts } from "../lib/channels.js";
 import PostFilters, { useSavedFilters } from "../components/posts/PostFilters";
 import { Link } from "react-router-dom";
-import { Layers } from "lucide-react";
+import { Archive, Layers, Undo2 } from "lucide-react";
 
 // Claude writes posts straight into To approve, so the board starts there.
 // Older idea/draft/revised posts are shown in To approve (see postsByStatus) so nothing disappears.
@@ -18,8 +18,13 @@ const PIPELINE_COLUMNS = [
   { status: "to_approve", label: "To approve" },
   { status: "scheduled", label: "Scheduled" },
   { status: "published", label: "Published" },
+  // Out of the active pipeline: never published (autopost only takes "scheduled"), never on the calendar.
+  { status: "archived", label: "Archived" },
 ];
-
+// Posts already out (or going out) are not archived from the card.
+const NOT_ARCHIVABLE = ["archived", "published", "publishing"];
+const CARD_BUTTON =
+  "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-primary hover:border-flowity-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan";
 
 export default function PipelinePage() {
   const [posts, setPosts] = useState([]);
@@ -80,10 +85,22 @@ export default function PipelinePage() {
     }
   }
 
+  // Moves a card to another status from its own button (same path as dropping it on a column).
+  async function setStatus(post, status) {
+    setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, status } : p)));
+    try {
+      const r = await postsApi.update(post.id, { status });
+      applySaved(r.data);
+    } catch (e) {
+      console.error(e);
+      applySaved(post);
+    }
+  }
+
   const pillarPlan = useMemo(() => {
     const datas = posts.map((p) => parseApiDate(p.scheduled_at)).filter(Boolean);
     const until = datas.length ? new Date(Math.max(...datas)) : new Date();
-    return planPillars({ posts: posts.filter((p) => p.channel === "linkedin"), today: new Date(), until });
+    return planPillars({ posts: posts.filter((p) => p.channel === "linkedin" && p.status !== "archived"), today: new Date(), until });
   }, [posts]);
 
   const [filters, setFilters] = useSavedFilters("ce-pipeline-filters");
@@ -241,16 +258,40 @@ export default function PipelinePage() {
                           )}
                         </div>
                       )}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
                       <Link
                         to={`/carousel/${post.id}`}
                         onClick={(event) => event.stopPropagation()}
                         draggable="false"
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-primary hover:border-flowity-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-primary hover:border-flowity-purple focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flowity-cyan"
                         aria-label={`Open carousel for post ${post.id}`}
                       >
                         <Layers size={13} aria-hidden="true" />
                         Edit carousel
                       </Link>
+                      {!NOT_ARCHIVABLE.includes(post.status) && (
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); setStatus(post, "archived"); }}
+                          className={CARD_BUTTON}
+                          aria-label={`Archive post ${post.id}`}
+                        >
+                          <Archive size={13} aria-hidden="true" />
+                          Archive
+                        </button>
+                      )}
+                      {post.status === "archived" && (
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); setStatus(post, "draft"); }}
+                          className={CARD_BUTTON}
+                          aria-label={`Move post ${post.id} back to draft`}
+                        >
+                          <Undo2 size={13} aria-hidden="true" />
+                          Back to draft
+                        </button>
+                      )}
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, CheckCircle } from "lucide-react";
 import SourceCard from "../components/sources/SourceCard";
 import NewSourceForm from "../components/sources/NewSourceForm";
 import SourceFilters from "../components/sources/SourceFilters";
@@ -14,6 +14,8 @@ export default function SourcesPage() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [approving, setApproving] = useState(null);
+  const [approveError, setApproveError] = useState(null);
 
   useEffect(() => {
     fetchSources();
@@ -60,6 +62,20 @@ export default function SourcesPage() {
       console.error("Error saving source:", err);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleApprove(source) {
+    setApproving(source.id);
+    setApproveError(null);
+    try {
+      await sourcesApi.approve(source.id);
+      setSources((prev) => prev.map((s) => (s.id === source.id ? { ...s, used: true } : s)));
+    } catch (err) {
+      console.error("Error approving source:", err);
+      setApproveError(source.id);
+    } finally {
+      setApproving(null);
     }
   }
 
@@ -140,13 +156,35 @@ export default function SourcesPage() {
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((source) => (
-            <SourceCard
-              key={source.id}
-              source={source}
-              onSelect={() => openEditForm(source)}
-              selected={editingSource?.id === source.id}
-              selectedLabel="Open"
-            />
+            <div key={source.id} className="flex flex-col gap-1.5">
+              <SourceCard
+                source={source}
+                onSelect={() => openEditForm(source)}
+                selected={editingSource?.id === source.id}
+                selectedLabel="Open"
+              />
+              <div className="flex items-center gap-2 px-1">
+                {source.used ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-300">
+                    <CheckCircle size={13} aria-hidden="true" />
+                    Used (post in Pipeline)
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-secondary text-xs px-2.5 py-1.5"
+                    onClick={() => handleApprove(source)}
+                    disabled={approving === source.id}
+                    aria-label={`Approve ${source.title}: create a post in To approve`}
+                  >
+                    {approving === source.id ? "Creating post..." : "Approve"}
+                  </button>
+                )}
+                {approveError === source.id && (
+                  <span role="alert" className="text-xs text-red-300">Could not create the post. Try again.</span>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}
