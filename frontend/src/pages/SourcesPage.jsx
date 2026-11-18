@@ -71,6 +71,7 @@ export default function SourcesPage() {
     try {
       await sourcesApi.approve(source.id);
       setSources((prev) => prev.map((s) => (s.id === source.id ? { ...s, used: true } : s)));
+      setEditingSource((cur) => (cur?.id === source.id ? { ...cur, used: true } : cur));
     } catch (err) {
       console.error("Error approving source:", err);
       setApproveError(source.id);
@@ -114,6 +115,29 @@ export default function SourcesPage() {
             onCancel={closeForm}
             loading={saving}
           />
+          {editingSource && (
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10">
+              {editingSource.used ? (
+                <span className="inline-flex items-center gap-1 text-xs text-emerald-300">
+                  <CheckCircle size={13} aria-hidden="true" />
+                  Used (post in Pipeline)
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-secondary text-xs px-2.5 py-1.5"
+                  onClick={() => handleApprove(editingSource)}
+                  disabled={approving === editingSource.id}
+                  aria-label={`Approve ${editingSource.title}: create a post in To approve`}
+                >
+                  {approving === editingSource.id ? "Creating post..." : "Approve"}
+                </button>
+              )}
+              {approveError === editingSource.id && (
+                <span role="alert" className="text-xs text-red-300">Could not create the post. Try again.</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
