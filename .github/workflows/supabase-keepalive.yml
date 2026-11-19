@@ -1,7 +1,9 @@
 name: Supabase keep-alive
 
 # O plano gratuito do Supabase pausa o projeto depois de ~7 dias sem atividade.
-# Este workflow faz uma leitura no banco duas vezes por semana para ele não dormir.
+# Este workflow faz uma leitura no banco todo dia para ele não dormir e checa a saúde dos posts
+# (falhou, preso em publishing, agendado atrasado). Se algo quebrou o job falha e o GitHub manda
+# e-mail para quem editou este arquivo por último.
 # Precisa do secret SUPABASE_DATABASE_URL (Settings > Secrets and variables > Actions).
 # Só lê (SELECT count(*) FROM posts), nunca escreve.
 # Observação: o GitHub desliga workflows agendados em repositórios sem commits por 60 dias;
@@ -9,7 +11,7 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: "17 11 * * 1,4"   # segunda e quinta, 08:17 em Brasília
+    - cron: "17 11 * * *"   # todo dia, 08:17 em Brasília
   workflow_dispatch: {}
 
 permissions:

@@ -1,4 +1,5 @@
 """Testa app/db/keepalive.py (leitura que mantém o Supabase gratuito acordado)."""
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -45,3 +46,40 @@ def test_workflow_agendado_usa_o_secret():
     ping = next(p for p in passos if p.get("name") == "Ler o banco")
     assert ping["env"]["DATABASE_URL"] == "${{ secrets.SUPABASE_DATABASE_URL }}"
     assert ping["run"] == "python -m app.db.keepalive"
+
+
+def _banco_com_posts(tmp_path, linhas):
+    url = f"sqlite:///{(tmp_path / 's.db').as_posix()}"
+    with create_engine(url).begin() as conn:
+        conn.execute(text(
+            "CREATE TABLE posts (id INTEGER PRIMARY KEY, status TEXT, scheduled_at DATETIME, updated_at DATETIME)"
+        ))
+        for linha in linhas:
+            conn.execute(text(
+                "INSERT INTO posts (id, status, scheduled_at, updated_at) VALUES (:id, :status, :ag, :up)"
+            ), linha)
+    return url
+
+
+def test_saude_ok_e_problemas(tmp_path):
+    agora = datetime(2026, 11, 19, 12, 0)
+    h = lambda n: agora - timedelta(hours=n)  # noqa: E731
+    url = _banco_com_posts(tmp_path, [
+        {"id": 1, "status": "published", "ag": h(5), "up": h(5)},
+        {"id": 2, "status": "failed", "ag": h(3), "up": h(2)},        # falhou hoje
+        {"id": 3, "status": "failed", "ag": h(50), "up": h(48)},      # falha antiga, ignora
+        {"id": 4, "status": "publishing", "ag": h(3), "up": h(2)},    # preso
+        {"id": 5, "status": "scheduled", "ag": h(2), "up": h(10)},    # atrasado
+        {"id": 6, "status": "scheduled", "ag": agora + timedelta(hours=3), "up": h(1)},  # futuro, ok
+    ])
+    problemas = keepalive.checar_saude(url, agora=agora)
+    assert problemas == [
+        "1 post(s) falharam nas últimas 24h: ids 2",
+        "1 post(s) presos em publishing há mais de 1h: ids 4",
+        "1 post(s) agendados com mais de 1h de atraso: ids 5",
+    ]
+
+
+def test_saude_sem_problemas(tmp_path):
+    url = _banco_com_posts(tmp_path, [{"id": 1, "status": "published", "ag": None, "up": datetime(2026, 11, 19)}])
+    assert keepalive.checar_saude(url, agora=datetime(2026, 11, 19, 12, 0)) == []

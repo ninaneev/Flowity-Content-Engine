@@ -9,12 +9,17 @@ por semana.
 Uso (dentro de backend/):
     DATABASE_URL=postgresql://... python -m app.db.keepalive
 
+Além do ping, faz uma checagem de saúde: posts que falharam nas últimas 24h, posts presos em
+"publishing" há mais de 1h e posts agendados com mais de 1h de atraso. Se achar algum, sai com
+código 1; o GitHub manda e-mail para quem editou o workflow quando um job agendado falha.
+
 Só lê, nunca escreve. Não importa app.core.config para não exigir JWT_SECRET e afins no CI.
 """
 from __future__ import annotations
 
 import os
 import sys
+from datetime import datetime, timedelta
 
 from sqlalchemy import create_engine, text
 
@@ -40,6 +45,33 @@ def pingar(url: str, timeout_s: int = 20) -> int:
         engine.dispose()
 
 
+# Datas no banco são UTC sem fuso (o scheduler compara com datetime.utcnow()).
+CHECAGENS = {
+    "falharam nas últimas 24h": "SELECT id FROM posts WHERE status = 'failed' AND updated_at >= :dia",
+    "presos em publishing há mais de 1h": "SELECT id FROM posts WHERE status = 'publishing' AND updated_at < :hora",
+    "agendados com mais de 1h de atraso": "SELECT id FROM posts WHERE status = 'scheduled' AND scheduled_at < :hora",
+}
+
+
+def checar_saude(url: str, agora: datetime | None = None, timeout_s: int = 20) -> list[str]:
+    """Devolve uma linha por problema encontrado (lista vazia = tudo certo)."""
+    agora = agora or datetime.utcnow()
+    params = {"dia": agora - timedelta(hours=24), "hora": agora - timedelta(hours=1)}
+    url = normalizar_url(url)
+    args = {"connect_timeout": timeout_s} if url.startswith("postgresql") else {}
+    engine = create_engine(url, connect_args=args, pool_pre_ping=False)
+    problemas = []
+    try:
+        with engine.connect() as conn:
+            for rotulo, sql in CHECAGENS.items():
+                ids = [str(i) for i in conn.execute(text(sql), params).scalars()]
+                if ids:
+                    problemas.append(f"{len(ids)} post(s) {rotulo}: ids {', '.join(ids)}")
+    finally:
+        engine.dispose()
+    return problemas
+
+
 def main() -> int:
     url = os.environ.get("DATABASE_URL", "").strip()
     if not url:
@@ -59,6 +91,17 @@ def main() -> int:
         )
         return 1
     print(f"[keepalive] ok, banco acordado ({total} posts).")
+    try:
+        problemas = checar_saude(url)
+    except Exception as erro:  # noqa: BLE001
+        print(f"[saude] Checagem falhou: {type(erro).__name__}.", file=sys.stderr)
+        return 1
+    if problemas:
+        for linha in problemas:
+            print(f"[saude] {linha}", file=sys.stderr)
+        print("[saude] Abra o Content Engine (Pipeline) e veja o motivo nas notas do post.", file=sys.stderr)
+        return 1
+    print("[saude] ok, nenhum post falhou ou travou.")
     return 0
 
 
